@@ -8,22 +8,47 @@ jobs:
   example-workflow:
     runs-on: ubuntu-latest
     steps:
+      # Part 1: benchmark-data-extract-transform
+      # TODO: once the action is published, we won't need to build
+      # the TypeScript code for the `benchmark-data-extract-transform` action here.
+      # At that point, we can replace the below with:
+      # ```
+      # - uses: cryspen/benchmark-data-extract-transform
+      #   with:
+      #     <...>
+      # ```
       - uses: actions/checkout@v4
-      # run the first action (main branch)
-      - uses: cryspen/benchmark-data-extract-transform@main
+        with:
+          name: cryspen/benchmark-data-extract-transform
+          path: first-action
+      - name: "build"
+        run: |
+          cd first-action
+          npm install
+          npm run build
+          cd -
+      - uses: ./first-action # local action in repo
         with:
           tool: 'cargo'
           platform: 'ubuntu-latest'
           # TODO: rename to `input-file-path`
-          output-file-path: ./test/data/extract/cargo_output.txt
+          output-file-path: ./first-action/test/data/extract/cargo_output.txt
           json-out-path: output.json
-      # prepare the local action in repo for testing
+
+
+      # Part 2: benchmark-upload-and-plot-action
+      # prepare the local action in current branch for testing
+      - uses: actions/checkout@v4
+        with:
+          path: second-action
       - uses: actions/setup-node@v4
       - name: "build"
         run: |
+          cd second-action
           npm install
-          npm run build 
-      - uses: ./ # local action in repo
+          npm run build
+          cd -
+      - uses: ./second-action # local action in repo
         with:
           name: 'Test benchmark'
           # TODO: rename to `input-file-path`
