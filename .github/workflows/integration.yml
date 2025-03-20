@@ -13,7 +13,7 @@ jobs:
       - uses: cryspen/benchmark-data-extract-transform@main
         with:
           tool: 'cargo'
-          platform: 'default'
+          platform: 'ubuntu-latest'
           # TODO: rename to `input-file-path`
           output-file-path: ./test/data/extract/cargo_output.txt
           json-out-path: output.json
