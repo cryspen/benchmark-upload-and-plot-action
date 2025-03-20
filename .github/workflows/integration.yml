@@ -56,3 +56,4 @@ jobs:
           gh-repository: github.com/cryspen/benchmark-upload-and-plot-action
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
+          skip-fetch-gh-pages: true
