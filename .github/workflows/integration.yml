@@ -49,5 +49,4 @@ jobs:
           output-file-path: /home/runner/work/output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
-          skip-fetch-gh-pages: true
           gh-pages-branch: gh-pages-test
