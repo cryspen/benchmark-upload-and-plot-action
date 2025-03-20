@@ -38,7 +38,6 @@ jobs:
       # Part 2: benchmark-upload-and-plot-action
       # prepare the local action in current branch for testing
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
       - name: "build"
         run: |
           npm install
