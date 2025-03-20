@@ -19,7 +19,7 @@ jobs:
       # ```
       - uses: actions/checkout@v4
         with:
-          name: cryspen/benchmark-data-extract-transform
+          repository: cryspen/benchmark-data-extract-transform
           path: first-action
       - name: "build"
         run: |
