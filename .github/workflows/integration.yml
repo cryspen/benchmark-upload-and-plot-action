@@ -26,7 +26,6 @@ jobs:
           cd first-action
           npm install
           npm run build
-          cd -
       - uses: ./first-action # local action in repo
         with:
           tool: 'cargo'
@@ -47,13 +46,12 @@ jobs:
           cd second-action
           npm install
           npm run build
-      - uses: ./second-action # local action in repo
+      - uses: ./ # local action in repo
+        working-directory: second-action
         with:
-          name: 'Test benchmark'
+          name: 'Test second-action'
           # TODO: rename to `input-file-path`
-          output-file-path: ./output.json
-          # TODO: remove this, since it will be in default config to use the current repo
-          gh-repository: github.com/cryspen/benchmark-upload-and-plot-action
+          output-file-path: ../output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           skip-fetch-gh-pages: true
