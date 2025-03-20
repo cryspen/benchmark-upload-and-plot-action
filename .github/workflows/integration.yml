@@ -51,3 +51,4 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           skip-fetch-gh-pages: true
+          gh-pages-branch: gh-pages-test
