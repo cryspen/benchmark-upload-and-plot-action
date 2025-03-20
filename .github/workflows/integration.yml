@@ -47,11 +47,10 @@ jobs:
           cd second-action
           npm install
           npm run build
-          cd -
-      - uses: ./second-action # local action in repo
+      - uses: ./ # local action in repo
         with:
           name: 'Test benchmark'
           # TODO: rename to `input-file-path`
-          output-file-path: output.json
+          output-file-path: ../output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
