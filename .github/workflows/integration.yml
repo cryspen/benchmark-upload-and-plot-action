@@ -1,0 +1,32 @@
+name: Example workflow
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  example-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # run the first action (main branch)
+      - uses: cryspen/benchmark-data-extract-transform@main
+        with:
+          tool: 'cargo'
+          platform: 'default'
+          # TODO: rename to `input-file-path`
+          output-file-path: ./test/data/extract/cargo_output.txt
+          json-out-path: output.json
+      # prepare the local action in repo for testing
+      - uses: actions/setup-node@v4
+      - name: "build"
+        run: |
+          npm install
+          npm run build 
+      - uses: ./ # local action in repo
+        with:
+          name: 'Test benchmark'
+          # TODO: rename to `input-file-path`
+          output-file-path: output.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
