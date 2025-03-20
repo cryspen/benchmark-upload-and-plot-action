@@ -39,18 +39,15 @@ jobs:
       # Part 2: benchmark-upload-and-plot-action
       # prepare the local action in current branch for testing
       - uses: actions/checkout@v4
-        with:
-          path: second-action
       - uses: actions/setup-node@v4
       - name: "build"
         run: |
-          cd second-action
           npm install
           npm run build
       - uses: ./ # local action in repo
         with:
           name: 'Test benchmark'
           # TODO: rename to `input-file-path`
-          output-file-path: ../output.json
+          output-file-path: ./output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
