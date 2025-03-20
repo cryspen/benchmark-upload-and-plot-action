@@ -53,6 +53,6 @@ jobs:
           # TODO: rename to `input-file-path`
           output-file-path: ./output.json
           # TODO: remove this, since it will be in default config to use the current repo
-          gh-repository: cryspen/benchmark-upload-and-plot-action
+          gh-repository: github.com/cryspen/benchmark-upload-and-plot-action
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
