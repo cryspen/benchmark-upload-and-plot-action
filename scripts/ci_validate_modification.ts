@@ -2,8 +2,7 @@ import * as path from 'path';
 import { promises as fs } from 'fs';
 import * as cp from 'child_process';
 import { BenchmarkSuites, DataJson, SCRIPT_PREFIX } from '../src/write';
-import { VALID_TOOLS } from '../src/config';
-import { Benchmark } from '../src/extract';
+import { Benchmark } from '../src/load';
 import { diff, Diff, DiffArray, DiffEdit, DiffNew } from 'deep-diff';
 import { getServerUrl } from '../src/git';
 import assert from 'assert';
@@ -49,10 +48,7 @@ function validateDataJson(data: DataJson) {
 
     for (const benchName of Object.keys(suites)) {
         for (const suite of suites[benchName]) {
-            const { commit, tool, date, benches } = suite;
-            if (!(VALID_TOOLS as ReadonlyArray<string>).includes(tool)) {
-                throw new Error(`Invalid tool ${tool}`);
-            }
+            const { commit, date, benches } = suite;
             if (!commitUrlMatcher.test(commit.url) && !/\/pull\/\d+\/commits\/[a-f0-9]+$/.test(commit.url)) {
                 throw new Error(`Invalid commit url: ${commit.url}`);
             }
@@ -122,7 +118,7 @@ function assertDiffNewBench(diff: Diff<unknown>): asserts diff is DiffNew<Benchm
     if (typeof rhs !== 'object' || rhs === null) {
         throw new Error(`DiffNew for Benchmark object is actually not a object: ${rhs}`);
     }
-    for (const prop of ['commit', 'date', 'tool', 'benches']) {
+    for (const prop of ['commit', 'date', 'benches']) {
         if (!(prop in rhs)) {
             throw new Error(`Not a valid benchmark object in DiffNew: ${JSON.stringify(rhs)}`);
         }
@@ -165,10 +161,6 @@ function validateBenchmarkResultMod<T>(diff: Diff<T>, expectedBenchName: string,
     for (const suite of benchSuites) {
         if (suite.date > added.date) {
             throw new Error(`Older suite's date ${JSON.stringify(suite)} is newer than added ${JSON.stringify(added)}`);
-        }
-
-        if (suite.tool !== added.tool) {
-            throw new Error(`Tool is different between ${JSON.stringify(suite)} and ${JSON.stringify(added)}`);
         }
 
         for (const addedBench of added.benches) {
