@@ -1,0 +1,52 @@
+name: Example workflow
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  example-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      # Part 1: benchmark-data-extract-transform
+      # TODO: once the action is published, we won't need to build
+      # the TypeScript code for the `benchmark-data-extract-transform` action here.
+      # At that point, we can replace the below with:
+      # ```
+      # - uses: cryspen/benchmark-data-extract-transform
+      #   with:
+      #     <...>
+      # ```
+      - uses: actions/checkout@v4
+        with:
+          repository: cryspen/benchmark-data-extract-transform
+          path: first-action
+      - name: "build"
+        run: |
+          cd first-action
+          npm install
+          npm run build
+      - uses: ./first-action # local action in repo
+        with:
+          tool: 'cargo'
+          platform: 'ubuntu-latest'
+          # TODO: rename to `input-file-path`
+          output-file-path: ./first-action/test/data/extract/cargo_output.txt
+          json-out-path: /home/runner/work/output.json
+
+
+      # Part 2: benchmark-upload-and-plot-action
+      # prepare the local action in current branch for testing
+      - uses: actions/checkout@v4
+      - name: "build"
+        run: |
+          npm install
+          npm run build
+      - uses: ./ # local action in repo
+        with:
+          name: 'Test second action'
+          # TODO: rename to `input-file-path`
+          output-file-path: /home/runner/work/output.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          gh-pages-branch: gh-pages-test
