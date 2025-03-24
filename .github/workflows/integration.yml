@@ -33,7 +33,7 @@ jobs:
           platform: 'ubuntu-latest'
           # TODO: rename to `input-file-path`
           output-file-path: ./first-action/test/data/extract/cargo_output.txt
-          json-out-path: /home/runner/work/output.json
+          data-out-path: /home/runner/work/output.json
 
 
       # Part 2: benchmark-upload-and-plot-action
