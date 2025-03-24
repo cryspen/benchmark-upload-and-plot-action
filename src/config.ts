@@ -6,7 +6,7 @@ import * as path from 'path';
 export interface Config {
     name: string;
     biggerIsBetter: boolean;
-    outputFilePath: string; // path to out data
+    inputDataPath: string; // path to out data
     ghPagesBranch: string;
     ghRepository: string | undefined;
     benchmarkDataDirPath: string;
@@ -55,11 +55,11 @@ async function resolveFilePath(p: string): Promise<string> {
     return p;
 }
 
-async function validateOutputFilePath(filePath: string): Promise<string> {
+async function validateInputDataPath(filePath: string): Promise<string> {
     try {
         return await resolveFilePath(filePath);
     } catch (err) {
-        throw new Error(`Invalid value for 'output-file-path' input: ${err}`);
+        throw new Error(`Invalid value for 'input-data-path' input: ${err}`);
     }
 }
 
@@ -197,7 +197,7 @@ function validateAlertThreshold(alertThreshold: number | null, failThreshold: nu
 }
 
 export async function configFromJobInput(): Promise<Config> {
-    let outputFilePath: string = core.getInput('output-file-path');
+    let inputDataPath: string = core.getInput('input-data-path');
     let biggerIsBetter = getBoolInput('bigger-is-better');
     const ghPagesBranch: string = core.getInput('gh-pages-branch');
     const ghRepository: string = core.getInput('gh-repository');
@@ -218,7 +218,7 @@ export async function configFromJobInput(): Promise<Config> {
     const maxItemsInChart = getUintInput('max-items-in-chart');
     let failThreshold = getPercentageInput('fail-threshold');
 
-    outputFilePath = await validateOutputFilePath(outputFilePath);
+    inputDataPath = await validateInputDataPath(inputDataPath);
     validateGhPagesBranch(ghPagesBranch);
     benchmarkDataDirPath = validateBenchmarkDataDirPath(benchmarkDataDirPath);
     validateName(name);
@@ -245,7 +245,7 @@ export async function configFromJobInput(): Promise<Config> {
     return {
         name,
         biggerIsBetter,
-        outputFilePath,
+        inputDataPath,
         ghPagesBranch,
         ghRepository,
         benchmarkDataDirPath,

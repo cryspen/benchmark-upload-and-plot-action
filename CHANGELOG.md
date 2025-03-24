@@ -380,7 +380,7 @@ e.g.
   with:
     name: My Project Go Benchmark
     tool: 'go'
-    output-file-path: output.txt
+    input-data-path: output.txt
     github-token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
     auto-push: true
 ```

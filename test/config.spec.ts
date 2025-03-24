@@ -32,7 +32,7 @@ describe('configFromJobInput()', function () {
     const defaultInputs = {
         name: 'Benchmark',
         'bigger-is-better': 'false',
-        'output-file-path': 'out.txt',
+        'input-data-path': 'out.txt',
         'gh-pages-branch': 'gh-pages',
         'benchmark-data-dir-path': '.',
         'github-token': '',
@@ -58,12 +58,12 @@ describe('configFromJobInput()', function () {
         },
         {
             what: 'output file does not exist',
-            inputs: { ...defaultInputs, 'output-file-path': 'foo.txt' },
-            expected: /^Error: Invalid value for 'output-file-path'/,
+            inputs: { ...defaultInputs, 'input-data-path': 'foo.txt' },
+            expected: /^Error: Invalid value for 'input-data-path'/,
         },
         {
             what: 'output file is actually directory',
-            inputs: { ...defaultInputs, 'output-file-path': '.' },
+            inputs: { ...defaultInputs, 'input-data-path': '.' },
             expected: /Specified path '.*' is not a file/,
         },
         {
@@ -287,7 +287,7 @@ describe('configFromJobInput()', function () {
         A.equal(actual.failOnAlert, test.expected.failOnAlert);
         A.equal(actual.alertThreshold, test.expected.alertThreshold);
         A.deepEqual(actual.alertCommentCcUsers, test.expected.alertCommentCcUsers);
-        A.ok(path.isAbsolute(actual.outputFilePath), actual.outputFilePath);
+        A.ok(path.isAbsolute(actual.inputDataPath), actual.inputDataPath);
         A.ok(path.isAbsolute(actual.benchmarkDataDirPath), actual.benchmarkDataDirPath);
         A.equal(actual.maxItemsInChart, test.expected.maxItemsInChart);
         if (test.expected.failThreshold === null) {
@@ -307,14 +307,14 @@ describe('configFromJobInput()', function () {
     it('resolves relative paths in config', async function () {
         mockInputs({
             ...defaultInputs,
-            'output-file-path': 'out.txt',
+            'input-data-path': 'out.txt',
             'benchmark-data-dir-path': 'path/to/output',
         });
 
         const config = await configFromJobInput();
         A.equal(config.name, 'Benchmark');
-        A.ok(path.isAbsolute(config.outputFilePath), config.outputFilePath);
-        A.ok(config.outputFilePath.endsWith('out.txt'), config.outputFilePath);
+        A.ok(path.isAbsolute(config.inputDataPath), config.inputDataPath);
+        A.ok(config.inputDataPath.endsWith('out.txt'), config.inputDataPath);
         A.ok(path.isAbsolute(config.benchmarkDataDirPath), config.benchmarkDataDirPath);
         A.ok(config.benchmarkDataDirPath.endsWith('output'), config.benchmarkDataDirPath);
     });
@@ -324,12 +324,12 @@ describe('configFromJobInput()', function () {
         const dataDir = path.resolve('path/to/output');
         mockInputs({
             ...defaultInputs,
-            'output-file-path': outFile,
+            'input-data-path': outFile,
             'benchmark-data-dir-path': dataDir,
         });
 
         const config = await configFromJobInput();
-        A.equal(config.outputFilePath, outFile);
+        A.equal(config.inputDataPath, outFile);
         A.equal(config.benchmarkDataDirPath, dataDir);
     });
 
@@ -347,13 +347,13 @@ describe('configFromJobInput()', function () {
 
         mockInputs({
             ...defaultInputs,
-            'output-file-path': file,
+            'input-data-path': file,
             'benchmark-data-dir-path': dir,
         });
 
         const config = await configFromJobInput();
-        A.ok(path.isAbsolute(config.outputFilePath), config.outputFilePath);
-        A.equal(config.outputFilePath, path.join(absCwd, 'out.txt'));
+        A.ok(path.isAbsolute(config.inputDataPath), config.inputDataPath);
+        A.equal(config.inputDataPath, path.join(absCwd, 'out.txt'));
         A.ok(path.isAbsolute(config.benchmarkDataDirPath), config.benchmarkDataDirPath);
         A.equal(config.benchmarkDataDirPath, path.join(absCwd, 'outdir'));
     });

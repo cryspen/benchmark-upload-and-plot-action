@@ -10,7 +10,7 @@ inputs:
     description: 'Name of the benchmark. This value must be identical among all benchmarks'
     required: true
     default: 'Benchmark'
-  output-file-path:
+  input-data-path:
     description: 'A path to file which contains the benchmark output'
     required: true
   gh-pages-branch:

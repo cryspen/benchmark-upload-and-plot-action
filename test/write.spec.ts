@@ -171,7 +171,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
         const defaultCfg: Config = {
             name: 'Test benchmark',
             biggerIsBetter: false,
-            outputFilePath: 'dummy', // Should not affect
+            inputDataPath: 'dummy', // Should not affect
             ghPagesBranch: 'dummy', // Should not affect
             ghRepository: undefined,
             benchmarkDataDirPath: 'dummy', // Should not affect
@@ -869,7 +869,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
         const defaultCfg: Config = {
             name: 'Test benchmark',
             biggerIsBetter: false,
-            outputFilePath: 'dummy', // Should not affect
+            inputDataPath: 'dummy', // Should not affect
             ghPagesBranch: 'gh-pages',
             ghRepository: undefined,
             benchmarkDataDirPath: 'data-dir', // Should not affect

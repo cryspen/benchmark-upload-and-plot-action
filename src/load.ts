@@ -133,12 +133,12 @@ function loadBenchmarkResult(output: string): BenchmarkResult[] {
 }
 
 export async function loadResult(config: Config): Promise<Benchmark> {
-    const output = await fs.readFile(config.outputFilePath, 'utf8');
+    const output = await fs.readFile(config.inputDataPath, 'utf8');
     const { githubToken, ref } = config;
     let benches: BenchmarkResult[] = loadBenchmarkResult(output);
 
     if (benches.length === 0) {
-        throw new Error(`No benchmark result was found in ${config.outputFilePath}. Benchmark output was '${output}'`);
+        throw new Error(`No benchmark result was found in ${config.inputDataPath}. Benchmark output was '${output}'`);
     }
 
     const commit = await getCommit(githubToken, ref);
