@@ -3,11 +3,10 @@ import { promises as fs } from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-export type ToolType = typeof VALID_TOOLS[number];
 export interface Config {
     name: string;
-    tool: ToolType;
-    outputFilePath: string;
+    biggerIsBetter: boolean;
+    outputFilePath: string; // path to out data
     ghPagesBranch: string;
     ghRepository: string | undefined;
     benchmarkDataDirPath: string;
@@ -26,29 +25,7 @@ export interface Config {
     maxItemsInChart: number | null;
     ref: string | undefined;
 }
-
-export const VALID_TOOLS = [
-    'cargo',
-    'go',
-    'benchmarkjs',
-    'benchmarkluau',
-    'pytest',
-    'googlecpp',
-    'catch2',
-    'julia',
-    'jmh',
-    'benchmarkdotnet',
-    'customBiggerIsBetter',
-    'customSmallerIsBetter',
-] as const;
 const RE_UINT = /^\d+$/;
-
-function validateToolType(tool: string): asserts tool is ToolType {
-    if ((VALID_TOOLS as ReadonlyArray<string>).includes(tool)) {
-        return;
-    }
-    throw new Error(`Invalid value '${tool}' for 'tool' input. It must be one of ${VALID_TOOLS}`);
-}
 
 function resolvePath(p: string): string {
     if (p.startsWith('~')) {
@@ -220,8 +197,8 @@ function validateAlertThreshold(alertThreshold: number | null, failThreshold: nu
 }
 
 export async function configFromJobInput(): Promise<Config> {
-    const tool: string = core.getInput('tool');
     let outputFilePath: string = core.getInput('output-file-path');
+    let biggerIsBetter = getBoolInput('bigger-is-better');
     const ghPagesBranch: string = core.getInput('gh-pages-branch');
     const ghRepository: string = core.getInput('gh-repository');
     let benchmarkDataDirPath: string = core.getInput('benchmark-data-dir-path');
@@ -241,7 +218,6 @@ export async function configFromJobInput(): Promise<Config> {
     const maxItemsInChart = getUintInput('max-items-in-chart');
     let failThreshold = getPercentageInput('fail-threshold');
 
-    validateToolType(tool);
     outputFilePath = await validateOutputFilePath(outputFilePath);
     validateGhPagesBranch(ghPagesBranch);
     benchmarkDataDirPath = validateBenchmarkDataDirPath(benchmarkDataDirPath);
@@ -268,7 +244,7 @@ export async function configFromJobInput(): Promise<Config> {
 
     return {
         name,
-        tool,
+        biggerIsBetter,
         outputFilePath,
         ghPagesBranch,
         ghRepository,

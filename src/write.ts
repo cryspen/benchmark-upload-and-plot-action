@@ -4,8 +4,8 @@ import * as io from '@actions/io';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import * as git from './git';
-import { Benchmark, BenchmarkResult } from './extract';
-import { Config, ToolType } from './config';
+import { Benchmark, BenchmarkResult } from './load';
+import { Config } from './config';
 import { DEFAULT_INDEX_HTML } from './default_index_html';
 import { leavePRComment } from './comment/leavePRComment';
 import { leaveCommitComment } from './comment/leaveCommitComment';
@@ -59,35 +59,6 @@ async function addIndexHtmlIfNeeded(additionalGitArguments: string[], dir: strin
     console.log('Created default index.html at', indexHtmlFullPath);
 }
 
-function biggerIsBetter(tool: ToolType): boolean {
-    switch (tool) {
-        case 'cargo':
-            return false;
-        case 'go':
-            return false;
-        case 'benchmarkjs':
-            return true;
-        case 'benchmarkluau':
-            return false;
-        case 'pytest':
-            return true;
-        case 'googlecpp':
-            return false;
-        case 'catch2':
-            return false;
-        case 'julia':
-            return false;
-        case 'jmh':
-            return false;
-        case 'benchmarkdotnet':
-            return false;
-        case 'customBiggerIsBetter':
-            return true;
-        case 'customSmallerIsBetter':
-            return false;
-    }
-}
-
 interface Alert {
     current: BenchmarkResult;
     prev: BenchmarkResult;
@@ -105,7 +76,7 @@ function findAlerts(curSuite: Benchmark, prevSuite: Benchmark, threshold: number
             continue;
         }
 
-        const ratio = getRatio(curSuite.tool, prev, current);
+        const ratio = getRatio(curSuite.bigger_is_better, prev, current);
 
         if (ratio > threshold) {
             core.warning(
@@ -184,7 +155,7 @@ export function buildComment(
         const prev = prevSuite.benches.find((i) => i.name === current.name);
 
         if (prev) {
-            const ratio = getRatio(curSuite.tool, prev, current);
+            const ratio = getRatio(curSuite.bigger_is_better, prev, current);
 
             line = `| \`${current.name}\` | ${strVal(current)} | ${strVal(prev)} | \`${floatStr(ratio)}\` |`;
         } else {
@@ -370,7 +341,6 @@ async function writeBenchmarkToGitHubPagesWithRetry(
 ): Promise<Benchmark | null> {
     const {
         name,
-        tool,
         ghPagesBranch,
         ghRepository,
         benchmarkDataDirPath,
@@ -427,7 +397,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(
 
     await git.cmd(extraGitArguments, 'add', path.join(benchmarkDataRelativeDirPath, 'data.js'));
     await addIndexHtmlIfNeeded(extraGitArguments, benchmarkDataRelativeDirPath, benchmarkBaseDir);
-    await git.cmd(extraGitArguments, 'commit', '-m', `add ${name} (${tool}) benchmark result for ${bench.commit.id}`);
+    await git.cmd(extraGitArguments, 'commit', '-m', `add ${name} benchmark result for ${bench.commit.id}`);
 
     if (githubToken && autoPush) {
         try {
@@ -564,10 +534,10 @@ async function handleSummary(benchName: string, currBench: Benchmark, prevBench:
     await summary.write();
 }
 
-function getRatio(tool: ToolType, prev: BenchmarkResult, current: BenchmarkResult) {
+function getRatio(biggerIsBetter: boolean, prev: BenchmarkResult, current: BenchmarkResult) {
     if (prev.value === 0 && current.value === 0) return 1;
 
-    return biggerIsBetter(tool)
+    return biggerIsBetter
         ? prev.value / current.value // e.g. current=100, prev=200
         : current.value / prev.value; // e.g. current=200, prev=100
 }
