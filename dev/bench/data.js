@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742814610273,
+  "lastUpdate": 1742818775312,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -153,6 +153,40 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/4/commits/99dbb766cd00d515f639f3ddca245ebe008598f6"
         },
         "date": 1742814609318,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "bench_fib_10",
+            "value": 135,
+            "unit": "ns/iter",
+            "platform": "ubuntu-latest",
+            "range": "± 24"
+          },
+          {
+            "name": "bench_fib_20",
+            "value": 18149,
+            "unit": "ns/iter",
+            "platform": "ubuntu-latest",
+            "range": "± 755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "7ebe26cb1348aa710d76ca93c69a42a9d7bb2704",
+          "message": "Rework benchmarking action to perform upload and plot tasks",
+          "timestamp": "2025-03-20T15:02:35Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/4/commits/7ebe26cb1348aa710d76ca93c69a42a9d7bb2704"
+        },
+        "date": 1742818774921,
         "bigger_is_better": false,
         "benches": [
           {
