@@ -1,5 +1,5 @@
 name: 'Continuous Benchmark'
-author: 'cryspen <https://github.com/cryspen>'
+author: 'Cryspen <https://github.com/cryspen>'
 description: 'Continuous Benchmark using GitHub pages as dash board for keeping performance'
 branding:
   icon: 'fast-forward'
