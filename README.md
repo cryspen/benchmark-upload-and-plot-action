@@ -61,8 +61,8 @@ Path to a file which contains the output from benchmark tool, in the standardize
 
 Name of your GitHub pages branch.
 
-Note: If you're using `docs/` directory of `master` branch for GitHub pages, please set `gh-pages-branch`
-to `master` and `benchmark-data-dir-path` to the directory under `docs` like `docs/dev/bench`.
+Note: If you're using `docs/` directory of `main` branch for GitHub pages, please set `gh-pages-branch`
+to `main` and `benchmark-data-dir-path` to the directory under `docs` like `docs/dev/bench`.
 
 #### `gh-repository`
 
@@ -211,13 +211,13 @@ a pull request on your repository could modify your GitHub pages branch.
 For this, you can specify a branch that runs your benchmark workflow on `on:` section. Or set the
 proper condition to `if:` section of step which pushes GitHub pages.
 
-e.g. Runs on only `master` branch
+e.g. Runs on only `main` branch
 
 ```yaml
 on:
   push:
     branches:
-      - master
+      - main
 ```
 
 e.g. Push when not running for a pull request
@@ -255,7 +255,7 @@ This action conforms semantic versioning 2.0.
 For example, `cryspen/benchmark-upload-and-plot-action@v1` means the latest version of `1.x.y`. And
 `cryspen/benchmark-upload-and-plot-action@v1.0.2` always uses `v1.0.2` even if a newer version is published.
 
-`master` branch of this repository is for development and does not work as action.
+`main` branch of this repository is for development and does not work as action.
 
 
 ### Track updates of this action
