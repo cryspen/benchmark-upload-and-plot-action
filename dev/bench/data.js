@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742899917034,
+  "lastUpdate": 1742901111258,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -561,6 +561,40 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/7/commits/02023eac2d23aee624d2d1424f20568492fbe2be"
         },
         "date": 1742899916429,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "bench_fib_10",
+            "value": 135,
+            "unit": "ns/iter",
+            "platform": "ubuntu-latest",
+            "range": "± 24"
+          },
+          {
+            "name": "bench_fib_20",
+            "value": 18149,
+            "unit": "ns/iter",
+            "platform": "ubuntu-latest",
+            "range": "± 755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "c7b7a649b8fdbb7f2a696163d263da2f130aa7ac",
+          "message": "Update dependencies to fix warnings from `npm audit`",
+          "timestamp": "2025-03-25T09:59:52Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/7/commits/c7b7a649b8fdbb7f2a696163d263da2f130aa7ac"
+        },
+        "date": 1742901110824,
         "bigger_is_better": false,
         "benches": [
           {
