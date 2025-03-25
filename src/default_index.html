@@ -282,7 +282,7 @@
                     const platforms = [...new Set(datasets.map((d) => d.platform))];
 
                     // plots by api
-                    createTitle(setElem, 'Plots by API');
+                    createTitle(setElem, 'Plots by API and platform');
                     const apis = [...new Set(datasets.map((d) => d.api))];
                     for (let api of apis) {
                         for (let platform of platforms) {
