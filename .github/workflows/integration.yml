@@ -8,26 +8,13 @@ jobs:
   example-workflow:
     runs-on: ubuntu-latest
     steps:
-      # Part 1: benchmark-data-extract-transform
-      # TODO: once the v1 branch is published,
-      # the TypeScript code for the `benchmark-data-extract-transform` action here.
-      # At that point, we can replace the below with:
-      # ```
-      # - uses: cryspen/benchmark-data-extract-transform@v1
-      #   with:
-      #     <...>
-      # ```
+      # Checkout the current repo to get test data
       - uses: actions/checkout@v4
         with:
           repository: cryspen/benchmark-data-extract-transform
           path: first-action
           ref: dev
-      - name: "build"
-        run: |
-          cd first-action
-          npm install
-          npm run build
-      - uses: ./first-action # local action in repo
+      - uses: cryspen/benchmark-data-extract-transform@v1
         with:
           tool: 'cargo'
           platform: 'ubuntu-latest'
