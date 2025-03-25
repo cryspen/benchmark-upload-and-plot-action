@@ -131,20 +131,36 @@
 
                 function init() {
                     function collectBenchesPerTestCase(entries) {
+                        // collect in nested map
                         const map = new Map();
                         for (const entry of entries) {
-                            const { commit, date, tool, benches } = entry;
+                            const { commit, date, benches } = entry;
                             for (const bench of benches) {
-                                const result = { commit, date, tool, bench };
-                                const arr = map.get(bench.name);
+                                const result = { commit, date, bench };
+
+                                if (map.get(bench.name) === undefined) {
+                                    map.set(bench.name, new Map());
+                                }
+
+                                const by_platform = map.get(bench.name);
+                                const arr = by_platform.get(bench.platform);
                                 if (arr === undefined) {
-                                    map.set(bench.name, [result]);
+                                    by_platform.set(bench.platform, [result]);
                                 } else {
                                     arr.push(result);
                                 }
                             }
                         }
-                        return map;
+
+                        // flatten
+                        const newMap = new Map();
+                        for (let [name, innerMap] of map) {
+                            for (let [platform, arr] of innerMap) {
+                                const key = { name, platform };
+                                newMap.set(key, arr);
+                            }
+                        }
+                        return newMap;
                     }
 
                     const data = window.BENCHMARK_DATA;
@@ -162,29 +178,94 @@
                     }));
                 }
 
+                function createTitle(parent, name) {
+                    const nameElem = document.createElement('h1');
+                    nameElem.className = 'benchmark-title';
+                    nameElem.textContent = name;
+                    parent.appendChild(nameElem);
+                }
+
                 // input: separated-out datasets
                 function renderAllCharts(dataSets) {
-                    function renderGraph(parent, dataSets) {
+                    function chartByApiAndPlatform(parent, api, platform, datasets, layout) {
+                        const filtered = Array.from(datasets.filter((d) => d.api == api && d.platform == platform));
+                        // return if no datasets
+                        if (filtered.length == 0) {
+                            console.log(`No datasets found with api "${api}" and platform ${platform}`);
+                            return;
+                        }
+                        layout.title = { text: `${api} (platform: ${platform})` };
+                        Plotly.newPlot(parent, filtered, layout);
+                    }
+
+                    function chartByKeySize(parent, keySize, datasets, layout) {
+                        const filtered = Array.from(datasets.filter((d) => d.keySize == keySize));
+                        // return if no datasets
+                        if (filtered.length == 0) {
+                            console.log(`No datasets found with keySize ${keySize}`);
+                            return;
+                        }
+                        layout.title = { text: `All benchmarks for key size ${keySize}` };
+                        Plotly.newPlot(parent, filtered, layout);
+                    }
+                    function chartByPlatform(parent, platform, datasets, layout) {
+                        const filtered = Array.from(datasets.filter((d) => d.platform == platform));
+                        // return if no datasets
+                        if (filtered.length == 0) {
+                            console.log(`No datasets found with platform ${platform}`);
+                            return;
+                        }
+                        layout.title = {
+                            text: `All benchmarks for platform "${platform}"`,
+                        };
+                        Plotly.newPlot(parent, filtered, layout);
+                    }
+
+                    function buildPlotConfig(dataSets) {
                         const datasets = Array.from(
-                            dataSets.dataSet.entries().map(([name, dataset], index) => {
+                            dataSets.dataSet.entries().map(([key, dataset], index) => {
+                                const name = key.name;
+                                const platform = key.platform;
+
+                                const name_info = name.split(' ');
+
+                                const name_with_platform = name.concat(` (platform: ${platform})`);
+
+                                // Extract the numeric component from the second substring
+                                // as the key size.
+                                // TODO: the data is not guaranteed to be in this format.
+                                // Will need to retrieve this info a different way,
+                                // or guarantee that the name specified in the `cargo bench` output
+                                // has the keySize in this location.
+                                const keySizeStr = name_info[1].replace(/[^0-9]/g, '');
+                                const keySize = parseInt(keySizeStr, 10);
+
+                                // remove key size from name to get api name
+                                // NOTE: The data is not guaranteed to be in this format.
+                                const api = name_info[0].concat(' ').concat(name_info.slice(2).join(' '));
+
                                 return {
-                                    name: name,
+                                    name: name_with_platform,
+                                    api,
+                                    keySize,
+                                    platform,
+                                    x: dataset.map((d) => d.date),
                                     y: dataset.map((d) => d.bench.value),
+                                    // tooltip
+                                    text: dataset.map((d) => `${d.bench.value} ${d.bench.unit}`),
+                                    showlegend: true,
+                                    hoverinfo: 'text',
                                 };
                             }),
                         );
 
-                        const canvas = document.createElement('canvas');
-                        canvas.className = 'benchmark-chart';
-                        parent.appendChild(canvas);
-
                         // TODO: more config
                         const layout = {
-                            width: 1200,
                             height: 600,
+                            width: 1200,
                         };
 
-                        const plot = Plotly.newPlot(parent, datasets, layout);
+                        return [datasets, layout];
                     }
 
                     const main = document.getElementById('main');
@@ -192,16 +273,41 @@
                     setElem.className = 'benchmark-set';
                     main.appendChild(setElem);
 
-                    const nameElem = document.createElement('h1');
-                    nameElem.className = 'benchmark-title';
-                    nameElem.textContent = 'All benchmarks';
-                    setElem.appendChild(nameElem);
+                    const [datasets, layout] = buildPlotConfig(dataSets[0]);
 
-                    const graphsElem = document.createElement('div');
-                    graphsElem.className = 'benchmark-graphs';
-                    setElem.appendChild(graphsElem);
+                    const platforms = [...new Set(datasets.map((d) => d.platform))];
 
-                    renderGraph(graphsElem, dataSets[0]);
+                    // plots by api
+                    createTitle(setElem, 'Plots by API');
+                    const apis = [...new Set(datasets.map((d) => d.api))];
+                    for (let api of apis) {
+                        for (let platform of platforms) {
+                            const graphsElem = document.createElement('div');
+                            graphsElem.className = 'benchmark-graphs';
+                            setElem.appendChild(graphsElem);
+                            chartByApiAndPlatform(graphsElem, api, platform, datasets, layout);
+                        }
+                    }
+
+                    // plots by key size
+                    createTitle(setElem, 'Plots by key size');
+                    const keySizes = [...new Set(datasets.map((d) => d.keySize))];
+                    for (let keySize of keySizes) {
+                        if (!isNaN(keySize)) {
+                            const graphsElem = document.createElement('div');
+                            graphsElem.className = 'benchmark-graphs';
+                            setElem.appendChild(graphsElem);
+                            chartByKeySize(graphsElem, keySize, datasets, layout);
+                        }
+                    }
+                    // plots by platform
+                    createTitle(setElem, 'Plots by platform');
+                    for (let platform of platforms) {
+                        const graphsElem = document.createElement('div');
+                        graphsElem.className = 'benchmark-graphs';
+                        setElem.appendChild(graphsElem);
+                        chartByPlatform(graphsElem, platform, datasets, layout);
+                    }
                 }
 
                 renderAllCharts(init()); // Start
