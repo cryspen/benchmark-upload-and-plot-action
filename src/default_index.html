@@ -237,7 +237,8 @@
                                 // Will need to retrieve this info a different way,
                                 // or guarantee that the name specified in the `cargo bench` output
                                 // has the keySize in this location.
-                                const keySizeStr = name_info[1].replace(/[^0-9]/g, '');
+                                const keySizeStr =
+                                    name_info[1] !== undefined ? name_info[1].replace(/[^0-9]/g, '') : '';
                                 const keySize = parseInt(keySizeStr, 10);
 
                                 // remove key size from name to get api name
