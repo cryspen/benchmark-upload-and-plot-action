@@ -41,7 +41,7 @@ Store the benchmark results with step using the action. Please set `cargo` to `t
   uses: benchmark-action/github-action-benchmark@v1
   with:
     tool: 'cargo'
-    output-file-path: output.txt
+    input-data-path: output.txt
 ```
 
 Please read ['How to use' section](https://github.com/benchmark-action/github-action-benchmark#how-to-use) for common usage.

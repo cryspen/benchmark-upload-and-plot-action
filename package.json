@@ -1,5 +1,5 @@
 {
-  "name": "github-action-benchmark",
+  "name": "benchmark-upload-and-plot-action",
   "version": "0.0.0",
   "private": true,
   "description": "",
@@ -17,19 +17,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/benchmark-action/github-action-benchmark.git"
+    "url": "git+https://github.com/cryspen/benchmark-upload-and-plot-action.git"
   },
   "keywords": [
     "github",
     "action",
     "benchmark"
   ],
-  "author": "github-action-benchmark developers <https://github.com/benchmark-action>",
+  "author": "cryspen <https://github.com/cryspen>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/benchmark-action/github-action-benchmark/issues"
+    "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/issues"
   },
-  "homepage": "https://github.com/benchmark-action/github-action-benchmark#readme",
+  "homepage": "https://github.com/cryspen/benchmark-upload-and-plot-action#readme",
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.1",

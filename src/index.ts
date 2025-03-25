@@ -1,14 +1,14 @@
 import * as core from '@actions/core';
 import { configFromJobInput } from './config';
-import { extractResult } from './extract';
+import { loadResult } from './load';
 import { writeBenchmark } from './write';
 
 async function main() {
     const config = await configFromJobInput();
     core.debug(`Config extracted from job: ${config}`);
 
-    const bench = await extractResult(config);
-    core.debug(`Benchmark result was extracted: ${bench}`);
+    const bench = await loadResult(config);
+    core.debug(`Benchmark result was loaded: ${bench}`);
 
     await writeBenchmark(bench, config);
 

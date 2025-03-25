@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { strict as A } from 'assert';
-import { Config, ToolType } from '../src/config';
-import { extractResult } from '../src/extract';
+import { Config } from '../src/config';
+import { loadResult } from '../src/load';
 
 const dummyWebhookPayload = {
     head_commit: {
@@ -46,7 +46,7 @@ jest.mock('@actions/github', () => ({
     },
 }));
 
-describe('extractResult()', function () {
+describe('loadResult()', function () {
     afterAll(function () {
         jest.unmock('@actions/github');
     });
@@ -56,145 +56,44 @@ describe('extractResult()', function () {
     });
 
     const normalCases: Array<{
-        tool: ToolType;
         file: string;
     }> = [
         {
-            tool: 'cargo',
-            file: 'cargo_output.txt',
-        },
-        {
-            tool: 'cargo',
-            file: 'cargo_output2.txt',
-        },
-        {
-            tool: 'cargo',
-            file: 'cargo_output3.txt',
-        },
-        {
-            tool: 'cargo',
-            file: 'cargo_output_units.txt',
-        },
-        {
-            tool: 'cargo',
-            file: 'criterion_output.txt',
-        },
-        {
-            tool: 'catch2',
-            file: 'catch2_output_v2.txt',
-        },
-        {
-            tool: 'catch2',
-            file: 'catch2_output_v3.txt',
-        },
-        {
-            tool: 'go',
-            file: 'go_output.txt',
-        },
-        {
-            tool: 'go',
-            file: 'go_fiber_output.txt',
-        },
-        {
-            tool: 'benchmarkjs',
-            file: 'benchmarkjs_output.txt',
-        },
-        {
-            tool: 'benchmarkluau',
-            file: 'benchmarkluau_output.txt',
-        },
-        {
-            tool: 'pytest',
-            file: 'pytest_output.json',
-        },
-        {
-            tool: 'googlecpp',
-            file: 'googlecpp_output.json',
-        },
-        {
-            tool: 'pytest',
-            file: 'pytest_several_units.json',
-        },
-        {
-            tool: 'catch2',
-            file: 'issue16_output.txt',
-        },
-        {
-            tool: 'julia',
-            file: 'julia_output.json',
-        },
-        {
-            tool: 'jmh',
-            file: 'jmh_output.json',
-        },
-        {
-            tool: 'jmh',
-            file: 'jmh_output_2.json',
-        },
-        {
-            tool: 'benchmarkdotnet',
-            file: 'benchmarkdotnet.json',
-        },
-        {
-            tool: 'customBiggerIsBetter',
             file: 'customBiggerIsBetter_output.json',
         },
         {
-            tool: 'customSmallerIsBetter',
             file: 'customSmallerIsBetter_output.json',
         },
     ];
 
-    it.each(normalCases)(`extracts benchmark output from $tool - $file`, async function (test) {
+    it.each(normalCases)(`extracts benchmark output from $file`, async function (test) {
         jest.useFakeTimers({
             now: 1712131503296,
         });
-        const outputFilePath = path.join(__dirname, 'data', 'extract', test.file);
+        const inputDataPath = path.join(__dirname, 'data', 'extract', test.file);
         const config = {
-            tool: test.tool,
-            outputFilePath,
+            inputDataPath,
         } as Config;
-        const bench = await extractResult(config);
+        const bench = await loadResult(config);
 
         expect(bench).toMatchSnapshot();
 
         jest.useRealTimers();
     });
 
-    it('raises an error on unexpected tool', async function () {
-        const config = {
-            tool: 'foo' as any,
-            outputFilePath: path.join(__dirname, 'data', 'extract', 'go_output.txt'),
-        } as Config;
-        await A.rejects(extractResult(config), /^Error: FATAL: Unexpected tool: 'foo'$/);
-    });
-
     it('raises an error when output file is not readable', async function () {
         const config = {
-            tool: 'go',
-            outputFilePath: 'path/does/not/exist.txt',
+            inputDataPath: 'path/does/not/exist.txt',
         } as Config;
-        await A.rejects(extractResult(config));
+        await A.rejects(loadResult(config));
     });
 
     it('raises an error when no output found', async function () {
         const config = {
-            tool: 'cargo',
-            outputFilePath: path.join(__dirname, 'data', 'extract', 'go_output.txt'),
+            inputDataPath: path.join(__dirname, 'data', 'extract', 'invalid_output.txt'),
         } as Config;
-        await A.rejects(extractResult(config), /^Error: No benchmark result was found in /);
+        await A.rejects(loadResult(config), /^Error: No benchmark result was found in /);
     });
-
-    it.each(['pytest', 'googlecpp', 'jmh', 'customBiggerIsBetter', 'customSmallerIsBetter'] as const)(
-        `raises an error when output file is not in JSON with tool '%s'`,
-        async function (tool) {
-            const file = 'go_output.txt';
-            // Note: go_output.txt is not in JSON format!
-            const outputFilePath = path.join(__dirname, 'data', 'extract', file);
-            const config = { tool, outputFilePath } as Config;
-            await A.rejects(extractResult(config), /must be JSON file/);
-        },
-    );
 
     it('collects the commit information from pull_request payload as fallback', async function () {
         dummyGitHubContext.payload = {
@@ -212,12 +111,11 @@ describe('extractResult()', function () {
                 },
             },
         };
-        const outputFilePath = path.join(__dirname, 'data', 'extract', 'go_output.txt');
+        const inputDataPath = path.join(__dirname, 'data', 'extract', 'customBiggerIsBetter_output.json');
         const config = {
-            tool: 'go',
-            outputFilePath,
+            inputDataPath,
         } as Config;
-        const { commit } = await extractResult(config);
+        const { commit } = await loadResult(config);
         const expectedUser = {
             name: 'user',
             username: 'user',
@@ -256,15 +154,14 @@ describe('extractResult()', function () {
             sha: 'abcd1234',
             html_url: 'https://github.com/dymmy/repo/commit/abcd1234',
         };
-        const outputFilePath = path.join(__dirname, 'data', 'extract', 'go_output.txt');
+        const inputDataPath = path.join(__dirname, 'data', 'extract', 'customBiggerIsBetter_output.json');
         const config = {
-            tool: 'go',
-            outputFilePath,
+            inputDataPath,
             githubToken: 'abcd1234',
             ref: 'refs/pull/123/head',
         } as Config;
 
-        const { commit } = await extractResult(config);
+        const { commit } = await loadResult(config);
 
         const expectedCommit = {
             id: 'abcd1234',
@@ -316,14 +213,13 @@ describe('extractResult()', function () {
             sha: 'abcd1235',
             html_url: 'https://github.com/dymmy/repo/commit/abcd1234',
         };
-        const outputFilePath = path.join(__dirname, 'data', 'extract', 'go_output.txt');
+        const inputDataPath = path.join(__dirname, 'data', 'extract', 'customBiggerIsBetter_output.json');
         const config = {
-            tool: 'go',
-            outputFilePath,
+            inputDataPath,
             githubToken: 'abcd1234',
         } as Config;
 
-        const { commit } = await extractResult(config);
+        const { commit } = await loadResult(config);
 
         const expectedCommit = {
             id: 'abcd1235',
@@ -351,11 +247,10 @@ describe('extractResult()', function () {
 
     it('raises an error when commit information is not found in webhook payload and no githubToken is provided', async function () {
         dummyGitHubContext.payload = {};
-        const outputFilePath = path.join(__dirname, 'data', 'extract', 'go_output.txt');
+        const inputDataPath = path.join(__dirname, 'data', 'extract', 'customBiggerIsBetter_output.json');
         const config = {
-            tool: 'go',
-            outputFilePath,
+            inputDataPath,
         } as Config;
-        await A.rejects(extractResult(config), /^Error: No commit information is found in payload/);
+        await A.rejects(loadResult(config), /^Error: No commit information is found in payload/);
     });
 });

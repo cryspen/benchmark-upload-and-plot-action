@@ -1,5 +1,5 @@
 name: 'Continuous Benchmark'
-author: 'github-action-benchmark developers <https://github.com/benchmark-action>'
+author: 'Cryspen <https://github.com/cryspen>'
 description: 'Continuous Benchmark using GitHub pages as dash board for keeping performance'
 branding:
   icon: 'fast-forward'
@@ -10,10 +10,7 @@ inputs:
     description: 'Name of the benchmark. This value must be identical among all benchmarks'
     required: true
     default: 'Benchmark'
-  tool:
-    description: 'Tool to use get benchmark output. One of "cargo", "go", "benchmarkjs", "pytest", "googlecpp", "catch2", "julia", "benchmarkdotnet", "customBiggerIsBetter", "customSmallerIsBetter"'
-    required: true
-  output-file-path:
+  input-data-path:
     description: 'A path to file which contains the benchmark output'
     required: true
   gh-pages-branch:

@@ -1,7 +1,7 @@
 import { strict as A } from 'assert';
 import * as path from 'path';
 import * as os from 'os';
-import { configFromJobInput, VALID_TOOLS } from '../src/config';
+import { configFromJobInput } from '../src/config';
 
 type Inputs = { [name: string]: string };
 
@@ -31,8 +31,8 @@ describe('configFromJobInput()', function () {
 
     const defaultInputs = {
         name: 'Benchmark',
-        tool: 'cargo',
-        'output-file-path': 'out.txt',
+        'bigger-is-better': 'false',
+        'input-data-path': 'out.txt',
         'gh-pages-branch': 'gh-pages',
         'benchmark-data-dir-path': '.',
         'github-token': '',
@@ -57,18 +57,13 @@ describe('configFromJobInput()', function () {
             expected: /^Error: Name must not be empty$/,
         },
         {
-            what: 'wrong tool',
-            inputs: { ...defaultInputs, tool: 'foo' },
-            expected: /^Error: Invalid value 'foo' for 'tool' input/,
-        },
-        {
             what: 'output file does not exist',
-            inputs: { ...defaultInputs, 'output-file-path': 'foo.txt' },
-            expected: /^Error: Invalid value for 'output-file-path'/,
+            inputs: { ...defaultInputs, 'input-data-path': 'foo.txt' },
+            expected: /^Error: Invalid value for 'input-data-path'/,
         },
         {
             what: 'output file is actually directory',
-            inputs: { ...defaultInputs, 'output-file-path': '.' },
+            inputs: { ...defaultInputs, 'input-data-path': '.' },
             expected: /Specified path '.*' is not a file/,
         },
         {
@@ -171,7 +166,6 @@ describe('configFromJobInput()', function () {
 
     interface ExpectedResult {
         name: string;
-        tool: string;
         ghPagesBranch: string;
         ghRepository: string | undefined;
         githubToken: string | undefined;
@@ -188,7 +182,6 @@ describe('configFromJobInput()', function () {
 
     const defaultExpected: ExpectedResult = {
         name: 'Benchmark',
-        tool: 'cargo',
         ghPagesBranch: 'gh-pages',
         ghRepository: undefined,
         autoPush: false,
@@ -208,11 +201,6 @@ describe('configFromJobInput()', function () {
         inputs: any;
         expected: ExpectedResult;
     }> = [
-        ...VALID_TOOLS.map((tool: string) => ({
-            what: 'valid tool ' + tool,
-            inputs: { ...defaultInputs, tool },
-            expected: { ...defaultExpected, tool },
-        })),
         ...(
             [
                 ['auto-push', 'autoPush'],
@@ -292,7 +280,6 @@ describe('configFromJobInput()', function () {
         mockInputs(test.inputs);
         const actual = await configFromJobInput();
         A.equal(actual.name, test.expected.name);
-        A.equal(actual.tool, test.expected.tool);
         A.equal(actual.ghPagesBranch, test.expected.ghPagesBranch);
         A.equal(actual.githubToken, test.expected.githubToken);
         A.equal(actual.skipFetchGhPages, test.expected.skipFetchGhPages);
@@ -300,7 +287,7 @@ describe('configFromJobInput()', function () {
         A.equal(actual.failOnAlert, test.expected.failOnAlert);
         A.equal(actual.alertThreshold, test.expected.alertThreshold);
         A.deepEqual(actual.alertCommentCcUsers, test.expected.alertCommentCcUsers);
-        A.ok(path.isAbsolute(actual.outputFilePath), actual.outputFilePath);
+        A.ok(path.isAbsolute(actual.inputDataPath), actual.inputDataPath);
         A.ok(path.isAbsolute(actual.benchmarkDataDirPath), actual.benchmarkDataDirPath);
         A.equal(actual.maxItemsInChart, test.expected.maxItemsInChart);
         if (test.expected.failThreshold === null) {
@@ -320,15 +307,14 @@ describe('configFromJobInput()', function () {
     it('resolves relative paths in config', async function () {
         mockInputs({
             ...defaultInputs,
-            'output-file-path': 'out.txt',
+            'input-data-path': 'out.txt',
             'benchmark-data-dir-path': 'path/to/output',
         });
 
         const config = await configFromJobInput();
         A.equal(config.name, 'Benchmark');
-        A.equal(config.tool, 'cargo');
-        A.ok(path.isAbsolute(config.outputFilePath), config.outputFilePath);
-        A.ok(config.outputFilePath.endsWith('out.txt'), config.outputFilePath);
+        A.ok(path.isAbsolute(config.inputDataPath), config.inputDataPath);
+        A.ok(config.inputDataPath.endsWith('out.txt'), config.inputDataPath);
         A.ok(path.isAbsolute(config.benchmarkDataDirPath), config.benchmarkDataDirPath);
         A.ok(config.benchmarkDataDirPath.endsWith('output'), config.benchmarkDataDirPath);
     });
@@ -338,12 +324,12 @@ describe('configFromJobInput()', function () {
         const dataDir = path.resolve('path/to/output');
         mockInputs({
             ...defaultInputs,
-            'output-file-path': outFile,
+            'input-data-path': outFile,
             'benchmark-data-dir-path': dataDir,
         });
 
         const config = await configFromJobInput();
-        A.equal(config.outputFilePath, outFile);
+        A.equal(config.inputDataPath, outFile);
         A.equal(config.benchmarkDataDirPath, dataDir);
     });
 
@@ -361,13 +347,13 @@ describe('configFromJobInput()', function () {
 
         mockInputs({
             ...defaultInputs,
-            'output-file-path': file,
+            'input-data-path': file,
             'benchmark-data-dir-path': dir,
         });
 
         const config = await configFromJobInput();
-        A.ok(path.isAbsolute(config.outputFilePath), config.outputFilePath);
-        A.equal(config.outputFilePath, path.join(absCwd, 'out.txt'));
+        A.ok(path.isAbsolute(config.inputDataPath), config.inputDataPath);
+        A.equal(config.inputDataPath, path.join(absCwd, 'out.txt'));
         A.ok(path.isAbsolute(config.benchmarkDataDirPath), config.benchmarkDataDirPath);
         A.equal(config.benchmarkDataDirPath, path.join(absCwd, 'outdir'));
     });
