@@ -198,7 +198,7 @@ function validateAlertThreshold(alertThreshold: number | null, failThreshold: nu
 
 export async function configFromJobInput(): Promise<Config> {
     let inputDataPath: string = core.getInput('input-data-path');
-    let biggerIsBetter = getBoolInput('bigger-is-better');
+    const biggerIsBetter = getBoolInput('bigger-is-better');
     const ghPagesBranch: string = core.getInput('gh-pages-branch');
     const ghRepository: string = core.getInput('gh-repository');
     let benchmarkDataDirPath: string = core.getInput('benchmark-data-dir-path');
