@@ -250,10 +250,12 @@
                                     api,
                                     keySize,
                                     platform,
-                                    x: dataset.map((d) => d.date),
+                                    x: dataset.map((d) => new Date(d.date)),
                                     y: dataset.map((d) => d.bench.value),
                                     // tooltip
-                                    text: dataset.map((d) => `${d.bench.value} ${d.bench.unit}`),
+                                    text: dataset.map(
+                                        (d) => `${d.bench.value} ${d.bench.unit} (commit: ${d.commit.message})`,
+                                    ),
                                     showlegend: true,
                                     hoverinfo: 'text',
                                 };
@@ -264,6 +266,7 @@
                         const layout = {
                             height: 600,
                             width: 1200,
+                            xaxis: { type: 'date' },
                         };
 
                         return [datasets, layout];
