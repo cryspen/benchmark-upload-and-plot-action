@@ -2,10 +2,26 @@ export const DEFAULT_INDEX_HTML = String.raw`<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes" />
+    <meta
+      name="viewport"
+      content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes"
+    />
     <style>
       html {
-        font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+        font-family:
+          BlinkMacSystemFont,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          "Fira Sans",
+          "Droid Sans",
+          "Helvetica Neue",
+          Helvetica,
+          Arial,
+          sans-serif;
         -webkit-font-smoothing: antialiased;
         background-color: #fff;
         font-size: 16px;
@@ -99,31 +115,43 @@ export const DEFAULT_INDEX_HTML = String.raw`<!DOCTYPE html>
     </header>
     <main id="main"></main>
     <footer>
-	<!--
+      <!--
       <button id="dl-button">Download data as JSON</button>
       <div class="spacer"></div>
       <div class="small">Powered by <a rel="noopener" href="https://github.com/marketplace/actions/continuous-benchmark">github-action-benchmark</a></div>
        -->
     </footer>
 
-    <script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
+    <script
+      src="https://cdn.plot.ly/plotly-3.0.0.min.js"
+      charset="utf-8"
+    ></script>
     <script src="data.js"></script>
     <script id="main-script">
-      'use strict';
-      (function() {
-        
-	// Colors from https://github.com/github/linguist/blob/master/lib/linguist/languages.yml
+      "use strict";
+      (function () {
+        // Colors from https://github.com/github/linguist/blob/master/lib/linguist/languages.yml
         const colors = [
-	  '#dea584', '#00add8', '#f1e05a', '#000080', '#3572a5',
-	  '#f34b7d', '#f34b7d', '#a270ba', '#b07219', '#178600',
-	  '#38ff38', '#ff3838', '#333333',
-	];
+          "#dea584",
+          "#00add8",
+          "#f1e05a",
+          "#000080",
+          "#3572a5",
+          "#f34b7d",
+          "#f34b7d",
+          "#a270ba",
+          "#b07219",
+          "#178600",
+          "#38ff38",
+          "#ff3838",
+          "#333333",
+        ];
 
         function init() {
           function collectBenchesPerTestCase(entries) {
             const map = new Map();
             for (const entry of entries) {
-              const {commit, date, tool, benches} = entry;
+              const { commit, date, tool, benches } = entry;
               for (const bench of benches) {
                 const result = { commit, date, tool, bench };
                 const arr = map.get(bench.name);
@@ -140,62 +168,60 @@ export const DEFAULT_INDEX_HTML = String.raw`<!DOCTYPE html>
           const data = window.BENCHMARK_DATA;
 
           // Render header
-          document.getElementById('last-update').textContent = new Date(data.lastUpdate).toString();
-          const repoLink = document.getElementById('repository-link');
+          document.getElementById("last-update").textContent = new Date(
+            data.lastUpdate,
+          ).toString();
+          const repoLink = document.getElementById("repository-link");
           repoLink.href = data.repoUrl;
           repoLink.textContent = data.repoUrl;
 
           // Prepare data points for charts
-          return Object.keys(data.entries).map(name => ({
+          return Object.keys(data.entries).map((name) => ({
             name,
             dataSet: collectBenchesPerTestCase(data.entries[name]),
           }));
         }
 
-	// input: separated-out datasets
+        // input: separated-out datasets
         function renderAllCharts(dataSets) {
-
           function renderGraph(parent, dataSets) {
+            const datasets = Array.from(
+              dataSets.dataSet.entries().map(([name, dataset], index) => {
+                return {
+                  name: name,
+                  y: dataset.map((d) => d.bench.value),
+                };
+              }),
+            );
 
-
-	    const datasets = Array.from(dataSets.dataSet.entries().map(([name, dataset], index) => {
-
-		return {
-			name: name,
-			y: dataset.map(d => d.bench.value),
-		};
-	    }));
-
-            const canvas = document.createElement('canvas');
-            canvas.className = 'benchmark-chart';
+            const canvas = document.createElement("canvas");
+            canvas.className = "benchmark-chart";
             parent.appendChild(canvas);
-             
-	    // TODO: more config
-	    const layout = {
-	      width: 1200,
-	      height: 600
 
-	    };
+            // TODO: more config
+            const layout = {
+              width: 1200,
+              height: 600,
+            };
 
-	    const plot = Plotly.newPlot(parent, datasets, layout);
+            const plot = Plotly.newPlot(parent, datasets, layout);
           }
 
-          const main = document.getElementById('main');
-	  const setElem = document.createElement('div');
-	  setElem.className = 'benchmark-set';
-	  main.appendChild(setElem);
+          const main = document.getElementById("main");
+          const setElem = document.createElement("div");
+          setElem.className = "benchmark-set";
+          main.appendChild(setElem);
 
-	  const nameElem = document.createElement('h1');
-	  nameElem.className = 'benchmark-title';
-	  nameElem.textContent = 'All benchmarks';
-	  setElem.appendChild(nameElem);
+          const nameElem = document.createElement("h1");
+          nameElem.className = "benchmark-title";
+          nameElem.textContent = "All benchmarks";
+          setElem.appendChild(nameElem);
 
-	  const graphsElem = document.createElement('div');
-	  graphsElem.className = 'benchmark-graphs';
-	  setElem.appendChild(graphsElem);
+          const graphsElem = document.createElement("div");
+          graphsElem.className = "benchmark-graphs";
+          setElem.appendChild(graphsElem);
 
-	  renderGraph(graphsElem, dataSets[0]);
-
+          renderGraph(graphsElem, dataSets[0]);
         }
 
         renderAllCharts(init()); // Start
