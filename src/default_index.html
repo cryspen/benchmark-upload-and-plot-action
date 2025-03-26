@@ -282,7 +282,7 @@
                     const keySizes = [...new Set(datasets.map((d) => d.keySize))];
 
                     // plots by platform
-                    createTitle(setElem, 'Plots by API');
+                    createTitle(setElem, 'API plots');
                     for (let api of apis) {
                         const graphsElem = document.createElement('div');
                         graphsElem.className = 'benchmark-graphs';
@@ -291,7 +291,7 @@
                     }
 
                     // plots by api
-                    createTitle(setElem, 'Plots by API and key size');
+                    createTitle(setElem, 'API and key size plots');
                     for (let api of apis) {
                         for (let keySize of keySizes) {
                             if (!isNaN(keySize)) {
