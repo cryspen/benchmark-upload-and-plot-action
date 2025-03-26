@@ -174,7 +174,7 @@
                             console.log(`No datasets found with api "${api} and keySize ${keySize}"`);
                             return;
                         }
-                        layout.title = { text: `${api}` };
+                        layout.title = { text: `${api} ${keySize}` };
                         Plotly.newPlot(parent, filtered, layout);
                     }
                     function chartByApiAndPlatform(parent, api, platform, datasets, layout) {
@@ -282,7 +282,7 @@
                     const keySizes = [...new Set(datasets.map((d) => d.keySize))];
 
                     // plots by platform
-                    createTitle(setElem, 'API plots');
+                    createTitle(setElem, 'Compare key size for API');
                     for (let api of apis) {
                         const graphsElem = document.createElement('div');
                         graphsElem.className = 'benchmark-graphs';
@@ -291,7 +291,7 @@
                     }
 
                     // plots by api
-                    createTitle(setElem, 'API and key size plots');
+                    createTitle(setElem, 'Compare platform for API/key size');
                     for (let api of apis) {
                         for (let keySize of keySizes) {
                             if (!isNaN(keySize)) {
