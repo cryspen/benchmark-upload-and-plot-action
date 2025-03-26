@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1743002763640,
+  "lastUpdate": 1743005461030,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -1003,6 +1003,40 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/8/commits/b7023b85006e66ee0c8766f44e8759edeb911e41"
         },
         "date": 1743002763177,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "bench_fib_10",
+            "value": 135,
+            "unit": "ns/iter",
+            "platform": "ubuntu-latest",
+            "range": "± 24"
+          },
+          {
+            "name": "bench_fib_20",
+            "value": 18149,
+            "unit": "ns/iter",
+            "platform": "ubuntu-latest",
+            "range": "± 755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "c3cb5929bb7eba169dfe703a743aaacae8b0d1e3",
+          "message": "Filter plots by criteria (platform, API, key size)",
+          "timestamp": "2025-03-25T12:23:33Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/8/commits/c3cb5929bb7eba169dfe703a743aaacae8b0d1e3"
+        },
+        "date": 1743005460589,
         "bigger_is_better": false,
         "benches": [
           {
