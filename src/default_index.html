@@ -187,14 +187,24 @@
 
                 // input: separated-out datasets
                 function renderAllCharts(dataSets) {
+                    function chartByApiAndKeySize(parent, api, keySize, datasets, layout) {
+                        const filtered = Array.from(datasets.filter((d) => d.api == api && d.keySize == keySize));
+                        // return if no datasets
+                        if (filtered.length == 0) {
+                            console.log(`No datasets found with api "${api} and keySize ${keySize}"`);
+                            return;
+                        }
+                        layout.title = { text: `${api}` };
+                        Plotly.newPlot(parent, filtered, layout);
+                    }
                     function chartByApiAndPlatform(parent, api, platform, datasets, layout) {
                         const filtered = Array.from(datasets.filter((d) => d.api == api && d.platform == platform));
                         // return if no datasets
                         if (filtered.length == 0) {
-                            console.log(`No datasets found with api "${api}" and platform ${platform}`);
+                            console.log(`No datasets found with api "${api} and platform ${platform}"`);
                             return;
                         }
-                        layout.title = { text: `${api} (platform: ${platform})` };
+                        layout.title = { text: `${api}` };
                         Plotly.newPlot(parent, filtered, layout);
                     }
 
@@ -224,12 +234,20 @@
                     function buildPlotConfig(dataSets) {
                         const datasets = Array.from(
                             dataSets.dataSet.entries().map(([key, dataset], index) => {
-                                const name = key.name;
+                                let name = key.name;
                                 const platform = key.platform;
 
+                                // remove the unneeded 'portable' prefix
+                                // TODO: standardize the benchmark name format
+                                if (name.startsWith('portable')) {
+                                    name = name.slice('portable '.length);
+                                    if (!name.includes('portable')) {
+                                        name = name.concat('/portable');
+                                    }
+                                }
                                 const name_info = name.split(' ');
 
-                                const name_with_platform = name.concat(` (platform: ${platform})`);
+                                const name_with_platform = key.name.concat(` (platform: ${platform})`);
 
                                 // Extract the numeric component from the second substring
                                 // as the key size.
@@ -250,11 +268,12 @@
                                     api,
                                     keySize,
                                     platform,
-                                    x: dataset.map((d) => new Date(d.date)),
+                                    x: dataset.map((d) => new Date(d.commit.timestamp)),
                                     y: dataset.map((d) => d.bench.value),
                                     // tooltip
                                     text: dataset.map(
-                                        (d) => `${d.bench.value} ${d.bench.unit} (commit: ${d.commit.message})`,
+                                        (d) =>
+                                            `<b>${name}</b><br>platform: ${platform}<br>value: ${d.bench.value} ${d.bench.unit} ${d.bench.range}<br>commit id: ${d.commit.id}<br>commit name: ${d.commit.message}<br>commit url: ${d.commit.url}`,
                                     ),
                                     showlegend: true,
                                     hoverinfo: 'text',
@@ -279,38 +298,29 @@
 
                     const [datasets, layout] = buildPlotConfig(dataSets[0]);
 
-                    const platforms = [...new Set(datasets.map((d) => d.platform))];
-
-                    // plots by api
-                    createTitle(setElem, 'Plots by API and platform');
                     const apis = [...new Set(datasets.map((d) => d.api))];
-                    for (let api of apis) {
-                        for (let platform of platforms) {
-                            const graphsElem = document.createElement('div');
-                            graphsElem.className = 'benchmark-graphs';
-                            setElem.appendChild(graphsElem);
-                            chartByApiAndPlatform(graphsElem, api, platform, datasets, layout);
-                        }
-                    }
-
-                    // plots by key size
-                    createTitle(setElem, 'Plots by key size');
                     const keySizes = [...new Set(datasets.map((d) => d.keySize))];
-                    for (let keySize of keySizes) {
-                        if (!isNaN(keySize)) {
-                            const graphsElem = document.createElement('div');
-                            graphsElem.className = 'benchmark-graphs';
-                            setElem.appendChild(graphsElem);
-                            chartByKeySize(graphsElem, keySize, datasets, layout);
-                        }
-                    }
+
                     // plots by platform
-                    createTitle(setElem, 'Plots by platform');
-                    for (let platform of platforms) {
+                    createTitle(setElem, 'Plots by API');
+                    for (let api of apis) {
                         const graphsElem = document.createElement('div');
                         graphsElem.className = 'benchmark-graphs';
                         setElem.appendChild(graphsElem);
-                        chartByPlatform(graphsElem, platform, datasets, layout);
+                        chartByApiAndPlatform(graphsElem, api, 'ubuntu-latest_64', datasets, layout);
+                    }
+
+                    // plots by api
+                    createTitle(setElem, 'Plots by API and key size');
+                    for (let api of apis) {
+                        for (let keySize of keySizes) {
+                            if (!isNaN(keySize)) {
+                                const graphsElem = document.createElement('div');
+                                graphsElem.className = 'benchmark-graphs';
+                                setElem.appendChild(graphsElem);
+                                chartByApiAndKeySize(graphsElem, api, keySize, datasets, layout);
+                            }
+                        }
                     }
                 }
 
