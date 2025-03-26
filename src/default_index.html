@@ -248,7 +248,7 @@
                                     api,
                                     keySize,
                                     platform,
-                                    x: dataset.map((d) => new Date(d.commit.timestamp)),
+                                    x: dataset.map((d) => d.commit.timestamp),
                                     y: dataset.map((d) => d.bench.value),
                                     // tooltip
                                     text: dataset.map(
