@@ -80,9 +80,6 @@
                 flex-wrap: wrap;
                 width: 100%;
             }
-            .benchmark-chart {
-                max-width: 1000px;
-            }
         </style>
         <title>Benchmarks</title>
     </head>
@@ -112,23 +109,6 @@
         <script id="main-script">
             'use strict';
             (function () {
-                // Colors from https://github.com/github/linguist/blob/master/lib/linguist/languages.yml
-                const colors = [
-                    '#dea584',
-                    '#00add8',
-                    '#f1e05a',
-                    '#000080',
-                    '#3572a5',
-                    '#f34b7d',
-                    '#f34b7d',
-                    '#a270ba',
-                    '#b07219',
-                    '#178600',
-                    '#38ff38',
-                    '#ff3838',
-                    '#333333',
-                ];
-
                 function init() {
                     function collectBenchesPerTestCase(entries) {
                         // collect in nested map
