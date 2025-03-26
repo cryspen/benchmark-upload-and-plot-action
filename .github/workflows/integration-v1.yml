@@ -24,7 +24,7 @@ jobs:
         with:
           name: 'Test second action'
           input-data-path: /home/runner/work/output.json
-          repository: github.com/cryspen/benchmark-upload-and-plot-action
+          gh-repository: github.com/cryspen/benchmark-upload-and-plot-action
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           gh-pages-branch: gh-pages-test
