@@ -279,7 +279,18 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench, config, retry) {
     const { name, ghPagesBranch, ghRepository, benchmarkDataDirPath, githubToken, autoPush, skipFetchGhPages, maxItemsInChart, } = config;
     const rollbackActions = new Array();
     // FIXME: This payload is not available on `schedule:` or `workflow_dispatch:` events.
-    const isPrivateRepo = (_b = (_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.private) !== null && _b !== void 0 ? _b : false;
+    let isPrivateRepo = false;
+    try {
+        isPrivateRepo = (_b = (_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.private) !== null && _b !== void 0 ? _b : false;
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            core.warning(error.message);
+        }
+        else {
+            core.warning('An unknown error occurred');
+        }
+    }
     let benchmarkBaseDir = './';
     let extraGitArguments = [];
     if (githubToken && !skipFetchGhPages && ghRepository) {
