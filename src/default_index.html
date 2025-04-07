@@ -172,7 +172,14 @@
                     function chartByOsAndKeySize(parent, os, keySize, datasets, layout) {
                         const filtered = Array.from(
                             datasets
-                                .filter((d) => d.os == os && d.keySize == keySize)
+                                .filter(
+                                    (d) =>
+                                        d.os == os &&
+                                        d.keySize == keySize &&
+                                        d.name !== undefined &&
+                                        d.api !== undefined &&
+                                        d.platform !== undefined,
+                                )
                                 .map((d) => {
                                     d.name = `${d.name} - ${d.api} - ${d.platform}`;
                                     return d;
