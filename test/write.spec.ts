@@ -156,13 +156,27 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
         };
     }
 
-    function bench(name: string, value: number, range = '± 20', unit = 'ns/iter', os = 'ubuntu-latest') {
+    function bench(
+        name: string,
+        value: number,
+        range = '± 20',
+        unit = 'ns/iter',
+        os = 'ubuntu-latest',
+        platform = undefined,
+        api = undefined,
+        keySize = undefined,
+        category = undefined,
+    ) {
         return {
             name,
             range,
             unit,
             os,
             value,
+            platform,
+            api,
+            keySize,
+            category,
         };
     }
 
