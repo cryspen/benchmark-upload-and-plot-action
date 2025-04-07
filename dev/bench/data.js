@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1744020338610,
+  "lastUpdate": 1744026293211,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -1173,6 +1173,40 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/11/commits/8d82c5fb71545b0b926b48412d2dc8ab8221202a"
         },
         "date": 1744020338264,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "bench_fib_10",
+            "value": 135,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 24"
+          },
+          {
+            "name": "bench_fib_20",
+            "value": 18149,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "131b414e79c8f6aa57d83c40a60148c39c84d7ad",
+          "message": "Add error handling for retrieving whether the current repo is private",
+          "timestamp": "2025-04-07T11:43:23Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/11/commits/131b414e79c8f6aa57d83c40a60148c39c84d7ad"
+        },
+        "date": 1744026292328,
         "bigger_is_better": false,
         "benches": [
           {
