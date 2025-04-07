@@ -351,7 +351,10 @@ async function writeBenchmarkToGitHubPagesWithRetry(
     } = config;
     const rollbackActions = new Array<() => Promise<void>>();
 
-    // FIXME: This payload is not available on `schedule:` or `workflow_dispatch:` events.
+    // XXX: fix that ensures we don't fail if the current branch is not available
+    // on the merge queue (which is a known bug).
+    // TODO: identify which of the below cases are needed. Potentially always
+    // require the gh-repository field.
     let isPrivateRepo = false;
     try {
         isPrivateRepo = github.context.payload.repository?.private ?? false;
