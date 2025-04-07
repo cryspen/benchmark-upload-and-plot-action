@@ -355,7 +355,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(
     // on the merge queue (which is a known bug).
     // TODO: identify which of the below cases are needed. Potentially always
     // require the gh-repository field.
-    let isPrivateRepo = false;
+    let isPrivateRepo = null;
     try {
         isPrivateRepo = github.context.payload.repository?.private ?? false;
     } catch (error) {
@@ -377,9 +377,9 @@ async function writeBenchmarkToGitHubPagesWithRetry(
         });
         extraGitArguments = [`--work-tree=${benchmarkBaseDir}`, `--git-dir=${benchmarkBaseDir}/.git`];
         await git.checkout(ghPagesBranch, extraGitArguments);
-    } else if (!skipFetchGhPages && (!isPrivateRepo || githubToken)) {
+    } else if (!skipFetchGhPages && (isPrivateRepo === false || githubToken)) {
         await git.pull(githubToken, ghPagesBranch);
-    } else if (isPrivateRepo && !skipFetchGhPages) {
+    } else if (isPrivateRepo === true && !skipFetchGhPages) {
         core.warning(
             "'git pull' was skipped. If you want to ensure GitHub Pages branch is up-to-date " +
                 "before generating a commit, please set 'github-token' input to pull GitHub pages branch",
