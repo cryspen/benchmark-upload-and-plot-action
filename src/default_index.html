@@ -180,11 +180,17 @@
                                         d.api !== undefined &&
                                         d.platform !== undefined,
                                 )
-                                .map((d) => {
-                                    d.name = `${d.name} - ${d.api} - ${d.platform}`;
-                                    return d;
+                                .map((trace) => {
+                                    trace.name = `${trace.name} - ${trace.api} - ${trace.platform}`;
+                                    // tooltip
+                                    trace.text = trace.dataset.map(
+                                        (d) =>
+                                            `<b>${trace.name}</b><br>value: ${d.bench.value} ${d.bench.unit} ${d.bench.range}<br>commit id: ${d.commit.id}<br>commit name: ${d.commit.message}<br>commit url: ${d.commit.url}`,
+                                    );
+                                    return trace;
                                 }),
                         );
+
                         // return if no datasets
                         if (filtered.length == 0) {
                             console.log(`No datasets found with os "${os} and keySize ${keySize}"`);
@@ -208,11 +214,7 @@
                                     platform,
                                     x: dataset.map((d) => d.commit.timestamp),
                                     y: dataset.map((d) => d.bench.value),
-                                    // tooltip
-                                    text: dataset.map(
-                                        (d) =>
-                                            `<b>${name}</b><br>platform: ${platform}<br>value: ${d.bench.value} ${d.bench.unit} ${d.bench.range}<br>commit id: ${d.commit.id}<br>commit name: ${d.commit.message}<br>commit url: ${d.commit.url}`,
-                                    ),
+                                    dataset,
                                     showlegend: true,
                                     hoverinfo: 'text',
                                 };
