@@ -352,16 +352,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(
     const rollbackActions = new Array<() => Promise<void>>();
 
     // FIXME: This payload is not available on `schedule:` or `workflow_dispatch:` events.
-    let isPrivateRepo = false;
-    try {
-        isPrivateRepo = github.context.payload.repository?.private ?? false;
-    } catch (error) {
-        if (error instanceof Error) {
-            core.warning(error.message);
-        } else {
-            core.warning('An unknown error occurred');
-        }
-    }
+    const isPrivateRepo = github.context.payload.repository?.private ?? false;
 
     let benchmarkBaseDir = './';
     let extraGitArguments: string[] = [];
