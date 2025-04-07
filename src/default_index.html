@@ -137,15 +137,11 @@
                         }
 
                         // replace the key with data
-                        const data = Array.from(map.entries())
-                            .map(([key, value]) => {
-                                const d = JSON.parse(key);
-                                d.dataset = value;
-                                return d;
-                            })
-                            // TODO: remove this filter
-                            .filter((e) => e.api !== undefined);
-
+                        const data = Array.from(map.entries()).map(([key, value]) => {
+                            const d = JSON.parse(key);
+                            d.dataset = value;
+                            return d;
+                        });
                         return data;
                     }
 
@@ -184,7 +180,7 @@
                         );
                         // return if no datasets
                         if (filtered.length == 0) {
-                            console.log(`No datasets found with api "${api} and keySize ${keySize}"`);
+                            console.log(`No datasets found with os "${os} and keySize ${keySize}"`);
                             return;
                         }
                         layout.title = { text: `OS: ${os}, keySize: ${keySize}` };
