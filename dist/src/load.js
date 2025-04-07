@@ -85,8 +85,9 @@ async function getCommit(githubToken, ref) {
 function loadBenchmarkResult(output) {
     try {
         const json = JSON.parse(output);
-        return json.map(({ name, value, unit, platform, range, extra }) => {
-            return { name, value, unit, platform, range, extra };
+        // TODO: don't require all fields?
+        return json.map(({ name, value, unit, os, range, extra, category, keySize, platform, api }) => {
+            return { name, value, unit, os, range, extra, category, keySize, platform, api };
         });
     }
     catch (err) {

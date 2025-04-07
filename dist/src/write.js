@@ -278,8 +278,11 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench, config, retry) {
     var _a, _b;
     const { name, ghPagesBranch, ghRepository, benchmarkDataDirPath, githubToken, autoPush, skipFetchGhPages, maxItemsInChart, } = config;
     const rollbackActions = new Array();
-    // FIXME: This payload is not available on `schedule:` or `workflow_dispatch:` events.
-    let isPrivateRepo = false;
+    // XXX: fix that ensures we don't fail if the current branch is not available
+    // on the merge queue (which is a known bug).
+    // TODO: identify which of the below cases are needed. Potentially always
+    // require the gh-repository field.
+    let isPrivateRepo = null;
     try {
         isPrivateRepo = (_b = (_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.private) !== null && _b !== void 0 ? _b : false;
     }
@@ -302,10 +305,10 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench, config, retry) {
         extraGitArguments = [`--work-tree=${benchmarkBaseDir}`, `--git-dir=${benchmarkBaseDir}/.git`];
         await git.checkout(ghPagesBranch, extraGitArguments);
     }
-    else if (!skipFetchGhPages && (!isPrivateRepo || githubToken)) {
+    else if (!skipFetchGhPages && (isPrivateRepo === false || githubToken)) {
         await git.pull(githubToken, ghPagesBranch);
     }
-    else if (isPrivateRepo && !skipFetchGhPages) {
+    else if (isPrivateRepo === true && !skipFetchGhPages) {
         core.warning("'git pull' was skipped. If you want to ensure GitHub Pages branch is up-to-date " +
             "before generating a commit, please set 'github-token' input to pull GitHub pages branch");
     }
