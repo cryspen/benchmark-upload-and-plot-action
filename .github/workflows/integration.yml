@@ -17,7 +17,7 @@ jobs:
       - uses: cryspen/benchmark-data-extract-transform@v1
         with:
           tool: 'cargo'
-          platform: 'ubuntu-latest'
+          os: 'ubuntu-latest'
           output-file-path: ./first-action/test/data/extract/cargo_output.txt
           data-out-path: /home/runner/work/output.json
 
