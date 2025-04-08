@@ -44,7 +44,7 @@ npm prune --production
 rm -rf .release
 mkdir -p .release
 
-cp action.yml action-types.yml package.json package-lock.json .release/
+cp action.yml action-types.yml package.json package-lock.json default_index.html .release/
 rsync -R -v dist/src/*.js .release/
 rsync -R -v dist/src/**/*.js .release/
 cp -R node_modules .release/node_modules
@@ -59,11 +59,12 @@ mkdir -p dist/src
 
 mv .release/action.yml .
 mv .release/action-types.yml .
+mv .release/default_index.html .
 mv .release/dist/src/ ./dist/
 mv .release/*.json .
 mv .release/node_modules .
 
-git add action.yml action-types.yml ./dist/src/*.js ./dist/src/comment/*.js package.json package-lock.json node_modules
+git add action.yml action-types.yml default_index.html ./dist/src/*.js ./dist/src/comment/*.js package.json package-lock.json node_modules
 set +x
 
 echo "Done. Please check 'git diff --cached' to verify changes. If ok, add version tag and push it to remote"
