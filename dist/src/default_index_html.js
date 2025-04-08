@@ -21,5 +21,5 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_INDEX_HTML = void 0;
 const fs = __importStar(require("fs"));
-exports.DEFAULT_INDEX_HTML = fs.readFileSync('./default_index.html', 'utf-8');
+exports.DEFAULT_INDEX_HTML = fs.readFileSync(__dirname + '/default_index.html', 'utf-8');
 //# sourceMappingURL=default_index_html.js.map
