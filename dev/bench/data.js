@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1744034837516,
+  "lastUpdate": 1744099793958,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -1377,6 +1377,40 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/8/commits/3729c467456fa239fdb3866d98bc8d32558fd3a5"
         },
         "date": 1744034837090,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "bench_fib_10",
+            "value": 135,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 24"
+          },
+          {
+            "name": "bench_fib_20",
+            "value": 18149,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "6aa10c0bab85a8cd1dfa43bc29c68c00e4613948",
+          "message": "Add documentation for new metadata format",
+          "timestamp": "2025-04-07T14:12:46Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/13/commits/6aa10c0bab85a8cd1dfa43bc29c68c00e4613948"
+        },
+        "date": 1744099793071,
         "bigger_is_better": false,
         "benches": [
           {
