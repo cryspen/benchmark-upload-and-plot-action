@@ -30,6 +30,25 @@ context) properties. Like this:
 ]
 ```
 
+Additional metadata can be provided in each JSON object, in order to be able to create plots broken down by other metadata fields. The following additional fields are currently supported:
+
+```json
+[
+    {
+        "name": "Decapsulation",
+        "unit": "ns/iter",
+        "value": 44601,
+        "range": "± 329",
+        "extra": "",
+        "platform": "portable",
+        "api": "unpacked",
+        "keySize": 1024,
+        "category": "ML-KEM",
+        "os": "windows-latest_64"
+    }
+]
+```
+
 ## How to use
 
 This action takes a file that contains benchmark output. And it outputs the results to GitHub Pages
