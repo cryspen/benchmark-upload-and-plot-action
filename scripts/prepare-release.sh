@@ -44,7 +44,7 @@ npm prune --production
 rm -rf .release
 mkdir -p .release
 
-cp action.yml action-types.yml package.json package-lock.json default_index.html .release/
+cp action.yml action-types.yml package.json package-lock.json src/default_index.html .release/
 rsync -R -v dist/src/*.js .release/
 rsync -R -v dist/src/**/*.js .release/
 cp -R node_modules .release/node_modules
