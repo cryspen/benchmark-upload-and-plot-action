@@ -6,7 +6,7 @@
 - `input-data-path` (required): a path to a file containing the standardized input data
 - `data-out-path` (required): the path where the output of the action should be written
 
-Every entry in the JSON file you provide only needs to provide `name`, `unit`, `platform`,
+Every entry in the JSON file you provide only needs to provide `name`, `unit`, `os`,
 and `value`. You can also provide optional `range` (results' variance) and
 `extra` (any additional information that might be useful to your benchmark's
 context) properties. Like this:
@@ -16,16 +16,35 @@ context) properties. Like this:
     {
         "name": "My Custom Smaller Is Better Benchmark - CPU Load",
         "unit": "Percent",
-        "platform": "ubuntu-latest",
+        "os": "ubuntu-latest",
         "value": 50
     },
     {
         "name": "My Custom Smaller Is Better Benchmark - Memory Used",
         "unit": "Megabytes",
-        "platform": "ubuntu-latest",
+        "os": "ubuntu-latest",
         "value": 100,
         "range": "3",
         "extra": "Value for Tooltip: 25\nOptional Num #2: 100\nAnything Else!"
+    }
+]
+```
+
+Additional metadata can be provided in each JSON object, in order to be able to create plots broken down by other metadata fields. The following additional fields are currently supported:
+
+```json
+[
+    {
+        "name": "Decapsulation",
+        "unit": "ns/iter",
+        "value": 44601,
+        "range": "± 329",
+        "extra": "",
+        "platform": "portable",
+        "api": "unpacked",
+        "keySize": 1024,
+        "category": "ML-KEM",
+        "os": "windows-latest_64"
     }
 ]
 ```
