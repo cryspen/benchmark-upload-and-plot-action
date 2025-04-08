@@ -6,7 +6,7 @@
 - `input-data-path` (required): a path to a file containing the standardized input data
 - `data-out-path` (required): the path where the output of the action should be written
 
-Every entry in the JSON file you provide only needs to provide `name`, `unit`, `platform`,
+Every entry in the JSON file you provide only needs to provide `name`, `unit`, `os`,
 and `value`. You can also provide optional `range` (results' variance) and
 `extra` (any additional information that might be useful to your benchmark's
 context) properties. Like this:
@@ -16,13 +16,13 @@ context) properties. Like this:
     {
         "name": "My Custom Smaller Is Better Benchmark - CPU Load",
         "unit": "Percent",
-        "platform": "ubuntu-latest",
+        "os": "ubuntu-latest",
         "value": 50
     },
     {
         "name": "My Custom Smaller Is Better Benchmark - Memory Used",
         "unit": "Megabytes",
-        "platform": "ubuntu-latest",
+        "os": "ubuntu-latest",
         "value": 100,
         "range": "3",
         "extra": "Value for Tooltip: 25\nOptional Num #2: 100\nAnything Else!"
