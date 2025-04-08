@@ -29,6 +29,9 @@ jobs:
         run: |
           npm install
           npm run build
+      # TODO: this would ideally be done in the build step
+      - name: "copy default_index.html"
+        run: cp src/default_index.html dist/src/default_index.html
       - uses: ./ # local action in repo
         with:
           name: 'Test second action'
