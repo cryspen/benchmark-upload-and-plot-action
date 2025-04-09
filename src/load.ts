@@ -4,12 +4,18 @@ import * as github from '@actions/github';
 import { Config } from './config';
 
 export interface BenchmarkResult {
-    name: string;
     value: number;
     range?: string;
-    platform: string;
     unit: string;
     extra?: string;
+    os: string;
+
+    // from NameMetadata
+    category?: string;
+    keySize?: number;
+    name: string;
+    platform?: string;
+    api?: string;
 }
 
 interface GitHubUser {
@@ -122,8 +128,9 @@ async function getCommit(githubToken?: string, ref?: string): Promise<Commit> {
 function loadBenchmarkResult(output: string): BenchmarkResult[] {
     try {
         const json: BenchmarkResult[] = JSON.parse(output);
-        return json.map(({ name, value, unit, platform, range, extra }) => {
-            return { name, value, unit, platform, range, extra };
+        // TODO: don't require all fields?
+        return json.map(({ name, value, unit, os, range, extra, category, keySize, platform, api }) => {
+            return { name, value, unit, os, range, extra, category, keySize, platform, api };
         });
     } catch (err: any) {
         throw new Error(

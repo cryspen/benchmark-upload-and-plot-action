@@ -64,6 +64,9 @@ describe('loadResult()', function () {
         {
             file: 'customSmallerIsBetter_output.json',
         },
+        {
+            file: 'fullMetadata_output.json',
+        },
     ];
 
     it.each(normalCases)(`extracts benchmark output from $file`, async function (test) {
