@@ -59,7 +59,7 @@ function getCommitFromPullRequestPayload(pr: PullRequest): Commit {
         username,
     };
 
-    console.log('using commit from pull request payload');
+    console.log('Using commit from pull request payload');
     return {
         author: user,
         committer: user,
@@ -86,7 +86,7 @@ async function getCommitFromGitHubAPIRequest(githubToken: string, ref?: string):
 
     const { commit } = data;
 
-    console.log('using commit from GitHub API request');
+    console.log('Using commit from GitHub API request');
     return {
         author: {
             name: commit.author?.name,
@@ -107,7 +107,7 @@ async function getCommitFromGitHubAPIRequest(githubToken: string, ref?: string):
 
 async function getCommit(githubToken?: string, ref?: string): Promise<Commit> {
     if (github.context.payload.head_commit) {
-        console.log('using github.context.payload.head_commit');
+        console.log('Using commit from github.context.payload.head_commit');
         return github.context.payload.head_commit;
     }
 
