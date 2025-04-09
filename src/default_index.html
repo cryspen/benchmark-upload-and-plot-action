@@ -197,7 +197,8 @@
                             console.log(`No datasets found with os "${os} and keySize ${keySize}"`);
                             return;
                         }
-                        // get the unit from the first item (all are same)
+                        // get the unit from the first item (all are same, since this field is part of the key in `collectBenchesPerTestCase()`)
+                        // this is possible because there is at least one data point
                         const unit = filtered[0].unit;
 
                         // update layout
