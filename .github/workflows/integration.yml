@@ -36,3 +36,56 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           gh-pages-branch: gh-pages-test
+
+jobs:
+  example-workflow-strategy:
+    strategy:
+      fail-fast: true
+      matrix:
+        bits: [32, 64]
+        os:
+          - macos-13
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+        exclude:
+          # There's no such thing as 32-bit macOS
+          - bits: 32
+            os: "macos-latest"
+          - bits: 32
+            os: "macos-13"
+
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # Checkout the current repo to get test data
+      - uses: actions/checkout@v4
+        with:
+          repository: cryspen/benchmark-data-extract-transform
+          path: first-action
+          ref: dev
+      - uses: cryspen/benchmark-data-extract-transform@v1
+        with:
+          tool: 'cargo'
+          os: 'ubuntu-latest'
+          output-file-path: ./first-action/test/data/extract/cargo_output.txt
+          data-out-path: /home/runner/work/output.json
+
+
+      # Part 2: benchmark-upload-and-plot-action
+      # prepare the local action in current branch for testing
+      - uses: actions/checkout@v4
+      - name: "build"
+        run: |
+          npm install
+          npm run build
+      - uses: ./ # local action in repo
+        with:
+          name: 'Test second action'
+          input-data-path: /home/runner/work/output.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          gh-pages-branch: gh-pages-test
