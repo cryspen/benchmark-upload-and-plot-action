@@ -50,6 +50,7 @@ export interface Benchmark {
 }
 
 function getCommitFromPullRequestPayload(pr: PullRequest): Commit {
+    console.log('Getting commit from pull request payload...');
     // On pull_request hook, head_commit is not available
     const id: string = pr.head.sha;
     const username: string = pr.head.user.login;
@@ -70,6 +71,7 @@ function getCommitFromPullRequestPayload(pr: PullRequest): Commit {
 }
 
 async function getCommitFromGitHubAPIRequest(githubToken: string, ref?: string): Promise<Commit> {
+    console.log('Getting commit from GitHub API request...');
     const octocat = github.getOctokit(githubToken);
 
     const { status, data } = await octocat.rest.repos.getCommit({
