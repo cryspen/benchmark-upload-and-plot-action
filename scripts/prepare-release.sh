@@ -46,7 +46,7 @@ mkdir -p .release
 
 cp action.yml action-types.yml package.json package-lock.json .release/
 rsync -R -v dist/src/*.js .release/
-cp src/default_index.html .release/dist/src/
+cp dist/src/default_index.html .release/dist/src/
 rsync -R -v dist/src/**/*.js .release/
 cp -R node_modules .release/node_modules
 
