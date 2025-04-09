@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1744191236597,
+  "lastUpdate": 1744192380806,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -1615,6 +1615,40 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/16/commits/33c9e3fdb4999d4809b0da1e2ee50c62bd93567f"
         },
         "date": 1744191236277,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "bench_fib_10",
+            "value": 135,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 24"
+          },
+          {
+            "name": "bench_fib_20",
+            "value": 18149,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "79b892da98bff375086618705801c8d523665170",
+          "message": "Add labels to x and y axes",
+          "timestamp": "2025-04-09T09:52:24Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/16/commits/79b892da98bff375086618705801c8d523665170"
+        },
+        "date": 1744192380393,
         "bigger_is_better": false,
         "benches": [
           {
