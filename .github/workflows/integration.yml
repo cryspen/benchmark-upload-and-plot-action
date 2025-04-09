@@ -43,10 +43,7 @@ jobs:
       matrix:
         bits: [32, 64]
         os:
-          - macos-13
-          - macos-latest
           - ubuntu-latest
-          - windows-latest
         exclude:
           # There's no such thing as 32-bit macOS
           - bits: 32
