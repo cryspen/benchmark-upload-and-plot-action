@@ -15,14 +15,14 @@ async function main() {
     console.log('github-action-benchmark was run successfully!', '\nData:', bench);
 }
 
-function stackTrace(e: Error): string {
-    // get the stack trace without the error message
-    const stackTrace = String(e.stack).split('\n').slice(1).join('\n');
-
-    return `Stack trace:\n${stackTrace}`;
-}
-
 main().catch((e) => {
+    function stackTrace(e: Error): string {
+        const prefix = 'Error: ' + e.message;
+        // get the stack trace without the error message
+        const stackTrace = String(e.stack).replace(prefix, '');
+
+        return 'Stack trace:' + stackTrace;
+    }
     console.log(stackTrace(e));
 
     core.setFailed(e.message);
