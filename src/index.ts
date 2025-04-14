@@ -19,9 +19,9 @@ main().catch((e) => {
     function stackTrace(e: Error): string {
         const prefix = 'Error: ' + e.message;
         // get the stack trace without the error message
-        const stackTrace = String(e.stack).replace(prefix, '');
+        const stackTrace = String(e.stack).replace(prefix, 'Stack trace:');
 
-        return 'Stack trace:' + stackTrace;
+        return stackTrace;
     }
     console.log(stackTrace(e));
 
