@@ -32,7 +32,7 @@ interface Commit {
     message: string;
     timestamp?: string;
     tree_id?: unknown; // Unused
-    url?: string;
+    url?: unknown
 }
 
 interface PullRequest {
