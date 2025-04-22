@@ -32,7 +32,7 @@ interface Commit {
     message: string;
     timestamp?: string;
     tree_id?: unknown; // Unused
-    url?: unknown
+    url: string;
 }
 
 interface PullRequest {
@@ -111,7 +111,13 @@ async function getCommit(githubToken?: string, ref?: string): Promise<Commit> {
 
     if (mergeGroup) {
         if (mergeGroup.head_commit) {
-            return mergeGroup.head_commit;
+            const commit = mergeGroup.head_commit;
+            // XXX: only supports github.com for now,
+            // since this information is not currently available
+            // in the merge group webhook payload.
+            commit.url = `https://github.com/${mergeGroup.organization}/${mergeGroup.repository}/commits/${commit.id}`;
+
+	    return commit;
         }
     }
 
