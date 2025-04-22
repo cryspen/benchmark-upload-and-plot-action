@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1745334491704,
+  "lastUpdate": 1745336610854,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -2277,6 +2277,40 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/18/commits/169c7e26af55f0cd2f70c21a9dad5704f814ad46"
         },
         "date": 1745334490770,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "bench_fib_10",
+            "value": 135,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 24"
+          },
+          {
+            "name": "bench_fib_20",
+            "value": 18149,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "321078cf2b7b5f8f5de24483cad1d79b790bd7e4",
+          "message": "FIX: make url field optional in `Commit`",
+          "timestamp": "2025-04-22T15:19:38Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/19/commits/321078cf2b7b5f8f5de24483cad1d79b790bd7e4"
+        },
+        "date": 1745336610500,
         "bigger_is_better": false,
         "benches": [
           {
