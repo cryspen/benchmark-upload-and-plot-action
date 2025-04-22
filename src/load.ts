@@ -106,6 +106,12 @@ async function getCommit(githubToken?: string, ref?: string): Promise<Commit> {
         return github.context.payload.head_commit;
     }
 
+    // also try with merge group
+    if (github.context.payload.merge_group.head_commit) {
+	return github.context.payload.merge_group.head_commit;
+    }
+
+
     const pr = github.context.payload.pull_request;
 
     if (pr) {
