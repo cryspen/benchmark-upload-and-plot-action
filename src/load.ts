@@ -24,6 +24,16 @@ interface GitHubUser {
     username?: string;
 }
 
+interface MergeGroupHeadCommit {
+    tree_id?: unknown; // unused
+    author: GitHubUser;
+    committer: GitHubUser;
+    distinct?: unknown; // Unused
+    id: string;
+    message: string;
+    timestamp: string;
+}
+
 interface Commit {
     author: GitHubUser;
     committer: GitHubUser;
@@ -68,6 +78,30 @@ function getCommitFromPullRequestPayload(pr: PullRequest): Commit {
     };
 }
 
+async function getCommitFromMergeGroupHeadCommit(headCommit: MergeGroupHeadCommit, repoUrl?: string): Promise<Commit> {
+    const id: string = headCommit.id;
+
+    const urlPrefix = repoUrl ? repoUrl : '';
+
+    const url = `${urlPrefix}/commits/${id}`;
+
+    // XXX: Username is not available. Use name as fallback
+    return {
+        author: {
+            name: headCommit.author.name,
+            username: headCommit.author.name,
+        },
+        committer: {
+            name: headCommit.committer.name,
+            username: headCommit.committer.name,
+        },
+        id,
+        message: headCommit.message,
+        timestamp: headCommit.timestamp,
+        url,
+    };
+}
+
 async function getCommitFromGitHubAPIRequest(githubToken: string, ref?: string): Promise<Commit> {
     const octocat = github.getOctokit(githubToken);
 
@@ -101,7 +135,7 @@ async function getCommitFromGitHubAPIRequest(githubToken: string, ref?: string):
     };
 }
 
-async function getCommit(githubToken?: string, ref?: string): Promise<Commit> {
+async function getCommit(repoUrl?: string, githubToken?: string, ref?: string): Promise<Commit> {
     if (github.context.payload.head_commit) {
         return github.context.payload.head_commit;
     }
@@ -111,13 +145,7 @@ async function getCommit(githubToken?: string, ref?: string): Promise<Commit> {
 
     if (mergeGroup) {
         if (mergeGroup.head_commit) {
-            const commit = mergeGroup.head_commit;
-            // XXX: only supports github.com for now,
-            // since this information is not currently available
-            // in the merge group webhook payload.
-            commit.url = `https://github.com/${mergeGroup.organization}/${mergeGroup.repository}/commits/${commit.id}`;
-
-	    return commit;
+            return getCommitFromMergeGroupHeadCommit(mergeGroup.head_commit, repoUrl);
         }
     }
 
@@ -156,14 +184,14 @@ function loadBenchmarkResult(output: string): BenchmarkResult[] {
 
 export async function loadResult(config: Config): Promise<Benchmark> {
     const output = await fs.readFile(config.inputDataPath, 'utf8');
-    const { githubToken, ref } = config;
+    const { githubToken, ref, ghRepository } = config;
     const benches: BenchmarkResult[] = loadBenchmarkResult(output);
 
     if (benches.length === 0) {
         throw new Error(`No benchmark result was found in ${config.inputDataPath}. Benchmark output was '${output}'`);
     }
 
-    const commit = await getCommit(githubToken, ref);
+    const commit = await getCommit(ghRepository, githubToken, ref);
 
     const bigger_is_better = config.biggerIsBetter;
 
