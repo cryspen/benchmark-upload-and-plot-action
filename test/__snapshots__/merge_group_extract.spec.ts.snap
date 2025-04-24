@@ -1,0 +1,160 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`loadResult() extracts benchmark output from customBiggerIsBetter_output.json 1`] = `
+{
+  "benches": [
+    {
+      "api": undefined,
+      "category": undefined,
+      "extra": undefined,
+      "keySize": undefined,
+      "name": "My Custom Bigger Is Better Benchmark - Throughput",
+      "os": undefined,
+      "platform": undefined,
+      "range": undefined,
+      "unit": "req/s",
+      "value": 70,
+    },
+    {
+      "api": undefined,
+      "category": undefined,
+      "extra": "Optional Value #1: 25
+Helpful Num #2: 100
+Anything Else!",
+      "keySize": undefined,
+      "name": "My Custom Bigger Is Better Benchmark - Free Memory",
+      "os": undefined,
+      "platform": undefined,
+      "range": "3",
+      "unit": "Megabytes",
+      "value": 150,
+    },
+  ],
+  "bigger_is_better": undefined,
+  "commit": {
+    "author": {
+      "name": "author",
+      "username": "author",
+    },
+    "committer": {
+      "name": "committer",
+      "username": "committer",
+    },
+    "id": "abcdef0123456789",
+    "message": "message",
+    "timestamp": "timestamp",
+    "url": "https://github.com/dummy/repo/commits/abcdef0123456789",
+  },
+  "date": 1712131503296,
+}
+`;
+
+exports[`loadResult() extracts benchmark output from customSmallerIsBetter_output.json 1`] = `
+{
+  "benches": [
+    {
+      "api": undefined,
+      "category": undefined,
+      "extra": "My Optional Information for the tooltip",
+      "keySize": undefined,
+      "name": "My Custom Smaller Is Better Benchmark - CPU Load",
+      "os": undefined,
+      "platform": undefined,
+      "range": "5%",
+      "unit": "Percent",
+      "value": 50,
+    },
+    {
+      "api": undefined,
+      "category": undefined,
+      "extra": undefined,
+      "keySize": undefined,
+      "name": "My Custom Smaller Is Better Benchmark - Memory Used",
+      "os": undefined,
+      "platform": undefined,
+      "range": undefined,
+      "unit": "Megabytes",
+      "value": 100,
+    },
+  ],
+  "bigger_is_better": undefined,
+  "commit": {
+    "author": {
+      "name": "author",
+      "username": "author",
+    },
+    "committer": {
+      "name": "committer",
+      "username": "committer",
+    },
+    "id": "abcdef0123456789",
+    "message": "message",
+    "timestamp": "timestamp",
+    "url": "https://github.com/dummy/repo/commits/abcdef0123456789",
+  },
+  "date": 1712131503296,
+}
+`;
+
+exports[`loadResult() extracts benchmark output from fullMetadata_output.json 1`] = `
+{
+  "benches": [
+    {
+      "api": undefined,
+      "category": undefined,
+      "extra": undefined,
+      "keySize": undefined,
+      "name": "My Custom Bigger Is Better Benchmark - Throughput",
+      "os": undefined,
+      "platform": undefined,
+      "range": undefined,
+      "unit": "req/s",
+      "value": 70,
+    },
+    {
+      "api": undefined,
+      "category": undefined,
+      "extra": "Optional Value #1: 25
+Helpful Num #2: 100
+Anything Else!",
+      "keySize": undefined,
+      "name": "My Custom Bigger Is Better Benchmark - Free Memory",
+      "os": undefined,
+      "platform": undefined,
+      "range": "3",
+      "unit": "Megabytes",
+      "value": 150,
+    },
+    {
+      "api": "myApi",
+      "category": "myCategory",
+      "extra": "Optional Value #1: 25
+Helpful Num #2: 100
+Anything Else!",
+      "keySize": 512,
+      "name": "My Custom Bigger Is Better Benchmark - Free Memory",
+      "os": "ubuntu-latest",
+      "platform": "avx2",
+      "range": "2",
+      "unit": "Megabytes",
+      "value": 125,
+    },
+  ],
+  "bigger_is_better": undefined,
+  "commit": {
+    "author": {
+      "name": "author",
+      "username": "author",
+    },
+    "committer": {
+      "name": "committer",
+      "username": "committer",
+    },
+    "id": "abcdef0123456789",
+    "message": "message",
+    "timestamp": "timestamp",
+    "url": "https://github.com/dummy/repo/commits/abcdef0123456789",
+  },
+  "date": 1712131503296,
+}
+`;
