@@ -24,6 +24,22 @@ interface GitHubUser {
     username?: string;
 }
 
+interface MergeGroupHeadCommit {
+    tree_id?: unknown; // unused
+    author?: GitHubUser;
+    committer?: GitHubUser;
+    distinct?: unknown; // Unused
+    id: string;
+    message: string;
+    timestamp: string;
+}
+
+interface MergeGroup {
+    organization?: string;
+    repository?: string;
+    head_commit: MergeGroupHeadCommit;
+}
+
 interface Commit {
     author: GitHubUser;
     committer: GitHubUser;
@@ -65,6 +81,36 @@ function getCommitFromPullRequestPayload(pr: PullRequest): Commit {
         message: pr.title,
         timestamp: pr.head.repo.updated_at,
         url: `${pr.html_url}/commits/${id}`,
+    };
+}
+
+async function getCommitFromMergeGroup(mergeGroup: MergeGroup): Promise<Commit> {
+    const headCommit = mergeGroup.head_commit;
+
+    const id: string = headCommit.id;
+
+    // XXX: assume the repository is on GitHub
+    const urlPrefix =
+        mergeGroup.organization && mergeGroup.repository
+            ? `https://github.com/${mergeGroup.organization}/${mergeGroup.repository}`
+            : '';
+
+    const url = `${urlPrefix}/commits/${id}`;
+
+    // XXX: Username is not available. Use name as fallback
+    return {
+        author: {
+            name: headCommit.author?.name,
+            username: headCommit.author?.name,
+        },
+        committer: {
+            name: headCommit.committer?.name,
+            username: headCommit.committer?.name,
+        },
+        id,
+        message: headCommit.message,
+        timestamp: headCommit.timestamp,
+        url,
     };
 }
 
@@ -111,13 +157,7 @@ async function getCommit(githubToken?: string, ref?: string): Promise<Commit> {
 
     if (mergeGroup) {
         if (mergeGroup.head_commit) {
-            const commit = mergeGroup.head_commit;
-            // XXX: only supports github.com for now,
-            // since this information is not currently available
-            // in the merge group webhook payload.
-            commit.url = `https://github.com/${mergeGroup.organization}/${mergeGroup.repository}/commits/${commit.id}`;
-
-	    return commit;
+            return getCommitFromMergeGroup(mergeGroup);
         }
     }
 
