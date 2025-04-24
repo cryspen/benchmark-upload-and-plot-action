@@ -26,8 +26,8 @@ interface GitHubUser {
 
 interface MergeGroupHeadCommit {
     tree_id?: unknown; // unused
-    author: GitHubUser;
-    committer: GitHubUser;
+    author?: GitHubUser;
+    committer?: GitHubUser;
     distinct?: unknown; // Unused
     id: string;
     message: string;
@@ -100,12 +100,12 @@ async function getCommitFromMergeGroup(mergeGroup: MergeGroup): Promise<Commit> 
     // XXX: Username is not available. Use name as fallback
     return {
         author: {
-            name: headCommit.author.name,
-            username: headCommit.author.name,
+            name: headCommit.author?.name,
+            username: headCommit.author?.name,
         },
         committer: {
-            name: headCommit.committer.name,
-            username: headCommit.committer.name,
+            name: headCommit.committer?.name,
+            username: headCommit.committer?.name,
         },
         id,
         message: headCommit.message,
