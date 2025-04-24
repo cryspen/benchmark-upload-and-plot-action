@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1745336610854,
+  "lastUpdate": 1745489093662,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -2311,6 +2311,40 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/19/commits/321078cf2b7b5f8f5de24483cad1d79b790bd7e4"
         },
         "date": 1745336610500,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "bench_fib_10",
+            "value": 135,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 24"
+          },
+          {
+            "name": "bench_fib_20",
+            "value": 18149,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "ed786c3fa98ff6190f37af6f7b5f7d824d8584d7",
+          "message": "Add function and unit tests for extracting merge group info from webhook payload",
+          "timestamp": "2025-04-23T06:38:42Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/20/commits/ed786c3fa98ff6190f37af6f7b5f7d824d8584d7"
+        },
+        "date": 1745489093351,
         "bigger_is_better": false,
         "benches": [
           {
