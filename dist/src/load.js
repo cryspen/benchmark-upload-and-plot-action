@@ -40,6 +40,31 @@ function getCommitFromPullRequestPayload(pr) {
         url: `${pr.html_url}/commits/${id}`,
     };
 }
+async function getCommitFromMergeGroup(mergeGroup) {
+    var _a, _b, _c, _d;
+    const headCommit = mergeGroup.head_commit;
+    const id = headCommit.id;
+    // XXX: assume the repository is on GitHub
+    const urlPrefix = mergeGroup.organization && mergeGroup.repository
+        ? `https://github.com/${mergeGroup.organization}/${mergeGroup.repository}`
+        : '';
+    const url = `${urlPrefix}/commits/${id}`;
+    // XXX: Username is not available. Use name as fallback
+    return {
+        author: {
+            name: (_a = headCommit.author) === null || _a === void 0 ? void 0 : _a.name,
+            username: (_b = headCommit.author) === null || _b === void 0 ? void 0 : _b.name,
+        },
+        committer: {
+            name: (_c = headCommit.committer) === null || _c === void 0 ? void 0 : _c.name,
+            username: (_d = headCommit.committer) === null || _d === void 0 ? void 0 : _d.name,
+        },
+        id,
+        message: headCommit.message,
+        timestamp: headCommit.timestamp,
+        url,
+    };
+}
 async function getCommitFromGitHubAPIRequest(githubToken, ref) {
     var _a, _b, _c, _d, _e, _f, _g;
     const octocat = github.getOctokit(githubToken);
@@ -72,6 +97,13 @@ async function getCommitFromGitHubAPIRequest(githubToken, ref) {
 async function getCommit(githubToken, ref) {
     if (github.context.payload.head_commit) {
         return github.context.payload.head_commit;
+    }
+    // also try with merge group
+    const mergeGroup = github.context.payload.merge_group;
+    if (mergeGroup) {
+        if (mergeGroup.head_commit) {
+            return getCommitFromMergeGroup(mergeGroup);
+        }
     }
     const pr = github.context.payload.pull_request;
     if (pr) {
