@@ -34,6 +34,12 @@ interface MergeGroupHeadCommit {
     timestamp: string;
 }
 
+interface MergeGroup {
+    organization?: string;
+    repository?: string;
+    head_commit: MergeGroupHeadCommit;
+}
+
 interface Commit {
     author: GitHubUser;
     committer: GitHubUser;
@@ -78,10 +84,16 @@ function getCommitFromPullRequestPayload(pr: PullRequest): Commit {
     };
 }
 
-async function getCommitFromMergeGroupHeadCommit(headCommit: MergeGroupHeadCommit, repoUrl?: string): Promise<Commit> {
+async function getCommitFromMergeGroup(mergeGroup: MergeGroup): Promise<Commit> {
+    const headCommit = mergeGroup.head_commit;
+
     const id: string = headCommit.id;
 
-    const urlPrefix = repoUrl ? repoUrl : '';
+    // XXX: assume the repository is on GitHub
+    const urlPrefix =
+        mergeGroup.organization && mergeGroup.repository
+            ? `https://github.com/${mergeGroup.organization}/${mergeGroup.repository}`
+            : '';
 
     const url = `${urlPrefix}/commits/${id}`;
 
@@ -135,7 +147,7 @@ async function getCommitFromGitHubAPIRequest(githubToken: string, ref?: string):
     };
 }
 
-async function getCommit(repoUrl?: string, githubToken?: string, ref?: string): Promise<Commit> {
+async function getCommit(githubToken?: string, ref?: string): Promise<Commit> {
     if (github.context.payload.head_commit) {
         return github.context.payload.head_commit;
     }
@@ -145,7 +157,7 @@ async function getCommit(repoUrl?: string, githubToken?: string, ref?: string): 
 
     if (mergeGroup) {
         if (mergeGroup.head_commit) {
-            return getCommitFromMergeGroupHeadCommit(mergeGroup.head_commit, repoUrl);
+            return getCommitFromMergeGroup(mergeGroup);
         }
     }
 
@@ -184,14 +196,14 @@ function loadBenchmarkResult(output: string): BenchmarkResult[] {
 
 export async function loadResult(config: Config): Promise<Benchmark> {
     const output = await fs.readFile(config.inputDataPath, 'utf8');
-    const { githubToken, ref, ghRepository } = config;
+    const { githubToken, ref } = config;
     const benches: BenchmarkResult[] = loadBenchmarkResult(output);
 
     if (benches.length === 0) {
         throw new Error(`No benchmark result was found in ${config.inputDataPath}. Benchmark output was '${output}'`);
     }
 
-    const commit = await getCommit(ghRepository, githubToken, ref);
+    const commit = await getCommit(githubToken, ref);
 
     const bigger_is_better = config.biggerIsBetter;
 

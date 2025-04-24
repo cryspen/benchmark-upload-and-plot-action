@@ -6,6 +6,8 @@ import { loadResult } from '../src/load';
 // merge_group payload
 const dummyWebhookPayload = {
     merge_group: {
+        organization: 'dummy',
+        repository: 'repo',
         head_commit: {
             id: 'abcdef0123456789',
             tree_id: 'tree_id',
@@ -77,7 +79,6 @@ describe('loadResult()', function () {
         const inputDataPath = path.join(__dirname, 'data', 'extract', test.file);
         const config = {
             inputDataPath,
-            ghRepository: 'https://github.com/dummy/repo',
         } as Config;
         const bench = await loadResult(config);
 
@@ -91,7 +92,6 @@ describe('loadResult()', function () {
         const inputDataPath = path.join(__dirname, 'data', 'extract', 'customBiggerIsBetter_output.json');
         const config = {
             inputDataPath,
-            ghRepository: 'https://github.com/dummy/repo',
         } as Config;
         const { commit } = await loadResult(config);
         const expectedAuthor = {
@@ -115,7 +115,6 @@ describe('loadResult()', function () {
         const inputDataPath = path.join(__dirname, 'data', 'extract', 'customBiggerIsBetter_output.json');
         const config = {
             inputDataPath,
-            ghRepository: 'https://github.com/dummy/repo',
         } as Config;
         await A.rejects(loadResult(config), /^Error: No commit information is found in payload/);
     });
