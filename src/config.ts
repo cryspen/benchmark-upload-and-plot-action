@@ -192,7 +192,7 @@ function validateGroupBy(groupBy: string | undefined): string[] {
         return ['os'];
     }
     // TODO: more validation
-    return JSON.parse(groupBy.replaceAll("'", "\""));
+    return JSON.parse(groupBy.replaceAll("'", '"'));
 }
 
 function validateAlertThreshold(alertThreshold: number | null, failThreshold: number | null): asserts alertThreshold {
