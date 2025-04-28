@@ -171,14 +171,9 @@
                 // input: separated-out datasets
                 function renderAllCharts(dataSets) {
                     function createPlotsGroupBy(parent, groupBy, datasets, layout) {
-                        // TODO: need a plot for every non-null/NaN combo of values
-                        // TODO: filter out invalid keys
-                        // TODO: plot title
-
                         // group by (key1, key2, ...)
                         createTitle(parent, `Compare platform for ${groupBy}`);
                         const groupedData = Object.groupBy(datasets, (d) => {
-                            // TODO:
                             const filter = {};
                             for (let key of groupBy) {
                                 filter[key] = d.metadata[key];
@@ -276,7 +271,6 @@
                             .filter((s) => s.includes('GMT'))
                             .map((s) => `(${s})`);
 
-                        // TODO: more config
                         const layout = {
                             height: 600,
                             width: 1200,
