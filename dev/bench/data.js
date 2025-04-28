@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1745841863946,
+  "lastUpdate": 1745842330361,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -2532,10 +2532,45 @@ window.BENCHMARK_DATA = {
             "range": "± 755"
           }
         ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "b5a697d75f0af9b9d954d5ec3083dbd7aaca1e01",
+          "message": "Generic plotting",
+          "timestamp": "2025-04-24T12:29:58Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/21/commits/b5a697d75f0af9b9d954d5ec3083dbd7aaca1e01"
+        },
+        "date": 1745842329846,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "bench_fib_10",
+            "value": 135,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 24"
+          },
+          {
+            "name": "bench_fib_20",
+            "value": 18149,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 755"
+          }
+        ]
       }
     ]
   },
   "groupBy": [
-    "os"
+    "os",
+    "keySize"
   ]
 }
