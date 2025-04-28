@@ -258,6 +258,8 @@
                     const osList = [...new Set(datasets.map((d) => d.os))];
                     const keySizes = [...new Set(datasets.map((d) => d.keySize))];
 
+                    const _groupBy = window.BENCHMARK_DATA.groupBy;
+                    // TODO: use groupBy for splitting out plots
                     // plots by OS/Key Size
                     createTitle(setElem, 'Compare platform for OS/key size');
                     for (let os of osList) {
