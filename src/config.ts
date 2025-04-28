@@ -5,6 +5,7 @@ import * as path from 'path';
 
 export interface Config {
     name: string;
+    groupBy: string[];
     biggerIsBetter: boolean;
     inputDataPath: string; // path to out data
     ghPagesBranch: string;
@@ -185,6 +186,15 @@ function validateMaxItemsInChart(max: number | null) {
     }
 }
 
+function validateGroupBy(groupBy: string | undefined): string[] {
+    if (groupBy === undefined) {
+        // default
+        return ['os'];
+    }
+    // TODO: more validation
+    return groupBy.split(',');
+}
+
 function validateAlertThreshold(alertThreshold: number | null, failThreshold: number | null): asserts alertThreshold {
     if (alertThreshold === null) {
         throw new Error("'alert-threshold' input must not be empty");
@@ -197,6 +207,8 @@ function validateAlertThreshold(alertThreshold: number | null, failThreshold: nu
 }
 
 export async function configFromJobInput(): Promise<Config> {
+    const groupByString: string | undefined = core.getInput('group-by') || undefined;
+
     let inputDataPath: string = core.getInput('input-data-path');
     const biggerIsBetter = getBoolInput('bigger-is-better');
     const ghPagesBranch: string = core.getInput('gh-pages-branch');
@@ -218,6 +230,7 @@ export async function configFromJobInput(): Promise<Config> {
     const maxItemsInChart = getUintInput('max-items-in-chart');
     let failThreshold = getPercentageInput('fail-threshold');
 
+    const groupBy = validateGroupBy(groupByString);
     inputDataPath = await validateInputDataPath(inputDataPath);
     validateGhPagesBranch(ghPagesBranch);
     benchmarkDataDirPath = validateBenchmarkDataDirPath(benchmarkDataDirPath);
@@ -243,6 +256,7 @@ export async function configFromJobInput(): Promise<Config> {
     }
 
     return {
+        groupBy,
         name,
         biggerIsBetter,
         inputDataPath,

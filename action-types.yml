@@ -1,4 +1,6 @@
 inputs:
+  group-by:
+    type: string
   name:
     type: string
   input-data-path:

@@ -6,6 +6,10 @@ branding:
   color: 'blue'
 
 inputs:
+  group-by:
+    description: 'Groups for plots. This value must be a comma-separated list'
+    required: true
+    default: 'os'
   name:
     description: 'Name of the benchmark. This value must be identical among all benchmarks'
     required: true
