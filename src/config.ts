@@ -187,12 +187,22 @@ function validateMaxItemsInChart(max: number | null) {
 }
 
 function validateGroupBy(groupBy: string | undefined): string[] {
+    const defaultValue: string[] = ['os'];
     if (groupBy === undefined) {
-        // default
-        return ['os'];
+        return defaultValue;
     }
-    // TODO: more validation
-    return JSON.parse(groupBy.replaceAll("'", '"'));
+
+    let arr: string[];
+    try {
+        arr = JSON.parse(groupBy.replaceAll("'", '"'));
+    } catch (e) {
+        // default
+        return defaultValue;
+    }
+    if (!Array.isArray(arr)) {
+        return defaultValue;
+    }
+    return arr;
 }
 
 function validateAlertThreshold(alertThreshold: number | null, failThreshold: number | null): asserts alertThreshold {
