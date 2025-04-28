@@ -181,8 +181,7 @@
                             // TODO:
                             const filter = {};
                             for (let key of groupBy) {
-                                const value = d[key];
-                                filter[key] = value;
+                                filter[key] = d.metadata[key];
                             }
                             return JSON.stringify(filter);
                         });
@@ -190,27 +189,33 @@
                         let data = Object.entries(groupedData);
 
                         for (let [key, value] of data) {
+                            // skip empty key
+                            if (key === '{}') {
+                                continue;
+                            }
                             // unparse the groupBy keys
-                            let filter = JSON.parse(key);
+                            let group = JSON.parse(key);
                             const graphsElem = document.createElement('div');
                             graphsElem.className = 'benchmark-graphs';
                             parent.appendChild(graphsElem);
-                            chartByOsAndKeySize(graphsElem, filter.os, filter.keySize, datasets, layout);
+                            chartByGroup(graphsElem, group, datasets, layout);
                         }
                     }
-                    function chartByOsAndKeySize(parent, os, keySize, datasets, layout) {
+                    function chartByGroup(parent, group, datasets, layout) {
                         const filtered = Array.from(
                             datasets
-                                .filter(
-                                    (d) =>
-                                        d.os == os &&
-                                        d.keySize == keySize &&
-                                        d.name !== undefined &&
-                                        d.api !== undefined &&
-                                        d.platform !== undefined,
+                                .filter((d) =>
+                                    Object.keys(group).every(
+                                        (key) => d.metadata[key] === group[key] && d.metadata[key] !== undefined,
+                                    ),
                                 )
                                 .map((trace) => {
-                                    trace.name = `${trace.name} - ${trace.api} - ${trace.platform}`;
+                                    const name = Object.entries(trace.metadata)
+                                        .filter(([key, value]) => !Object.keys(group).includes(key) && key !== 'unit')
+                                        .map(([_k, v]) => v)
+                                        .filter((v) => v !== undefined)
+                                        .join(' ');
+                                    trace.name = name;
                                     // tooltip
                                     trace.text = trace.dataset.map(
                                         (d) =>
@@ -220,17 +225,20 @@
                                 }),
                         );
 
+                        const description = Object.entries(group)
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(', ');
                         // return if no datasets
                         if (filtered.length == 0) {
-                            console.log(`No datasets found with os "${os} and keySize ${keySize}"`);
+                            console.log(`No datasets found with ${description}`);
                             return;
                         }
                         // get the unit from the first item (all are same, since this field is part of the key in `collectBenchesPerTestCase()`)
                         // this is possible because there is at least one data point
-                        const unit = filtered[0].unit;
+                        const unit = filtered[0].metadata.unit;
 
                         // update layout
-                        layout.title = { text: `OS: ${os}, keySize: ${keySize}` };
+                        layout.title = { text: description };
                         layout.yaxis = { title: { text: `Value (${unit})` } };
 
                         // create plot
@@ -243,13 +251,15 @@
                                 let { name, api, keySize, category, os, platform, dataset, unit } = item;
 
                                 return {
-                                    category,
-                                    name,
-                                    api,
-                                    keySize,
-                                    os,
-                                    platform,
-                                    unit,
+                                    metadata: {
+                                        category,
+                                        name,
+                                        api,
+                                        keySize,
+                                        os,
+                                        platform,
+                                        unit,
+                                    },
                                     x: dataset.map((d) => new Date(d.commit.timestamp)),
                                     y: dataset.map((d) => d.bench.value),
                                     dataset,
