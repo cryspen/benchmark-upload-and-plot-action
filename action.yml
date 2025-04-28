@@ -7,9 +7,9 @@ branding:
 
 inputs:
   group-by:
-    description: 'Groups for plots. This value must be a comma-separated list'
+    description: 'Groups for plots. This value must be an array of strings'
     required: true
-    default: 'os'
+    default: '["os"]'
   name:
     description: 'Name of the benchmark. This value must be identical among all benchmarks'
     required: true
