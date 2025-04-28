@@ -172,7 +172,11 @@
                 function renderAllCharts(dataSets) {
                     function createPlotsGroupBy(parent, groupBy, datasets, layout) {
                         // group by (key1, key2, ...)
+
+                        // create title
                         createTitle(parent, `Compare platform for ${groupBy}`);
+
+                        // group datasets by the relevant keys
                         const groupedData = Object.groupBy(datasets, (d) => {
                             const filter = {};
                             for (let key of groupBy) {
@@ -181,8 +185,8 @@
                             return JSON.stringify(filter);
                         });
 
+                        // create  a chart for each group
                         let data = Object.entries(groupedData);
-
                         for (let [key, value] of data) {
                             // skip empty key
                             if (key === '{}') {
@@ -196,22 +200,37 @@
                             chartByGroup(graphsElem, group, datasets, layout);
                         }
                     }
+                    function dataItemBelongsToGroup(d, groupBy) {
+                        // returns true if for every key in the groupBy entry,
+                        // the data item's value for that key (e.g. `os`: `windows_64`)
+                        // matches the value for this group.
+                        return Object.keys(group).every(
+                            (key) => d.metadata[key] === group[key] && d.metadata[key] !== undefined,
+                        );
+                    }
+                    function getOtherMetadataEntries(d, groupBy) {
+                        // returns the metadata keys that are not already
+                        // taken into account by the filter
+                        // and are not the unit key
+                        return Object.entries(d.metadata).filter(
+                            ([key, value]) => !Object.keys(groupBy).includes(key) && key !== 'unit',
+                        );
+                    }
                     function chartByGroup(parent, group, datasets, layout) {
                         const filtered = Array.from(
                             datasets
-                                .filter((d) =>
-                                    Object.keys(group).every(
-                                        (key) => d.metadata[key] === group[key] && d.metadata[key] !== undefined,
-                                    ),
-                                )
+                                .filter((d) => dataItemBelongsToGroup(d, group))
                                 .map((trace) => {
-                                    const name = Object.entries(trace.metadata)
-                                        .filter(([key, value]) => !Object.keys(group).includes(key) && key !== 'unit')
+                                    // set the name in the legend
+                                    // construct the name using the other metadata keys
+                                    // that were not taken into account by the filter
+                                    const otherEntries = getOtherMetadataEntries(trace, groupBy);
+                                    trace.name = otherEntries
                                         .map(([_k, v]) => v)
                                         .filter((v) => v !== undefined)
                                         .join(' ');
-                                    trace.name = name;
-                                    // tooltip
+
+                                    // set the tooltip text
                                     trace.text = trace.dataset.map(
                                         (d) =>
                                             `<b>${trace.name}</b><br>value: ${d.bench.value} ${d.bench.unit} ${d.bench.range}<br>commit id: ${d.commit.id}<br>commit name: ${d.commit.message}<br>commit url: ${d.commit.url}`,
