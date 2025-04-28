@@ -293,7 +293,11 @@
 
                     const [datasets, layout] = buildPlotConfig(dataSets[0]);
 
-                    const groupBy = window.BENCHMARK_DATA.groupBy;
+                    let groupBy = window.BENCHMARK_DATA.groupBy;
+                    if (!groupBy || typeof groupBy !== 'object') {
+                        console.error('No or invalid groupBy provided: defaulting to `[os]`');
+                        groupBy = ['os'];
+                    }
                     createPlotsGroupBy(setElem, groupBy, datasets, layout);
                 }
 
