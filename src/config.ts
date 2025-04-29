@@ -191,7 +191,13 @@ function validateGroupBy(groupBy?: string): string[] {
         return ['os'];
     }
 
-    return groupBy.split(',');
+    const keys = groupBy.split(',');
+
+    if (keys.length === 0) {
+        return ['os'];
+    }
+
+    return keys;
 }
 
 function validateAlertThreshold(alertThreshold: number | null, failThreshold: number | null): asserts alertThreshold {
