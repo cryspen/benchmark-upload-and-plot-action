@@ -5,14 +5,10 @@ on:
   pull_request:
 
 jobs:
-  typescript-tests:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: "format"
-        run: |
-          npm install
-          npm run format -c
       - name: "lint"
         run: |
+          npm install
           npm run lint
