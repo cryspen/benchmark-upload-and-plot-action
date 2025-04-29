@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes" />
+        <style>
+            html {
+                font-family: BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+                    'Fira Sans', 'Droid Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                -webkit-font-smoothing: antialiased;
+                background-color: #fff;
+                font-size: 16px;
+            }
+            body {
+                color: #4a4a4a;
+                margin: 8px;
+                font-size: 1em;
+                font-weight: 400;
+            }
+            header {
+                margin-bottom: 8px;
+                display: flex;
+                flex-direction: column;
+            }
+            main {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+            a {
+                color: #3273dc;
+                cursor: pointer;
+                text-decoration: none;
+            }
+            a:hover {
+                color: #000;
+            }
+            button {
+                color: #fff;
+                background-color: #3298dc;
+                border-color: transparent;
+                cursor: pointer;
+                text-align: center;
+            }
+            button:hover {
+                background-color: #2793da;
+                flex: none;
+            }
+            .spacer {
+                flex: auto;
+            }
+            .small {
+                font-size: 0.75rem;
+            }
+            footer {
+                margin-top: 16px;
+                display: flex;
+                align-items: center;
+            }
+            .header-label {
+                margin-right: 4px;
+            }
+            .benchmark-set {
+                margin: 8px 0;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+            .benchmark-title {
+                font-size: 3rem;
+                font-weight: 600;
+                word-break: break-word;
+                text-align: center;
+            }
+            .benchmark-graphs {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                flex-wrap: wrap;
+                width: 100%;
+            }
+        </style>
+        <title>Benchmarks</title>
+    </head>
+
+    <body>
+        <header id="header">
+            <div class="header-item">
+                <strong class="header-label">Last Update:</strong>
+                <span id="last-update"></span>
+            </div>
+            <div class="header-item">
+                <strong class="header-label">Repository:</strong>
+                <a id="repository-link" rel="noopener"></a>
+            </div>
+        </header>
+        <main id="main"></main>
+        <footer>
+            <!--
+      <button id="dl-button">Download data as JSON</button>
+      <div class="spacer"></div>
+      <div class="small">Powered by <a rel="noopener" href="https://github.com/marketplace/actions/continuous-benchmark">github-action-benchmark</a></div>
+       -->
+        </footer>
+
+        <script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
+        <script src="data.js"></script>
+        <script id="main-script">
+            'use strict';
+            (function () {
+                function init() {
+                    function collectBenchesPerTestCase(entries) {
+                        // TODO: collect by all fields in `bench`
+                        // collect in nested map
+                        const map = new Map();
+                        for (const entry of entries) {
+                            const { commit, date, benches } = entry;
+                            for (const bench of benches) {
+                                let name = bench.name;
+                                let platform = bench.platform;
+                                let os = bench.os;
+                                let keySize = bench.keySize;
+                                let api = bench.api;
+                                let category = bench.category;
+                                let unit = bench.unit;
+
+                                let key = JSON.stringify({ name, platform, os, keySize, api, category, unit });
+                                const result = { commit, date, bench };
+
+                                const arr = map.get(key);
+                                if (arr === undefined) {
+                                    map.set(key, [result]);
+                                } else {
+                                    arr.push(result);
+                                }
+                            }
+                        }
+
+                        // replace the key with data
+                        const data = Array.from(map.entries()).map(([key, value]) => {
+                            const d = JSON.parse(key);
+                            d.dataset = value;
+                            return d;
+                        });
+                        return data;
+                    }
+
+                    const data = window.BENCHMARK_DATA;
+
+                    // Render header
+                    document.getElementById('last-update').textContent = new Date(data.lastUpdate).toString();
+                    const repoLink = document.getElementById('repository-link');
+                    repoLink.href = data.repoUrl;
+                    repoLink.textContent = data.repoUrl;
+
+                    // Prepare data points for charts
+                    return Object.keys(data.entries).map((name) => ({
+                        name,
+                        dataSet: collectBenchesPerTestCase(data.entries[name]),
+                    }));
+                }
+
+                function createTitle(parent, name) {
+                    const nameElem = document.createElement('h1');
+                    nameElem.className = 'benchmark-title';
+                    nameElem.textContent = name;
+                    parent.appendChild(nameElem);
+                }
+
+                // input: separated-out datasets
+                function renderAllCharts(dataSets) {
+                    function createPlotsGroupBy(parent, groupBy, datasets, layout) {
+                        // group by (key1, key2, ...)
+
+                        // create title
+                        createTitle(parent, `Compare platform for ${groupBy}`);
+
+                        // group datasets by the relevant keys
+                        const groupedData = Object.groupBy(datasets, (d) => {
+                            const filter = {};
+                            for (let key of groupBy) {
+                                filter[key] = d.metadata[key];
+                            }
+                            return JSON.stringify(filter);
+                        });
+
+                        // create  a chart for each group
+                        let data = Object.entries(groupedData);
+                        for (let [key, value] of data) {
+                            // skip empty key
+                            if (key === '{}') {
+                                continue;
+                            }
+                            // unparse the groupBy keys
+                            let group = JSON.parse(key);
+                            const graphsElem = document.createElement('div');
+                            graphsElem.className = 'benchmark-graphs';
+                            parent.appendChild(graphsElem);
+                            chartByGroup(graphsElem, group, datasets, layout);
+                        }
+                    }
+                    function dataItemBelongsToGroup(d, groupBy) {
+                        // returns true if for every key in the groupBy entry,
+                        // the data item's value for that key (e.g. `os`: `windows_64`)
+                        // matches the value for this group.
+                        return Object.keys(group).every(
+                            (key) => d.metadata[key] === group[key] && d.metadata[key] !== undefined,
+                        );
+                    }
+                    function getOtherMetadataEntries(d, groupBy) {
+                        // returns the metadata keys that are not already
+                        // taken into account by the filter
+                        // and are not the unit key
+                        return Object.entries(d.metadata).filter(
+                            ([key, value]) => !Object.keys(groupBy).includes(key) && key !== 'unit',
+                        );
+                    }
+                    function chartByGroup(parent, group, datasets, layout) {
+                        const filtered = Array.from(
+                            datasets
+                                .filter((d) => dataItemBelongsToGroup(d, group))
+                                .map((trace) => {
+                                    // set the name in the legend
+                                    // construct the name using the other metadata keys
+                                    // that were not taken into account by the filter
+                                    const otherEntries = getOtherMetadataEntries(trace, groupBy);
+                                    trace.name = otherEntries
+                                        .map(([_k, v]) => v)
+                                        .filter((v) => v !== undefined)
+                                        .join(' ');
+
+                                    // set the tooltip text
+                                    trace.text = trace.dataset.map(
+                                        (d) =>
+                                            `<b>${trace.name}</b><br>value: ${d.bench.value} ${d.bench.unit} ${d.bench.range}<br>commit id: ${d.commit.id}<br>commit name: ${d.commit.message}<br>commit url: ${d.commit.url}`,
+                                    );
+                                    return trace;
+                                }),
+                        );
+
+                        const description = Object.entries(group)
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(', ');
+                        // return if no datasets
+                        if (filtered.length == 0) {
+                            console.log(`No datasets found with ${description}`);
+                            return;
+                        }
+                        // get the unit from the first item (all are same, since this field is part of the key in `collectBenchesPerTestCase()`)
+                        // this is possible because there is at least one data point
+                        const unit = filtered[0].metadata.unit;
+
+                        // update layout
+                        layout.title = { text: description };
+                        layout.yaxis = { title: { text: `Value (${unit})` } };
+
+                        // create plot
+                        Plotly.newPlot(parent, filtered, layout);
+                    }
+
+                    function buildPlotConfig(dataSets) {
+                        const datasets = Array.from(
+                            dataSets.dataSet.map((item) => {
+                                let { name, api, keySize, category, os, platform, dataset, unit } = item;
+
+                                return {
+                                    metadata: {
+                                        category,
+                                        name,
+                                        api,
+                                        keySize,
+                                        os,
+                                        platform,
+                                        unit,
+                                    },
+                                    x: dataset.map((d) => new Date(d.commit.timestamp)),
+                                    y: dataset.map((d) => d.bench.value),
+                                    dataset,
+                                    showlegend: true,
+                                    hoverinfo: 'text',
+                                };
+                            }),
+                        );
+
+                        // extract GMT+offset from current time zone, if available
+                        const timeZone = new Date()
+                            .toString()
+                            .split(' ')
+                            .filter((s) => s.includes('GMT'))
+                            .map((s) => `(${s})`);
+
+                        const layout = {
+                            height: 600,
+                            width: 1200,
+                            xaxis: { title: { text: `Time of benchmark run ${timeZone}` }, type: 'date' },
+                        };
+
+                        return [datasets, layout];
+                    }
+
+                    const main = document.getElementById('main');
+                    const setElem = document.createElement('div');
+                    setElem.className = 'benchmark-set';
+                    main.appendChild(setElem);
+
+                    const [datasets, layout] = buildPlotConfig(dataSets[0]);
+
+                    let groupBy = window.BENCHMARK_DATA.groupBy;
+                    if (!groupBy || typeof groupBy !== 'object') {
+                        console.error('No or invalid groupBy provided: defaulting to `[os]`');
+                        groupBy = ['os'];
+                    }
+                    createPlotsGroupBy(setElem, groupBy, datasets, layout);
+                }
+
+                renderAllCharts(init()); // Start
+            })();
+        </script>
+    </body>
+</html>
