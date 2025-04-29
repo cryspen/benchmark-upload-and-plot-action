@@ -170,20 +170,67 @@
 
                 // input: separated-out datasets
                 function renderAllCharts(dataSets) {
-                    function chartByOsAndKeySize(parent, os, keySize, datasets, layout) {
+                    function createPlotsGroupBy(parent, groupBy, datasets, layout) {
+                        // group by (key1, key2, ...)
+
+                        // create title
+                        createTitle(parent, `Compare platform for ${groupBy}`);
+
+                        // group datasets by the relevant keys
+                        const groupedData = Object.groupBy(datasets, (d) => {
+                            const filter = {};
+                            for (let key of groupBy) {
+                                filter[key] = d.metadata[key];
+                            }
+                            return JSON.stringify(filter);
+                        });
+
+                        // create  a chart for each group
+                        let data = Object.entries(groupedData);
+                        for (let [key, value] of data) {
+                            // skip empty key
+                            if (key === '{}') {
+                                continue;
+                            }
+                            // unparse the groupBy keys
+                            let group = JSON.parse(key);
+                            const graphsElem = document.createElement('div');
+                            graphsElem.className = 'benchmark-graphs';
+                            parent.appendChild(graphsElem);
+                            chartByGroup(graphsElem, group, datasets, layout);
+                        }
+                    }
+                    function dataItemBelongsToGroup(d, groupBy) {
+                        // returns true if for every key in the groupBy entry,
+                        // the data item's value for that key (e.g. `os`: `windows_64`)
+                        // matches the value for this group.
+                        return Object.keys(group).every(
+                            (key) => d.metadata[key] === group[key] && d.metadata[key] !== undefined,
+                        );
+                    }
+                    function getOtherMetadataEntries(d, groupBy) {
+                        // returns the metadata keys that are not already
+                        // taken into account by the filter
+                        // and are not the unit key
+                        return Object.entries(d.metadata).filter(
+                            ([key, value]) => !Object.keys(groupBy).includes(key) && key !== 'unit',
+                        );
+                    }
+                    function chartByGroup(parent, group, datasets, layout) {
                         const filtered = Array.from(
                             datasets
-                                .filter(
-                                    (d) =>
-                                        d.os == os &&
-                                        d.keySize == keySize &&
-                                        d.name !== undefined &&
-                                        d.api !== undefined &&
-                                        d.platform !== undefined,
-                                )
+                                .filter((d) => dataItemBelongsToGroup(d, group))
                                 .map((trace) => {
-                                    trace.name = `${trace.name} - ${trace.api} - ${trace.platform}`;
-                                    // tooltip
+                                    // set the name in the legend
+                                    // construct the name using the other metadata keys
+                                    // that were not taken into account by the filter
+                                    const otherEntries = getOtherMetadataEntries(trace, groupBy);
+                                    trace.name = otherEntries
+                                        .map(([_k, v]) => v)
+                                        .filter((v) => v !== undefined)
+                                        .join(' ');
+
+                                    // set the tooltip text
                                     trace.text = trace.dataset.map(
                                         (d) =>
                                             `<b>${trace.name}</b><br>value: ${d.bench.value} ${d.bench.unit} ${d.bench.range}<br>commit id: ${d.commit.id}<br>commit name: ${d.commit.message}<br>commit url: ${d.commit.url}`,
@@ -192,17 +239,20 @@
                                 }),
                         );
 
+                        const description = Object.entries(group)
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(', ');
                         // return if no datasets
                         if (filtered.length == 0) {
-                            console.log(`No datasets found with os "${os} and keySize ${keySize}"`);
+                            console.log(`No datasets found with ${description}`);
                             return;
                         }
                         // get the unit from the first item (all are same, since this field is part of the key in `collectBenchesPerTestCase()`)
                         // this is possible because there is at least one data point
-                        const unit = filtered[0].unit;
+                        const unit = filtered[0].metadata.unit;
 
                         // update layout
-                        layout.title = { text: `OS: ${os}, keySize: ${keySize}` };
+                        layout.title = { text: description };
                         layout.yaxis = { title: { text: `Value (${unit})` } };
 
                         // create plot
@@ -215,13 +265,15 @@
                                 let { name, api, keySize, category, os, platform, dataset, unit } = item;
 
                                 return {
-                                    category,
-                                    name,
-                                    api,
-                                    keySize,
-                                    os,
-                                    platform,
-                                    unit,
+                                    metadata: {
+                                        category,
+                                        name,
+                                        api,
+                                        keySize,
+                                        os,
+                                        platform,
+                                        unit,
+                                    },
                                     x: dataset.map((d) => new Date(d.commit.timestamp)),
                                     y: dataset.map((d) => d.bench.value),
                                     dataset,
@@ -238,7 +290,6 @@
                             .filter((s) => s.includes('GMT'))
                             .map((s) => `(${s})`);
 
-                        // TODO: more config
                         const layout = {
                             height: 600,
                             width: 1200,
@@ -255,21 +306,12 @@
 
                     const [datasets, layout] = buildPlotConfig(dataSets[0]);
 
-                    const osList = [...new Set(datasets.map((d) => d.os))];
-                    const keySizes = [...new Set(datasets.map((d) => d.keySize))];
-
-                    // plots by OS/Key Size
-                    createTitle(setElem, 'Compare platform for OS/key size');
-                    for (let os of osList) {
-                        for (let keySize of keySizes) {
-                            if (!isNaN(keySize)) {
-                                const graphsElem = document.createElement('div');
-                                graphsElem.className = 'benchmark-graphs';
-                                setElem.appendChild(graphsElem);
-                                chartByOsAndKeySize(graphsElem, os, keySize, datasets, layout);
-                            }
-                        }
+                    let groupBy = window.BENCHMARK_DATA.groupBy;
+                    if (!groupBy || typeof groupBy !== 'object') {
+                        console.error('No or invalid groupBy provided: defaulting to `[os]`');
+                        groupBy = ['os'];
                     }
+                    createPlotsGroupBy(setElem, groupBy, datasets, layout);
                 }
 
                 renderAllCharts(init()); // Start

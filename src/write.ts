@@ -15,6 +15,7 @@ export interface DataJson {
     lastUpdate: number;
     repoUrl: string;
     entries: BenchmarkSuites;
+    groupBy: string[];
 }
 
 export const SCRIPT_PREFIX = 'window.BENCHMARK_DATA = ';
@@ -22,6 +23,7 @@ const DEFAULT_DATA_JSON = {
     lastUpdate: 0,
     repoUrl: '',
     entries: {},
+    groupBy: ['os'],
 };
 
 async function loadDataJs(dataPath: string): Promise<DataJson> {
@@ -288,6 +290,7 @@ async function handleAlert(benchName: string, curSuite: Benchmark, prevSuite: Be
 }
 
 function addBenchmarkToDataJson(
+    groupBy: string[],
     benchName: string,
     bench: Benchmark,
     data: DataJson,
@@ -298,6 +301,7 @@ function addBenchmarkToDataJson(
 
     let prevBench: Benchmark | null = null;
     data.lastUpdate = Date.now();
+    data.groupBy = groupBy;
     data.repoUrl = htmlUrl;
 
     // Add benchmark result
@@ -348,6 +352,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(
         autoPush,
         skipFetchGhPages,
         maxItemsInChart,
+        groupBy,
     } = config;
     const rollbackActions = new Array<() => Promise<void>>();
 
@@ -403,7 +408,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(
     await io.mkdirP(benchmarkDataDirFullPath);
 
     const data = await loadDataJs(dataPath);
-    const prevBench = addBenchmarkToDataJson(name, bench, data, maxItemsInChart);
+    const prevBench = addBenchmarkToDataJson(groupBy, name, bench, data, maxItemsInChart);
 
     await storeDataJs(dataPath, data);
 
@@ -491,9 +496,9 @@ async function writeBenchmarkToExternalJson(
     jsonFilePath: string,
     config: Config,
 ): Promise<Benchmark | null> {
-    const { name, maxItemsInChart, saveDataFile } = config;
+    const { name, maxItemsInChart, saveDataFile, groupBy } = config;
     const data = await loadDataJson(jsonFilePath);
-    const prevBench = addBenchmarkToDataJson(name, bench, data, maxItemsInChart);
+    const prevBench = addBenchmarkToDataJson(groupBy, name, bench, data, maxItemsInChart);
 
     if (!saveDataFile) {
         core.debug('Skipping storing benchmarks in external data file');

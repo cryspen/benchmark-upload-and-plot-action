@@ -36,3 +36,4 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           gh-pages-branch: gh-pages-test
+          group-by: 'os,keySize'

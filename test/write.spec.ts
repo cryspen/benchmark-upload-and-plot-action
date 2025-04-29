@@ -183,6 +183,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
     describe('with external json file', function () {
         const dataJson = 'data.json';
         const defaultCfg: Config = {
+            groupBy: ['os'],
             name: 'Test benchmark',
             biggerIsBetter: false,
             inputDataPath: 'dummy', // Should not affect
@@ -235,6 +236,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'appends new result to existing data',
                 config: defaultCfg,
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -271,6 +273,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'creates new result suite to existing data file',
                 config: defaultCfg,
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -295,6 +298,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'appends new result to existing multiple benchmarks data',
                 config: defaultCfg,
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -327,6 +331,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'raises an alert when exceeding threshold 2.0',
                 config: defaultCfg,
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -366,6 +371,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'raises an alert with tool whose result value is bigger-is-better',
                 config: defaultCfg,
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -404,6 +410,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'raises an alert without benchmark name with default benchmark name',
                 config: { ...defaultCfg, name: 'Benchmark' },
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -442,6 +449,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'raises an alert without CC names',
                 config: { ...defaultCfg, alertCommentCcUsers: [] },
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -478,6 +486,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'sends commit comment on alert with GitHub API',
                 config: { ...defaultCfg, commentOnAlert: true, githubToken: 'dummy token' },
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -503,6 +512,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'does not raise an alert when both comment-on-alert and fail-on-alert are disabled',
                 config: { ...defaultCfg, commentOnAlert: false, failOnAlert: false },
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -529,6 +539,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'ignores other bench case on detecting alerts',
                 config: defaultCfg,
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -555,6 +566,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'throws an error when GitHub token is not set (though this case should not happen in favor of validation)',
                 config: { ...defaultCfg, commentOnAlert: true },
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -581,6 +593,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'truncates data items if it exceeds max-items-in-chart',
                 config: { ...defaultCfg, maxItemsInChart: 1 },
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -622,6 +635,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'changes title when threshold is zero which means comment always happens',
                 config: { ...defaultCfg, alertThreshold: 0, failThreshold: 0 },
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -660,6 +674,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'raises an alert with different failure threshold from alert threshold',
                 config: { ...defaultCfg, failThreshold: 3 },
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -700,6 +715,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'does not raise an alert when not exceeding failure threshold',
                 config: { ...defaultCfg, failThreshold: 3 },
                 data: {
+                    groupBy: ['os'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -881,6 +897,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
         }
 
         const defaultCfg: Config = {
+            groupBy: ['os'],
             name: 'Test benchmark',
             biggerIsBetter: false,
             inputDataPath: 'dummy', // Should not affect
