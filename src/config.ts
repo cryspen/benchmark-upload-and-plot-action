@@ -193,7 +193,7 @@ function validateGroupBy(groupBy?: string): string[] {
 
     const keys = groupBy.split(',');
 
-    if (keys.length === 0) {
+    if (keys.length === 1 && keys[0] === "") {
         return ['os'];
     }
 
