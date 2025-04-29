@@ -141,8 +141,8 @@
                     const layout = buildPlotLayout();
 
                     // get the unit from the first item
-                    // (all are same, since this field is part of the key in `collectBenchesPerTestCase()`)
-                    // this is possible because there is at least one data point
+                    // this is possible because there is at least one data point,
+                    // and the unit is the same across all data points.
                     const unit = filteredTraces[0].metadata.unit;
                     layout.yaxis = { title: { text: `Value (${unit})` } };
 
