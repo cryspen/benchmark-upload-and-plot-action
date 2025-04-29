@@ -211,14 +211,28 @@
 
                     return Array.from(traces);
                 }
+                function retrieveSchema() {
+                    // get the schema object from `window.BENCHMARK_DATA`,
+                    // and return a default value if invalid or none is provided.
+
+                    const defaultSchema = ['name', 'platform', 'os', 'keySize', 'api', 'category', 'unit'];
+
+                    let schema = window.BENCHMARK_DATA.schema;
+                    if (!schema || typeof schema !== 'object') {
+                        console.error(`No or invalid groupBy provided: defaulting to [${defaultSchema}]`);
+                        schema = defaultSchema;
+                    }
+                    return schema;
+                }
                 function retrieveGroupBy() {
                     // get the groupBy object from `window.BENCHMARK_DATA`,
                     // and return a default value if invalid or none is provided.
 
+                    const defaultGroupBy = ['os'];
                     let groupBy = window.BENCHMARK_DATA.groupBy;
                     if (!groupBy || typeof groupBy !== 'object') {
-                        console.error('No or invalid groupBy provided: defaulting to `[os]`');
-                        groupBy = ['os'];
+                        console.error(`No or invalid groupBy provided: defaulting to [${defaultGroupBy}]`);
+                        groupBy = defaultGroupBy;
                     }
                     return groupBy;
                 }
@@ -278,12 +292,12 @@
                     const entries = window.BENCHMARK_DATA.entries;
                     const entry = Object.values(entries)[0];
 
+                    const schema = retrieveSchema();
+
                     // build the data traces by separating out the observations
                     // by key. This is equivalent to separating out the observations
                     // by benchmark id, except that the benchmark id consists
                     // of multiple, separate fields.
-                    // TODO: allow the user to specify the schema.
-                    const schema = ['name', 'platform', 'os', 'keySize', 'api', 'category', 'unit'];
                     const traces = separateAllTraces(entry, schema);
 
                     // get the groupBy information from `window.BENCHMARK_DATA`
