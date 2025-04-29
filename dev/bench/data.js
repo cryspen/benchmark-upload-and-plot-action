@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1745912960028,
+  "lastUpdate": 1745933996650,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -2923,6 +2923,40 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/22/commits/0ee1095102e6d588d2d67acbd8770c4bd9a2fa9d"
         },
         "date": 1745912959558,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "bench_fib_10",
+            "value": 135,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 24"
+          },
+          {
+            "name": "bench_fib_20",
+            "value": 18149,
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "range": "± 755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "cc2cc5bd69ad6877761ab582beb9aa6d25d685d9",
+          "message": "[fix] Fix a bug in index.html: use correct variable name",
+          "timestamp": "2025-04-29T08:03:26Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/23/commits/cc2cc5bd69ad6877761ab582beb9aa6d25d685d9"
+        },
+        "date": 1745933995713,
         "bigger_is_better": false,
         "benches": [
           {
