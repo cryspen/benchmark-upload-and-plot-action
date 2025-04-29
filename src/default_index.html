@@ -109,43 +109,212 @@
         <script id="main-script">
             'use strict';
             (function () {
-                function init() {
-                    function collectBenchesPerTestCase(entries) {
-                        // TODO: collect by all fields in `bench`
-                        // collect in nested map
-                        const map = new Map();
-                        for (const entry of entries) {
-                            const { commit, date, benches } = entry;
-                            for (const bench of benches) {
-                                let name = bench.name;
-                                let platform = bench.platform;
-                                let os = bench.os;
-                                let keySize = bench.keySize;
-                                let api = bench.api;
-                                let category = bench.category;
-                                let unit = bench.unit;
+                function buildPlotLayout() {
+                    const offset = timeZoneOffset();
+                    const layout = {
+                        height: 600,
+                        width: 1200,
+                        xaxis: { title: { text: `Time of benchmark run ${offset}` }, type: 'date' },
+                    };
 
-                                let key = JSON.stringify({ name, platform, os, keySize, api, category, unit });
-                                const result = { commit, date, bench };
+                    return layout;
+                }
 
-                                const arr = map.get(key);
-                                if (arr === undefined) {
-                                    map.set(key, [result]);
-                                } else {
-                                    arr.push(result);
-                                }
-                            }
-                        }
-
-                        // replace the key with data
-                        const data = Array.from(map.entries()).map(([key, value]) => {
-                            const d = JSON.parse(key);
-                            d.dataset = value;
-                            return d;
-                        });
-                        return data;
+                function addTitleToElement(parent, title) {
+                    const titleElem = document.createElement('h1');
+                    titleElem.className = 'benchmark-title';
+                    titleElem.textContent = title;
+                    parent.appendChild(titleElem);
+                }
+                function chartFilteredTraces(parent, title, filteredTraces) {
+                    // return if no datasets
+                    if (filteredTraces.length == 0) {
+                        console.log(`No datasets found with ${description}`);
+                        return;
                     }
 
+                    // create elem for plot
+                    const elem = document.createElement('div');
+                    elem.className = 'benchmark-graphs';
+                    parent.appendChild(elem);
+
+                    const layout = buildPlotLayout();
+
+                    // get the unit from the first item
+                    // (all are same, since this field is part of the key in `collectBenchesPerTestCase()`)
+                    // this is possible because there is at least one data point
+                    const unit = filteredTraces[0].metadata.unit;
+                    layout.yaxis = { title: { text: `Value (${unit})` } };
+
+                    layout.title = { text: title };
+
+                    // add the plot to the elem
+                    Plotly.newPlot(elem, filteredTraces, layout);
+                }
+
+                function timeZoneOffset() {
+                    // extract GMT+offset from current time zone, if available
+                    return new Date()
+                        .toString()
+                        .split(' ')
+                        .filter((s) => s.includes('GMT'))
+                        .map((s) => `(${s})`);
+                }
+
+                function buildKey(benchItem, schema) {
+                    // build the key from the values in the schema
+                    let key = {};
+                    for (const s of schema) {
+                        key[s] = benchItem[s];
+                    }
+                    return JSON.stringify(key);
+                }
+                function parseKey(keyString, schema) {
+                    const key = JSON.parse(keyString);
+                    for (const s of schema) {
+                        if (!key.hasOwnProperty(s)) {
+                            key[s] = undefined;
+                        }
+                    }
+                    return key;
+                }
+                // separates the data into traces by key
+                function separateAllTraces(commits, schema) {
+                    // flatten and keep commit data
+                    const data = commits
+                        .map((commitEntry) => {
+                            const { commit, date, benches } = commitEntry;
+                            return benches.map((bench) => {
+                                return { commit, date, bench };
+                            });
+                        })
+                        .flat();
+
+                    // group by key
+                    const groupedData = Object.groupBy(data, (benchEntry) => {
+                        return buildKey(benchEntry.bench, schema);
+                    });
+
+                    // prepare for plotting
+                    const traces = Object.entries(groupedData).map(([keyString, dataset]) => {
+                        const metadata = parseKey(keyString, schema);
+
+                        return {
+                            metadata,
+                            x: dataset.map((d) => new Date(d.commit.timestamp)),
+                            y: dataset.map((d) => d.bench.value),
+                            dataset,
+                            showlegend: true,
+                            hoverinfo: 'text',
+                        };
+                    });
+
+                    return Array.from(traces);
+                }
+                function retrieveGroupBy() {
+                    // get the groupBy object from `window.BENCHMARK_DATA`,
+                    // and return a default value if invalid or none is provided.
+
+                    let groupBy = window.BENCHMARK_DATA.groupBy;
+                    if (!groupBy || typeof groupBy !== 'object') {
+                        console.error('No or invalid groupBy provided: defaulting to `[os]`');
+                        groupBy = ['os'];
+                    }
+                    return groupBy;
+                }
+
+                function buildTraceGroupKey(trace, groupBy) {
+                    // build the groupKey for a trace,
+                    // which consists of the key-value pairs
+                    // for the groupBy keys only.
+                    const traceGroup = {};
+                    for (let key of groupBy) {
+                        traceGroup[key] = trace.metadata[key];
+                    }
+                    return JSON.stringify(traceGroup);
+                }
+                function getObservationTooltipText(name, observation) {
+                    const value = observation.bench.value;
+                    const unit = observation.bench.unit;
+                    const range = observation.bench.range;
+                    const commitId = observation.commit.id;
+                    const message = observation.commit.message;
+                    const url = observation.commit.url;
+
+                    return `<b>${name}</b><br>value: ${value} ${unit} ${range}<br>commit id: ${commitId}<br>commit name: ${message}<br>commit url: ${url}`;
+                }
+                function getLegendName(trace, groupBy, schema) {
+                    // return the name for the graph legend,
+                    // using only the metadata entries that are not included in the
+                    // groupBy, and are not 'unit'.
+                    // also, don't include the fields whose values are `undefined` in the name.
+
+                    // entries sorted by schema
+                    const orderedEntries = schema.map((key) => [key, trace.metadata[key]]);
+
+                    return orderedEntries
+                        .filter(([key, value]) => !groupBy.includes(key) && key !== 'unit' && value !== undefined)
+                        .map(([_, value]) => value)
+                        .join(' ');
+                }
+                function addLegendNameAndTooltip(trace, groupBy, schema) {
+                    // set the name in the legend
+                    trace.name = getLegendName(trace, groupBy, schema);
+
+                    // set the tooltip text
+                    trace.text = trace.dataset.map((observation) => getObservationTooltipText(trace.name, observation));
+                }
+
+                function buildTitleFromGroupKey(groupKey, groupBy) {
+                    // Display the fields in the group as a comma-separated list
+                    return groupBy
+                        .map((field) => [field, groupKey[field]])
+                        .map(([field, value]) => `${field}: ${value}`)
+                        .join(', ');
+                }
+                function renderAllCharts() {
+                    // retrieve the data for the benchmark with the first name
+                    // TODO: don't just support a single overarching name
+                    const entries = window.BENCHMARK_DATA.entries;
+                    const entry = Object.values(entries)[0];
+
+                    // build the data traces by separating out the observations
+                    // by key. This is equivalent to separating out the observations
+                    // by benchmark id, except that the benchmark id consists
+                    // of multiple, separate fields.
+                    // TODO: allow the user to specify the schema.
+                    const schema = ['name', 'platform', 'os', 'keySize', 'api', 'category', 'unit'];
+                    const traces = separateAllTraces(entry, schema);
+
+                    // get the groupBy information from `window.BENCHMARK_DATA`
+                    // this is an array of keys, e.g. ['os', 'keySize']
+                    // there should be one plot per combination of these values
+                    const groupBy = retrieveGroupBy();
+
+                    // create a div for the benchmark set
+                    const main = document.getElementById('main');
+                    const setElem = document.createElement('div');
+                    setElem.className = 'benchmark-set';
+                    main.appendChild(setElem);
+                    addTitleToElement(setElem, `Compare platform for ${groupBy}`);
+
+                    // group datasets by the relevant keys
+                    const groupedData = Object.groupBy(traces, (trace) => buildTraceGroupKey(trace, groupBy));
+
+                    // create  a chart for each group
+                    Object.entries(groupedData).forEach(([groupKeyString, filteredTraces]) => {
+                        // build the title
+                        const groupKey = parseKey(groupKeyString, groupBy);
+                        const title = buildTitleFromGroupKey(groupKey, groupBy);
+
+                        // add the legend name to each trace,
+                        // as well as the tooltip text for each point in each trace
+                        filteredTraces.forEach((trace) => addLegendNameAndTooltip(trace, groupBy, schema));
+
+                        chartFilteredTraces(setElem, title, filteredTraces);
+                    });
+                }
+                function init() {
                     const data = window.BENCHMARK_DATA;
 
                     // Render header
@@ -153,168 +322,10 @@
                     const repoLink = document.getElementById('repository-link');
                     repoLink.href = data.repoUrl;
                     repoLink.textContent = data.repoUrl;
-
-                    // Prepare data points for charts
-                    return Object.keys(data.entries).map((name) => ({
-                        name,
-                        dataSet: collectBenchesPerTestCase(data.entries[name]),
-                    }));
                 }
 
-                function createTitle(parent, name) {
-                    const nameElem = document.createElement('h1');
-                    nameElem.className = 'benchmark-title';
-                    nameElem.textContent = name;
-                    parent.appendChild(nameElem);
-                }
-
-                // input: separated-out datasets
-                function renderAllCharts(dataSets) {
-                    function createPlotsGroupBy(parent, groupBy, datasets, layout) {
-                        // group by (key1, key2, ...)
-
-                        // create title
-                        createTitle(parent, `Compare platform for ${groupBy}`);
-
-                        // group datasets by the relevant keys
-                        const groupedData = Object.groupBy(datasets, (d) => {
-                            const filter = {};
-                            for (let key of groupBy) {
-                                filter[key] = d.metadata[key];
-                            }
-                            return JSON.stringify(filter);
-                        });
-
-                        // create  a chart for each group
-                        let data = Object.entries(groupedData);
-                        for (let [key, value] of data) {
-                            // skip empty key
-                            if (key === '{}') {
-                                continue;
-                            }
-                            // unparse the groupBy keys
-                            let group = JSON.parse(key);
-                            const graphsElem = document.createElement('div');
-                            graphsElem.className = 'benchmark-graphs';
-                            parent.appendChild(graphsElem);
-                            chartByGroup(graphsElem, group, datasets, layout);
-                        }
-                    }
-                    function dataItemBelongsToGroup(d, groupBy) {
-                        // returns true if for every key in the groupBy entry,
-                        // the data item's value for that key (e.g. `os`: `windows_64`)
-                        // matches the value for this group.
-                        return Object.keys(groupBy).every(
-                            (key) => d.metadata[key] === groupBy[key] && d.metadata[key] !== undefined,
-                        );
-                    }
-                    function getOtherMetadataEntries(d, groupBy) {
-                        // returns the metadata keys that are not already
-                        // taken into account by the filter
-                        // and are not the unit key
-                        return Object.entries(d.metadata).filter(
-                            ([key, value]) => !Object.keys(groupBy).includes(key) && key !== 'unit',
-                        );
-                    }
-                    function chartByGroup(parent, group, datasets, layout) {
-                        const filtered = Array.from(
-                            datasets
-                                .filter((d) => dataItemBelongsToGroup(d, group))
-                                .map((trace) => {
-                                    // set the name in the legend
-                                    // construct the name using the other metadata keys
-                                    // that were not taken into account by the filter
-                                    const otherEntries = getOtherMetadataEntries(trace, groupBy);
-                                    trace.name = otherEntries
-                                        .map(([_k, v]) => v)
-                                        .filter((v) => v !== undefined)
-                                        .join(' ');
-
-                                    // set the tooltip text
-                                    trace.text = trace.dataset.map(
-                                        (d) =>
-                                            `<b>${trace.name}</b><br>value: ${d.bench.value} ${d.bench.unit} ${d.bench.range}<br>commit id: ${d.commit.id}<br>commit name: ${d.commit.message}<br>commit url: ${d.commit.url}`,
-                                    );
-                                    return trace;
-                                }),
-                        );
-
-                        const description = Object.entries(group)
-                            .map(([k, v]) => `${k}: ${v}`)
-                            .join(', ');
-                        // return if no datasets
-                        if (filtered.length == 0) {
-                            console.log(`No datasets found with ${description}`);
-                            return;
-                        }
-                        // get the unit from the first item (all are same, since this field is part of the key in `collectBenchesPerTestCase()`)
-                        // this is possible because there is at least one data point
-                        const unit = filtered[0].metadata.unit;
-
-                        // update layout
-                        layout.title = { text: description };
-                        layout.yaxis = { title: { text: `Value (${unit})` } };
-
-                        // create plot
-                        Plotly.newPlot(parent, filtered, layout);
-                    }
-
-                    function buildPlotConfig(dataSets) {
-                        const datasets = Array.from(
-                            dataSets.dataSet.map((item) => {
-                                let { name, api, keySize, category, os, platform, dataset, unit } = item;
-
-                                return {
-                                    metadata: {
-                                        category,
-                                        name,
-                                        api,
-                                        keySize,
-                                        os,
-                                        platform,
-                                        unit,
-                                    },
-                                    x: dataset.map((d) => new Date(d.commit.timestamp)),
-                                    y: dataset.map((d) => d.bench.value),
-                                    dataset,
-                                    showlegend: true,
-                                    hoverinfo: 'text',
-                                };
-                            }),
-                        );
-
-                        // extract GMT+offset from current time zone, if available
-                        const timeZone = new Date()
-                            .toString()
-                            .split(' ')
-                            .filter((s) => s.includes('GMT'))
-                            .map((s) => `(${s})`);
-
-                        const layout = {
-                            height: 600,
-                            width: 1200,
-                            xaxis: { title: { text: `Time of benchmark run ${timeZone}` }, type: 'date' },
-                        };
-
-                        return [datasets, layout];
-                    }
-
-                    const main = document.getElementById('main');
-                    const setElem = document.createElement('div');
-                    setElem.className = 'benchmark-set';
-                    main.appendChild(setElem);
-
-                    const [datasets, layout] = buildPlotConfig(dataSets[0]);
-
-                    let groupBy = window.BENCHMARK_DATA.groupBy;
-                    if (!groupBy || typeof groupBy !== 'object') {
-                        console.error('No or invalid groupBy provided: defaulting to `[os]`');
-                        groupBy = ['os'];
-                    }
-                    createPlotsGroupBy(setElem, groupBy, datasets, layout);
-                }
-
-                renderAllCharts(init()); // Start
+                init();
+                renderAllCharts();
             })();
         </script>
     </body>
