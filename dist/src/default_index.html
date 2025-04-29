@@ -204,8 +204,8 @@
                         // returns true if for every key in the groupBy entry,
                         // the data item's value for that key (e.g. `os`: `windows_64`)
                         // matches the value for this group.
-                        return Object.keys(group).every(
-                            (key) => d.metadata[key] === group[key] && d.metadata[key] !== undefined,
+                        return Object.keys(groupBy).every(
+                            (key) => d.metadata[key] === groupBy[key] && d.metadata[key] !== undefined,
                         );
                     }
                     function getOtherMetadataEntries(d, groupBy) {
