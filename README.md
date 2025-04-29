@@ -60,7 +60,7 @@ Input definitions are written in [action.yml](./action.yml).
 
 #### `group-by` (Required)
 - Type: String
-- Default: `'["os"]'`
+- Default: `"os"`
 
 The grouping logic for the charts. This field specifies which data fields to group the charts by.
 

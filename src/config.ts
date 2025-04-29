@@ -186,23 +186,12 @@ function validateMaxItemsInChart(max: number | null) {
     }
 }
 
-function validateGroupBy(groupBy: string | undefined): string[] {
-    const defaultValue: string[] = ['os'];
+function validateGroupBy(groupBy?: string): string[] {
     if (groupBy === undefined) {
-        return defaultValue;
+        return ['os'];
     }
 
-    let arr: string[];
-    try {
-        arr = JSON.parse(groupBy.replaceAll("'", '"'));
-    } catch (e) {
-        // default
-        return defaultValue;
-    }
-    if (!Array.isArray(arr)) {
-        return defaultValue;
-    }
-    return arr;
+    return groupBy.split(',');
 }
 
 function validateAlertThreshold(alertThreshold: number | null, failThreshold: number | null): asserts alertThreshold {
