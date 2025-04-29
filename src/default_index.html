@@ -129,7 +129,7 @@
                 function chartFilteredTraces(parent, title, filteredTraces) {
                     // return if no datasets
                     if (filteredTraces.length == 0) {
-                        console.log(`No datasets found with ${description}`);
+                        console.error(`No datasets found with ${title}`);
                         return;
                     }
 
