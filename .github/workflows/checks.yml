@@ -12,7 +12,7 @@ jobs:
       - name: "format"
         run: |
           npm install
-          npm run format
+          npm run format -c
       - name: "lint"
         run: |
           npm run lint
