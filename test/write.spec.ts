@@ -184,6 +184,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
         const dataJson = 'data.json';
         const defaultCfg: Config = {
             groupBy: ['os'],
+            schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             name: 'Test benchmark',
             biggerIsBetter: false,
             inputDataPath: 'dummy', // Should not affect
@@ -237,6 +238,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: defaultCfg,
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -274,6 +276,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: defaultCfg,
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -299,6 +302,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: defaultCfg,
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -332,6 +336,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: defaultCfg,
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -372,6 +377,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: defaultCfg,
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -411,6 +417,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: { ...defaultCfg, name: 'Benchmark' },
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -450,6 +457,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: { ...defaultCfg, alertCommentCcUsers: [] },
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -487,6 +495,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: { ...defaultCfg, commentOnAlert: true, githubToken: 'dummy token' },
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -513,6 +522,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: { ...defaultCfg, commentOnAlert: false, failOnAlert: false },
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -540,6 +550,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: defaultCfg,
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -567,6 +578,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: { ...defaultCfg, commentOnAlert: true },
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -594,6 +606,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: { ...defaultCfg, maxItemsInChart: 1 },
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -636,6 +649,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: { ...defaultCfg, alertThreshold: 0, failThreshold: 0 },
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -675,6 +689,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: { ...defaultCfg, failThreshold: 3 },
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -716,6 +731,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: { ...defaultCfg, failThreshold: 3 },
                 data: {
                     groupBy: ['os'],
+                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -898,6 +914,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
 
         const defaultCfg: Config = {
             groupBy: ['os'],
+            schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             name: 'Test benchmark',
             biggerIsBetter: false,
             inputDataPath: 'dummy', // Should not affect

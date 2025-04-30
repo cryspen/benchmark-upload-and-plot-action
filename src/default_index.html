@@ -161,6 +161,9 @@
                     for (const s of schema) {
                         key[s] = benchItem[s];
                     }
+                    // include unit
+                    key.unit = benchItem.unit;
+
                     return JSON.stringify(key);
                 }
                 function parseKey(keyString, schema) {
@@ -210,7 +213,7 @@
                     // get the schema object from `window.BENCHMARK_DATA`,
                     // and return a default value if invalid or none is provided.
 
-                    const defaultSchema = ['name', 'platform', 'os', 'keySize', 'api', 'category', 'unit'];
+                    const defaultSchema = ['name', 'platform', 'os', 'keySize', 'api', 'category'];
 
                     let schema = window.BENCHMARK_DATA.schema;
                     if (!schema || typeof schema !== 'object') {

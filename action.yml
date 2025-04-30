@@ -7,9 +7,13 @@ branding:
 
 inputs:
   group-by:
-    description: 'Groups for plots. This value must be an array of strings'
+    description: 'Groups for plots. This value must be a comma-separated list of strings'
     required: true
     default: 'os'
+  schema:
+    description: 'Metadata schema for plots. This value must be a comma-separated list of strings'
+    required: true
+    default: 'name,platform,os,keySize,api,category'
   name:
     description: 'Name of the benchmark. This value must be identical among all benchmarks'
     required: true

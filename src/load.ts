@@ -10,12 +10,8 @@ export interface BenchmarkResult {
     extra?: string;
     os: string;
 
-    // from NameMetadata
-    category?: string;
-    keySize?: number;
-    name: string;
-    platform?: string;
-    api?: string;
+    // from Metadata
+    [key: string]: any;
 }
 
 interface GitHubUser {
