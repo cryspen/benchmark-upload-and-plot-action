@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1746005021894,
+  "lastUpdate": 1746016073373,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -3142,6 +3142,40 @@ window.BENCHMARK_DATA = {
             "unit": "ns/iter",
             "os": "ubuntu-latest",
             "range": "± 755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "72255883b7415adc0c7f653c2b40f8e3113ac5d3",
+          "message": "Refactor chart creation script",
+          "timestamp": "2025-04-29T13:40:42Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/24/commits/72255883b7415adc0c7f653c2b40f8e3113ac5d3"
+        },
+        "date": 1746016072439,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "value": 135,
+            "range": "± 24",
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "name": "bench_fib_10"
+          },
+          {
+            "value": 18149,
+            "range": "± 755",
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "name": "bench_fib_20"
           }
         ]
       }
