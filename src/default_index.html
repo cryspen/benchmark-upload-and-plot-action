@@ -292,6 +292,8 @@
                     const entries = window.BENCHMARK_DATA.entries;
                     const entry = Object.values(entries)[0];
 
+                    // retrieve the custom metadata schema from `window.BENCHMARK_DATA`
+                    // each combination of fields is used to uniquely identify a trace
                     const schema = retrieveSchema();
 
                     // build the data traces by separating out the observations
