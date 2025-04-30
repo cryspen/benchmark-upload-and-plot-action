@@ -173,6 +173,7 @@
                     const key = JSON.parse(keyString);
                     for (const s of schema) {
                         if (!key.hasOwnProperty(s)) {
+                            // explicitly set to `undefined`
                             key[s] = undefined;
                         }
                     }
