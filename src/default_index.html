@@ -209,10 +209,9 @@
 
                     return Array.from(traces);
                 }
+                // get the schema object from `window.BENCHMARK_DATA`,
+                // and return a default value if invalid or none is provided.
                 function retrieveSchema() {
-                    // get the schema object from `window.BENCHMARK_DATA`,
-                    // and return a default value if invalid or none is provided.
-
                     const defaultSchema = ['name', 'platform', 'os', 'keySize', 'api', 'category'];
 
                     let schema = window.BENCHMARK_DATA.schema;
@@ -222,10 +221,9 @@
                     }
                     return schema;
                 }
+                // get the groupBy object from `window.BENCHMARK_DATA`,
+                // and return a default value if invalid or none is provided.
                 function retrieveGroupBy() {
-                    // get the groupBy object from `window.BENCHMARK_DATA`,
-                    // and return a default value if invalid or none is provided.
-
                     const defaultGroupBy = ['os'];
                     let groupBy = window.BENCHMARK_DATA.groupBy;
                     if (!groupBy || typeof groupBy !== 'object') {
@@ -235,10 +233,10 @@
                     return groupBy;
                 }
 
+                // build the groupKey for a trace,
+                // which consists of the key-value pairs
+                // for the groupBy keys only.
                 function buildTraceGroupKey(trace, groupBy) {
-                    // build the groupKey for a trace,
-                    // which consists of the key-value pairs
-                    // for the groupBy keys only.
                     const traceGroup = {};
                     for (let key of groupBy) {
                         traceGroup[key] = trace.metadata[key];
@@ -255,12 +253,11 @@
 
                     return `<b>${name}</b><br>value: ${value} ${unit} ${range}<br>commit id: ${commitId}<br>commit name: ${message}<br>commit url: ${url}`;
                 }
+                // return the name for the graph legend,
+                // using only the metadata entries that are not included in the
+                // groupBy, and are not 'unit'.
+                // also, don't include the fields whose values are `undefined` in the name.
                 function getLegendName(trace, groupBy, schema) {
-                    // return the name for the graph legend,
-                    // using only the metadata entries that are not included in the
-                    // groupBy, and are not 'unit'.
-                    // also, don't include the fields whose values are `undefined` in the name.
-
                     // entries sorted by schema
                     const orderedEntries = schema.map((key) => [key, trace.metadata[key]]);
 
@@ -277,8 +274,8 @@
                     trace.text = trace.dataset.map((observation) => getObservationTooltipText(trace.name, observation));
                 }
 
+                // Display the fields in the group as a comma-separated list
                 function buildTitleFromGroupKey(groupKey, groupBy) {
-                    // Display the fields in the group as a comma-separated list
                     return groupBy
                         .map((field) => [field, groupKey[field]])
                         .map(([field, value]) => `${field}: ${value}`)
