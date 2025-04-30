@@ -37,3 +37,4 @@ jobs:
           auto-push: true
           gh-pages-branch: gh-pages-test
           group-by: 'os,keySize'
+          schema: 'os,keySize,name,platform,api,category'
