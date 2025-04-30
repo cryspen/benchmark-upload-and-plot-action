@@ -35,6 +35,7 @@ const DEFAULT_DATA_JSON = {
     repoUrl: '',
     entries: {},
     groupBy: ['os'],
+    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
 };
 async function loadDataJs(dataPath) {
     try {
@@ -240,7 +241,7 @@ async function handleAlert(benchName, curSuite, prevSuite, config) {
         }
     }
 }
-function addBenchmarkToDataJson(groupBy, benchName, bench, data, maxItems) {
+function addBenchmarkToDataJson(groupBy, schema, benchName, bench, data, maxItems) {
     var _a;
     const repoMetadata = getCurrentRepoMetadata();
     const htmlUrl = (_a = repoMetadata.html_url) !== null && _a !== void 0 ? _a : '';
@@ -248,6 +249,7 @@ function addBenchmarkToDataJson(groupBy, benchName, bench, data, maxItems) {
     data.lastUpdate = Date.now();
     data.groupBy = groupBy;
     data.repoUrl = htmlUrl;
+    data.schema = schema;
     // Add benchmark result
     if (data.entries[benchName] === undefined) {
         data.entries[benchName] = [bench];
@@ -278,7 +280,7 @@ function isRemoteRejectedError(err) {
 }
 async function writeBenchmarkToGitHubPagesWithRetry(bench, config, retry) {
     var _a, _b;
-    const { name, ghPagesBranch, ghRepository, benchmarkDataDirPath, githubToken, autoPush, skipFetchGhPages, maxItemsInChart, groupBy, } = config;
+    const { name, ghPagesBranch, ghRepository, benchmarkDataDirPath, githubToken, autoPush, skipFetchGhPages, maxItemsInChart, groupBy, schema, } = config;
     const rollbackActions = new Array();
     // XXX: fix that ensures we don't fail if the current branch is not available
     // on the merge queue (which is a known bug).
@@ -329,7 +331,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench, config, retry) {
     const dataPath = path.join(benchmarkDataDirFullPath, 'data.js');
     await io.mkdirP(benchmarkDataDirFullPath);
     const data = await loadDataJs(dataPath);
-    const prevBench = addBenchmarkToDataJson(groupBy, name, bench, data, maxItemsInChart);
+    const prevBench = addBenchmarkToDataJson(groupBy, schema, name, bench, data, maxItemsInChart);
     await storeDataJs(dataPath, data);
     await git.cmd(extraGitArguments, 'add', path.join(benchmarkDataRelativeDirPath, 'data.js'));
     await addIndexHtmlIfNeeded(extraGitArguments, benchmarkDataRelativeDirPath, benchmarkBaseDir);
@@ -397,9 +399,9 @@ async function loadDataJson(jsonPath) {
     }
 }
 async function writeBenchmarkToExternalJson(bench, jsonFilePath, config) {
-    const { name, maxItemsInChart, saveDataFile, groupBy } = config;
+    const { name, maxItemsInChart, saveDataFile, groupBy, schema } = config;
     const data = await loadDataJson(jsonFilePath);
-    const prevBench = addBenchmarkToDataJson(groupBy, name, bench, data, maxItemsInChart);
+    const prevBench = addBenchmarkToDataJson(groupBy, schema, name, bench, data, maxItemsInChart);
     if (!saveDataFile) {
         core.debug('Skipping storing benchmarks in external data file');
         return prevBench;

@@ -176,6 +176,17 @@ function validateGroupBy(groupBy) {
     }
     return keys;
 }
+function validateSchema(schema) {
+    const defaultSchema = ['name', 'platform', 'os', 'keySize', 'api', 'category'];
+    if (schema === undefined) {
+        return defaultSchema;
+    }
+    const keys = schema.split(',');
+    if (keys.length === 1 && keys[0] === '') {
+        return defaultSchema;
+    }
+    return keys;
+}
 function validateAlertThreshold(alertThreshold, failThreshold) {
     if (alertThreshold === null) {
         throw new Error("'alert-threshold' input must not be empty");
@@ -186,6 +197,7 @@ function validateAlertThreshold(alertThreshold, failThreshold) {
 }
 async function configFromJobInput() {
     const groupByString = core.getInput('group-by') || undefined;
+    const schemaString = core.getInput('schema') || undefined;
     let inputDataPath = core.getInput('input-data-path');
     const biggerIsBetter = getBoolInput('bigger-is-better');
     const ghPagesBranch = core.getInput('gh-pages-branch');
@@ -207,6 +219,7 @@ async function configFromJobInput() {
     const maxItemsInChart = getUintInput('max-items-in-chart');
     let failThreshold = getPercentageInput('fail-threshold');
     const groupBy = validateGroupBy(groupByString);
+    const schema = validateSchema(schemaString);
     inputDataPath = await validateInputDataPath(inputDataPath);
     validateGhPagesBranch(ghPagesBranch);
     benchmarkDataDirPath = validateBenchmarkDataDirPath(benchmarkDataDirPath);
@@ -231,6 +244,7 @@ async function configFromJobInput() {
         failThreshold = alertThreshold;
     }
     return {
+        schema,
         groupBy,
         name,
         biggerIsBetter,
