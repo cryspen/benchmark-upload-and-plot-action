@@ -1,6 +1,8 @@
 inputs:
   group-by:
     type: string
+  schema:
+    type: string
   name:
     type: string
   input-data-path:

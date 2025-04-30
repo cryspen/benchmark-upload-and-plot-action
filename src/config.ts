@@ -6,6 +6,7 @@ import * as path from 'path';
 export interface Config {
     name: string;
     groupBy: string[];
+    schema: string[];
     biggerIsBetter: boolean;
     inputDataPath: string; // path to out data
     ghPagesBranch: string;
@@ -200,6 +201,21 @@ function validateGroupBy(groupBy?: string): string[] {
     return keys;
 }
 
+function validateSchema(schema?: string): string[] {
+    const defaultSchema = ['name', 'platform', 'os', 'keySize', 'api', 'category'];
+    if (schema === undefined) {
+        return defaultSchema;
+    }
+
+    const keys = schema.split(',');
+
+    if (keys.length === 1 && keys[0] === '') {
+        return defaultSchema;
+    }
+
+    return keys;
+}
+
 function validateAlertThreshold(alertThreshold: number | null, failThreshold: number | null): asserts alertThreshold {
     if (alertThreshold === null) {
         throw new Error("'alert-threshold' input must not be empty");
@@ -213,6 +229,7 @@ function validateAlertThreshold(alertThreshold: number | null, failThreshold: nu
 
 export async function configFromJobInput(): Promise<Config> {
     const groupByString: string | undefined = core.getInput('group-by') || undefined;
+    const schemaString: string | undefined = core.getInput('schema') || undefined;
 
     let inputDataPath: string = core.getInput('input-data-path');
     const biggerIsBetter = getBoolInput('bigger-is-better');
@@ -236,6 +253,7 @@ export async function configFromJobInput(): Promise<Config> {
     let failThreshold = getPercentageInput('fail-threshold');
 
     const groupBy = validateGroupBy(groupByString);
+    const schema = validateSchema(schemaString);
     inputDataPath = await validateInputDataPath(inputDataPath);
     validateGhPagesBranch(ghPagesBranch);
     benchmarkDataDirPath = validateBenchmarkDataDirPath(benchmarkDataDirPath);
@@ -261,6 +279,7 @@ export async function configFromJobInput(): Promise<Config> {
     }
 
     return {
+        schema,
         groupBy,
         name,
         biggerIsBetter,

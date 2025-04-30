@@ -16,6 +16,7 @@ export interface DataJson {
     repoUrl: string;
     entries: BenchmarkSuites;
     groupBy: string[];
+    schema: string[];
 }
 
 export const SCRIPT_PREFIX = 'window.BENCHMARK_DATA = ';
@@ -24,6 +25,7 @@ const DEFAULT_DATA_JSON = {
     repoUrl: '',
     entries: {},
     groupBy: ['os'],
+    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
 };
 
 async function loadDataJs(dataPath: string): Promise<DataJson> {
@@ -291,6 +293,7 @@ async function handleAlert(benchName: string, curSuite: Benchmark, prevSuite: Be
 
 function addBenchmarkToDataJson(
     groupBy: string[],
+    schema: string[],
     benchName: string,
     bench: Benchmark,
     data: DataJson,
@@ -303,6 +306,7 @@ function addBenchmarkToDataJson(
     data.lastUpdate = Date.now();
     data.groupBy = groupBy;
     data.repoUrl = htmlUrl;
+    data.schema = schema;
 
     // Add benchmark result
     if (data.entries[benchName] === undefined) {
@@ -353,6 +357,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(
         skipFetchGhPages,
         maxItemsInChart,
         groupBy,
+        schema,
     } = config;
     const rollbackActions = new Array<() => Promise<void>>();
 
@@ -408,7 +413,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(
     await io.mkdirP(benchmarkDataDirFullPath);
 
     const data = await loadDataJs(dataPath);
-    const prevBench = addBenchmarkToDataJson(groupBy, name, bench, data, maxItemsInChart);
+    const prevBench = addBenchmarkToDataJson(groupBy, schema, name, bench, data, maxItemsInChart);
 
     await storeDataJs(dataPath, data);
 
@@ -496,9 +501,9 @@ async function writeBenchmarkToExternalJson(
     jsonFilePath: string,
     config: Config,
 ): Promise<Benchmark | null> {
-    const { name, maxItemsInChart, saveDataFile, groupBy } = config;
+    const { name, maxItemsInChart, saveDataFile, groupBy, schema } = config;
     const data = await loadDataJson(jsonFilePath);
-    const prevBench = addBenchmarkToDataJson(groupBy, name, bench, data, maxItemsInChart);
+    const prevBench = addBenchmarkToDataJson(groupBy, schema, name, bench, data, maxItemsInChart);
 
     if (!saveDataFile) {
         core.debug('Skipping storing benchmarks in external data file');

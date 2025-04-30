@@ -63,6 +63,12 @@ Input definitions are written in [action.yml](./action.yml).
 - Default: `"os"`
 
 The grouping logic for the charts. This field specifies which data fields to group the charts by.
+ 
+### `schema` (Required)
+- Type: String
+- Default: `"name,platform,os,keySize,api,category"`
+
+The metadata schema for plots. This value must be a comma-separated list of strings.
 
 #### `name` (Required)
 
