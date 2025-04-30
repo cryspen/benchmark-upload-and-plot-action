@@ -109,6 +109,15 @@
         <script id="main-script">
             'use strict';
             (function () {
+                function timeZoneOffset() {
+                    // extract GMT+offset from current time zone, if available
+                    return new Date()
+                        .toString()
+                        .split(' ')
+                        .filter((s) => s.includes('GMT'))
+                        .map((s) => `(${s})`);
+                }
+
                 function buildPlotLayout() {
                     const offset = timeZoneOffset();
                     const layout = {
@@ -150,15 +159,6 @@
 
                     // add the plot to the elem
                     Plotly.newPlot(elem, filteredTraces, layout);
-                }
-
-                function timeZoneOffset() {
-                    // extract GMT+offset from current time zone, if available
-                    return new Date()
-                        .toString()
-                        .split(' ')
-                        .filter((s) => s.includes('GMT'))
-                        .map((s) => `(${s})`);
                 }
 
                 function buildKey(benchItem, schema) {
