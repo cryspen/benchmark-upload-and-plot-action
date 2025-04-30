@@ -229,7 +229,7 @@ function validateAlertThreshold(alertThreshold: number | null, failThreshold: nu
 
 export async function configFromJobInput(): Promise<Config> {
     const groupByString: string | undefined = core.getInput('group-by') || undefined;
-    const schemaString: string = core.getInput('schema');
+    const schemaString: string | undefined = core.getInput('schema') || undefined;
 
     let inputDataPath: string = core.getInput('input-data-path');
     const biggerIsBetter = getBoolInput('bigger-is-better');

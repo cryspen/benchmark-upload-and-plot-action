@@ -75,6 +75,7 @@ describe('loadResult()', function () {
         });
         const inputDataPath = path.join(__dirname, 'data', 'extract', test.file);
         const config = {
+            schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             inputDataPath,
         } as Config;
         const bench = await loadResult(config);
@@ -86,6 +87,7 @@ describe('loadResult()', function () {
 
     it('raises an error when output file is not readable', async function () {
         const config = {
+            schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             inputDataPath: 'path/does/not/exist.txt',
         } as Config;
         await A.rejects(loadResult(config));
@@ -93,6 +95,7 @@ describe('loadResult()', function () {
 
     it('raises an error when no output found', async function () {
         const config = {
+            schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             inputDataPath: path.join(__dirname, 'data', 'extract', 'invalid_output.txt'),
         } as Config;
         await A.rejects(loadResult(config), /^Error: No benchmark result was found in /);
@@ -116,6 +119,7 @@ describe('loadResult()', function () {
         };
         const inputDataPath = path.join(__dirname, 'data', 'extract', 'customBiggerIsBetter_output.json');
         const config = {
+            schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             inputDataPath,
         } as Config;
         const { commit } = await loadResult(config);
@@ -159,6 +163,7 @@ describe('loadResult()', function () {
         };
         const inputDataPath = path.join(__dirname, 'data', 'extract', 'customBiggerIsBetter_output.json');
         const config = {
+            schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             inputDataPath,
             githubToken: 'abcd1234',
             ref: 'refs/pull/123/head',
@@ -218,6 +223,7 @@ describe('loadResult()', function () {
         };
         const inputDataPath = path.join(__dirname, 'data', 'extract', 'customBiggerIsBetter_output.json');
         const config = {
+            schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             inputDataPath,
             githubToken: 'abcd1234',
         } as Config;
@@ -252,6 +258,7 @@ describe('loadResult()', function () {
         dummyGitHubContext.payload = {};
         const inputDataPath = path.join(__dirname, 'data', 'extract', 'customBiggerIsBetter_output.json');
         const config = {
+            schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             inputDataPath,
         } as Config;
         await A.rejects(loadResult(config), /^Error: No commit information is found in payload/);

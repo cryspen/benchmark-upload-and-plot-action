@@ -176,24 +176,35 @@ async function getCommit(githubToken?: string, ref?: string): Promise<Commit> {
     return getCommitFromGitHubAPIRequest(githubToken, ref);
 }
 
-function loadBenchmarkResult(output: string): BenchmarkResult[] {
+function loadBenchmarkResult(output: string, schema: string[]): BenchmarkResult[] {
+    let json: BenchmarkResult[];
     try {
-        const json: BenchmarkResult[] = JSON.parse(output);
-        // TODO: don't require all fields?
-        return json.map(({ name, value, unit, os, range, extra, category, keySize, platform, api }) => {
-            return { name, value, unit, os, range, extra, category, keySize, platform, api };
-        });
+        json = JSON.parse(output);
     } catch (err: any) {
         throw new Error(
             `Output file must be JSON file containing an array of entries in BenchmarkResult format: ${err.message}`,
         );
     }
+    json.forEach((result: BenchmarkResult) => {
+        schema.forEach((key) => {
+            if (!Object.keys(result).includes(key)) {
+                result[key] = undefined;
+            }
+            if (!result['range']) {
+                result['range'] = undefined;
+            }
+            if (!result['extra']) {
+                result['extra'] = undefined;
+            }
+        });
+    });
+    return json;
 }
 
 export async function loadResult(config: Config): Promise<Benchmark> {
     const output = await fs.readFile(config.inputDataPath, 'utf8');
-    const { githubToken, ref } = config;
-    const benches: BenchmarkResult[] = loadBenchmarkResult(output);
+    const { githubToken, ref, schema } = config;
+    const benches: BenchmarkResult[] = loadBenchmarkResult(output, schema);
 
     if (benches.length === 0) {
         throw new Error(`No benchmark result was found in ${config.inputDataPath}. Benchmark output was '${output}'`);
