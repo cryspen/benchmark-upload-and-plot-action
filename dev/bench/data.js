@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1746450961447,
+  "lastUpdate": 1746450965366,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -3314,6 +3314,40 @@ window.BENCHMARK_DATA = {
             "name": "bench_fib_20"
           }
         ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "1044132d77cceb6886c335d5a15ee385a07a4669",
+          "message": "Make comparison for failure when exceeding threshold based on key instead of name",
+          "timestamp": "2025-04-30T12:28:41Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/26/commits/1044132d77cceb6886c335d5a15ee385a07a4669"
+        },
+        "date": 1746450964424,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "value": 135,
+            "range": "± 24",
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "name": "bench_fib_10"
+          },
+          {
+            "value": 18149,
+            "range": "± 755",
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "name": "bench_fib_20"
+          }
+        ]
       }
     ],
     "Test fail if exceed threshold": [
@@ -3548,10 +3582,15 @@ window.BENCHMARK_DATA = {
     ]
   },
   "groupBy": [
-    "os"
+    "os",
+    "keySize"
   ],
   "schema": [
+    "os",
+    "keySize",
     "name",
-    "os"
+    "platform",
+    "api",
+    "category"
   ]
 }
