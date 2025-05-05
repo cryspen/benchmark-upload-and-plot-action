@@ -199,7 +199,7 @@
 
                         return {
                             metadata,
-                            x: dataset.map((d) => new Date(d.commit.timestamp)),
+                            x: dataset.map((d) => new Date(d.date)),
                             y: dataset.map((d) => d.bench.value),
                             dataset,
                             showlegend: true,
