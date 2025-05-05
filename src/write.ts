@@ -69,14 +69,28 @@ interface Alert {
     ratio: number;
 }
 
-function findAlerts(curSuite: Benchmark, prevSuite: Benchmark, threshold: number): Alert[] {
+// construct the benchmark key using the schema,
+// so we can compare BenchmarkResults for the purpose
+// of generating alerts.
+function benchmarkKey(benchmark: BenchmarkResult, schema: string[]): string {
+    const key: any = {};
+    for (const s of schema) {
+        key[s] = benchmark[s];
+    }
+
+    const keyString = JSON.stringify(key);
+    return keyString;
+}
+
+function findAlerts(curSuite: Benchmark, prevSuite: Benchmark, threshold: number, schema: string[]): Alert[] {
     core.debug(`Comparing current:${curSuite.commit.id} and prev:${prevSuite.commit.id} for alert`);
 
     const alerts = [];
     for (const current of curSuite.benches) {
-        const prev = prevSuite.benches.find((b) => b.name === current.name);
+        const currentKey = benchmarkKey(current, schema);
+        const prev = prevSuite.benches.find((b: BenchmarkResult) => benchmarkKey(b, schema) === currentKey);
         if (prev === undefined) {
-            core.debug(`Skipped because benchmark '${current.name}' is not found in previous benchmarks`);
+            core.debug(`Skipped because benchmark '${currentKey}' is not found in previous benchmarks`);
             continue;
         }
 
@@ -251,7 +265,7 @@ async function handleAlert(benchName: string, curSuite: Benchmark, prevSuite: Be
         return;
     }
 
-    const alerts = findAlerts(curSuite, prevSuite, alertThreshold);
+    const alerts = findAlerts(curSuite, prevSuite, alertThreshold, config.schema);
     if (alerts.length === 0) {
         core.debug('No performance alert found happily');
         return;

@@ -64,11 +64,17 @@ Input definitions are written in [action.yml](./action.yml).
 
 The grouping logic for the charts. This field specifies which data fields to group the charts by.
  
-### `schema` (Required)
+#### `schema` (Required)
 - Type: String
 - Default: `"name,platform,os,keySize,api,category"`
 
 The metadata schema for plots. This value must be a comma-separated list of strings.
+
+#### `bigger-is-better` (Required)
+- Type: Boolean
+- Default: `false`
+
+Whether a larger value of a benchmark observation is better for comparison purposes. This is used to generate alerts when new values increased beyond the provided threshold.
 
 #### `name` (Required)
 
