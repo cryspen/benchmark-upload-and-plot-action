@@ -79,9 +79,6 @@ function benchmarkKey(benchmark: BenchmarkResult, schema: string[]): string {
     }
 
     const keyString = JSON.stringify(key);
-    console.log(schema);
-    console.log(keyString);
-    console.log(benchmark.os);
     return keyString;
 }
 
