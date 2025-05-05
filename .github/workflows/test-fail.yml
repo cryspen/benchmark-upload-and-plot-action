@@ -35,6 +35,7 @@ jobs:
           schema: 'name,os'
           fail-on-alert: true
           alert-threshold: 200%
+          bigger-is-better: false,
   # ensure that the above job fails
   check-action-fails-on-exceed-threshold:
     if: ${{ always() }}
