@@ -6,6 +6,10 @@ branding:
   color: 'blue'
 
 inputs:
+  bigger-is-better:
+    description: 'Whether a larger value is better for comparison purposes'
+    required: true
+    default: false 
   group-by:
     description: 'Groups for plots. This value must be a comma-separated list of strings'
     required: true

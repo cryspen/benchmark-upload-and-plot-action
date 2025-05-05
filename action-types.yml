@@ -1,4 +1,6 @@
 inputs:
+  bigger-is-better:
+    type: boolean
   group-by:
     type: string
   schema:
