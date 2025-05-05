@@ -1,0 +1,17 @@
+[
+    {
+        "name": "My Custom Smaller Is Better Benchmark - Bench 1",
+        "unit": "Megabytes",
+        "value": 0
+    },
+    {
+        "name": "My Custom Smaller Is Better Benchmark - Bench 2",
+        "unit": "Megabytes",
+        "value": 1
+    },
+    {
+        "name": "My Custom Smaller Is Better Benchmark - Bench 3",
+        "unit": "Megabytes",
+        "value": 2
+    }
+]
