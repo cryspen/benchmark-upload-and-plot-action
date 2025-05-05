@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1746450386973,
+  "lastUpdate": 1746450388047,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -3358,19 +3358,52 @@ window.BENCHMARK_DATA = {
             "value": 2
           }
         ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "b1c259816c9308f8512b1a4645694498c8ff8dc0",
+          "message": "Make comparison for failure when exceeding threshold based on key instead of name",
+          "timestamp": "2025-04-30T12:28:41Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/26/commits/b1c259816c9308f8512b1a4645694498c8ff8dc0"
+        },
+        "date": 1746450386964,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 1",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 0
+          },
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 2",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 1
+          },
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 3",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 2
+          }
+        ]
       }
     ]
   },
   "groupBy": [
-    "os",
-    "keySize"
+    "os"
   ],
   "schema": [
-    "os",
-    "keySize",
     "name",
-    "platform",
-    "api",
-    "category"
+    "os"
   ]
 }
