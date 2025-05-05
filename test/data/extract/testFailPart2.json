@@ -1,0 +1,21 @@
+
+[
+    {
+        "name": "My Custom Smaller Is Better Benchmark - Bench 1",
+        "unit": "Megabytes",
+	"os": "ubuntu-latest_64",
+        "value": 200
+    },
+    {
+        "name": "My Custom Smaller Is Better Benchmark - Bench 2",
+        "unit": "Megabytes",
+	"os": "ubuntu-latest_64",
+        "value": 200
+    },
+    {
+        "name": "My Custom Smaller Is Better Benchmark - Bench 3",
+        "unit": "Megabytes",
+	"os": "ubuntu-latest_64",
+        "value": 2
+    }
+]
