@@ -1,0 +1,30 @@
+name: Example v1 workflow
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  example-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the current repo to get test data
+      - uses: actions/checkout@v4
+        with:
+          repository: cryspen/benchmark-data-extract-transform
+          path: first-action
+          ref: dev
+      - uses: cryspen/benchmark-data-extract-transform@v1
+        with:
+          tool: 'cargo'
+          platform: 'ubuntu-latest'
+          output-file-path: ./first-action/test/data/extract/cargo_output.txt
+          data-out-path: /home/runner/work/output.json
+      - uses: cryspen/benchmark-upload-and-plot-action@v1
+        with:
+          name: 'Test second action'
+          input-data-path: /home/runner/work/output.json
+          gh-repository: github.com/cryspen/benchmark-upload-and-plot-action
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          gh-pages-branch: gh-pages-test
