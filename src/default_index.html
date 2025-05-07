@@ -281,6 +281,11 @@
                         .map(([field, value]) => `${field}: ${value}`)
                         .join(', ');
                 }
+                function addAttributesToChartElement(elem, groupKey) {
+                    Object.entries(groupKey).forEach(([key, value]) => {
+                        elem.setAttribute(key, value);
+                    });
+                }
                 function renderAllCharts() {
                     // retrieve the data for the benchmark with the first name
                     // TODO: don't just support a single overarching name
@@ -321,6 +326,8 @@
                         // add the legend name to each trace,
                         // as well as the tooltip text for each point in each trace
                         filteredTraces.forEach((trace) => addLegendNameAndTooltip(trace, groupBy, schema));
+
+                        addAttributesToChartElement(setElem, groupKey);
 
                         chartFilteredTraces(setElem, title, filteredTraces);
                     });
