@@ -60,6 +60,10 @@
             .header-label {
                 margin-right: 4px;
             }
+            .dropdowns {
+                display: flex;
+                gap: 25px;
+            }
             .filter-interface {
                 display: flex;
                 gap: 25px;
@@ -104,8 +108,10 @@
             </div>
         </header>
         <main id="main">
-            <div id="branch-pr-dropdown"></div>
-            <div id="benchmark-set-dropdown"></div>
+            <div class="dropdowns">
+                <div id="branch-pr-dropdown"></div>
+                <div id="benchmark-set-dropdown"></div>
+            </div>
             <div id="body"></div>
         </main>
         <footer></footer>
@@ -488,7 +494,7 @@
                     elem.innerHTML = '';
 
                     // if there is one or fewer names, remove the dropdown
-                    if (names.length <= 1) {
+                    if (names.length === 0) {
                         return;
                     }
                     const label = document.createElement('label');
