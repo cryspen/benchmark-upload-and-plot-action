@@ -104,6 +104,7 @@
             </div>
         </header>
         <main id="main">
+            <div id="branch-pr-dropdown"></div>
             <div id="benchmark-set-dropdown"></div>
             <div id="body"></div>
         </main>
@@ -441,9 +442,49 @@
                         elem.appendChild(checklist);
                     });
                 }
+                function populateBranchPrDropdown(branches, prs) {
+                    let elem = document.getElementById('branch-pr-dropdown');
+                    elem.innerHTML = '';
+
+                    // if there are no branches or prs, remove the dropdown
+                    if (branches.length == 0 && prs.length == 0) {
+                        return;
+                    }
+                    const label = document.createElement('label');
+                    label.setAttribute('for', 'branch-pr-dropdown');
+                    elem.appendChild(label);
+
+                    const select = document.createElement('select');
+                    select.id = 'branch-pr-dropdown';
+                    elem.appendChild(select);
+
+                    branches.forEach((name) => {
+                        const option = document.createElement('option');
+                        option.setAttribute('value', name);
+                        option.textContent = `branch ${name}`;
+                        select.appendChild(option);
+                    });
+                    prs.forEach((name) => {
+                        const option = document.createElement('option');
+                        option.setAttribute('value', name);
+                        option.textContent = `pr ${name}`;
+                        select.appendChild(option);
+                    });
+
+                    select.addEventListener('change', async function () {
+                        // TODO: set default benchSet
+                        // rerender other dropdown
+                        // and rerender charts
+                    });
+                }
                 function populateBenchSetDropdown(names) {
-                    // TODO: clear old
                     let elem = document.getElementById('benchmark-set-dropdown');
+                    elem.innerHTML = '';
+
+                    // if there is one or fewer names, remove the dropdown
+                    if (names.length <= 1) {
+                        return;
+                    }
                     const label = document.createElement('label');
                     label.setAttribute('for', 'bench-set-dropdown');
                     elem.appendChild(label);
@@ -528,27 +569,34 @@
                         });
                 }
                 async function init() {
-                    window.BENCHMARK_DATA = await loadDataFromUrl('branch/main.json');
+                    const listing = await loadDataFromUrl('listing.json');
+
+                    // TODO: error handling
+                    const branch = listing.branches[0];
+                    const dataUrl = `branch/${branch}.json`;
+                    window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
                     const data = window.BENCHMARK_DATA;
+
+                    populateBranchPrDropdown(listing.branches, listing.prs);
 
                     // Render header
                     document.getElementById('last-update').textContent = new Date(data.lastUpdate).toString();
                     const repoLink = document.getElementById('repository-link');
                     repoLink.href = data.repoUrl;
                     repoLink.textContent = data.repoUrl;
+
+                    // retrieve the data for the benchmark set with the first name
+                    const benchSets = window.BENCHMARK_DATA.entries;
+                    const [benchSet, entry] = Object.entries(benchSets)[0];
+
+                    // TODO: build the dropdown for all files
+
+                    // build the dropdown for all benchmark sets
+                    populateBenchSetDropdown(Object.keys(benchSets));
+                    renderAllCharts(benchSet);
                 }
 
                 await init();
-
-                // retrieve the data for the benchmark set with the first name
-                const benchSets = window.BENCHMARK_DATA.entries;
-                const [benchSet, entry] = Object.entries(benchSets)[0];
-
-                // TODO: build the dropdown for all files
-
-                // build the dropdown for all benchmark sets
-                populateBenchSetDropdown(Object.keys(benchSets));
-                renderAllCharts(benchSet);
             })();
         </script>
     </body>
