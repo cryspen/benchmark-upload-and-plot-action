@@ -107,10 +107,9 @@
         <footer></footer>
 
         <script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
-        <script src="data.js"></script>
         <script id="main-script">
             'use strict';
-            (function () {
+            (async function () {
                 function timeZoneOffset() {
                     // extract GMT+offset from current time zone, if available
                     return new Date()
@@ -282,28 +281,29 @@
 
                     return Array.from(traces);
                 }
-                // get the schema object from `window.BENCHMARK_DATA`,
+                // get the correct schema object from `window.BENCHMARK_DATA`,
                 // and return a default value if invalid or none is provided.
-                function retrieveSchema() {
+                function retrieveSchema(benchSet) {
                     const defaultSchema = ['name', 'platform', 'os', 'keySize', 'api', 'category'];
 
                     let schema = window.BENCHMARK_DATA.schema;
-                    if (!schema || typeof schema !== 'object') {
+                    if (!schema || typeof schema !== 'object' || !schema.hasOwnProperty(benchSet)) {
                         console.error(`No or invalid schema provided: defaulting to [${defaultSchema}]`);
-                        schema = defaultSchema;
+                        return defaultSchema;
                     }
-                    return schema;
+
+                    return schema[benchSet];
                 }
-                // get the groupBy object from `window.BENCHMARK_DATA`,
+                // get the correct groupBy object from `window.BENCHMARK_DATA`,
                 // and return a default value if invalid or none is provided.
-                function retrieveGroupBy() {
+                function retrieveGroupBy(benchSet) {
                     const defaultGroupBy = ['os'];
                     let groupBy = window.BENCHMARK_DATA.groupBy;
-                    if (!groupBy || typeof groupBy !== 'object') {
+                    if (!groupBy || typeof groupBy !== 'object' || !groupBy.hasOwnProperty(benchSet)) {
                         console.error(`No or invalid groupBy provided: defaulting to [${defaultGroupBy}]`);
-                        groupBy = defaultGroupBy;
+                        return defaultGroupBy;
                     }
-                    return groupBy;
+                    return groupBy[benchSet];
                 }
 
                 // build the groupKey for a trace,
@@ -442,11 +442,11 @@
                     // retrieve the data for the benchmark with the first name
                     // TODO: don't just support a single overarching name
                     const entries = window.BENCHMARK_DATA.entries;
-                    const entry = Object.values(entries)[0];
+                    const [benchSet, entry] = Object.entries(entries)[0];
 
                     // retrieve the custom metadata schema from `window.BENCHMARK_DATA`
                     // each combination of fields is used to uniquely identify a trace
-                    const schema = retrieveSchema();
+                    const schema = retrieveSchema(benchSet);
 
                     // build the data traces by separating out the observations
                     // by key. This is equivalent to separating out the observations
@@ -457,7 +457,7 @@
                     // get the groupBy information from `window.BENCHMARK_DATA`
                     // this is an array of keys, e.g. ['os', 'keySize']
                     // there should be one plot per combination of these values
-                    const groupBy = retrieveGroupBy();
+                    const groupBy = retrieveGroupBy(benchSet);
 
                     const main = document.getElementById('main');
 
@@ -496,7 +496,15 @@
                     main.appendChild(filterElem);
                     main.appendChild(setElem);
                 }
-                function init() {
+                async function loadDataFromUrl(url) {
+                    return fetch(url)
+                        .then((response) => response.json())
+                        .catch((e) => {
+                            throw new Error(`Error retrieving data: ${e}`);
+                        });
+                }
+                async function init() {
+                    window.BENCHMARK_DATA = await loadDataFromUrl('branch/main.json');
                     const data = window.BENCHMARK_DATA;
 
                     // Render header
@@ -506,7 +514,7 @@
                     repoLink.textContent = data.repoUrl;
                 }
 
-                init();
+                await init();
                 renderAllCharts();
             })();
         </script>
