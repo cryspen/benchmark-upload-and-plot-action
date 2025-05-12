@@ -183,8 +183,6 @@
                     for (const s of schema) {
                         key[s] = benchItem[s];
                     }
-                    // include unit
-                    key.unit = benchItem.unit;
 
                     return JSON.stringify(key);
                 }
