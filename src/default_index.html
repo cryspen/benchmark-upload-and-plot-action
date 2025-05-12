@@ -103,7 +103,10 @@
                 <a id="repository-link" rel="noopener"></a>
             </div>
         </header>
-        <main id="main"></main>
+        <main id="main">
+            <div id="benchmark-set-dropdown"></div>
+            <div id="body"></div>
+        </main>
         <footer></footer>
 
         <script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
@@ -438,11 +441,34 @@
                         elem.appendChild(checklist);
                     });
                 }
-                function renderAllCharts() {
-                    // retrieve the data for the benchmark with the first name
-                    // TODO: don't just support a single overarching name
-                    const entries = window.BENCHMARK_DATA.entries;
-                    const [benchSet, entry] = Object.entries(entries)[0];
+                function populateBenchSetDropdown(names) {
+                    // TODO: clear old
+                    let elem = document.getElementById('benchmark-set-dropdown');
+                    const label = document.createElement('label');
+                    label.setAttribute('for', 'bench-set-dropdown');
+                    elem.appendChild(label);
+
+                    const select = document.createElement('select');
+                    select.id = 'bench-set-dropdown';
+                    elem.appendChild(select);
+
+                    names.forEach((name) => {
+                        const option = document.createElement('option');
+                        option.setAttribute('value', name);
+                        option.textContent = name;
+                        select.appendChild(option);
+                    });
+                    select.addEventListener('change', async function () {
+                        const benchSet = this.value;
+                        renderAllCharts(benchSet);
+                    });
+                }
+                function renderAllCharts(benchSet) {
+                    const main = document.getElementById('body');
+                    main.innerHTML = '';
+
+                    // retrieve the data
+                    const entry = window.BENCHMARK_DATA.entries[benchSet];
 
                     // retrieve the custom metadata schema from `window.BENCHMARK_DATA`
                     // each combination of fields is used to uniquely identify a trace
@@ -459,8 +485,6 @@
                     // there should be one plot per combination of these values
                     const groupBy = retrieveGroupBy(benchSet);
 
-                    const main = document.getElementById('main');
-
                     // create a div for the filter interface
                     const filterElem = document.createElement('div');
                     filterElem.className = 'filter-interface';
@@ -468,7 +492,7 @@
                     // create a div for the benchmark set
                     const setElem = document.createElement('div');
                     setElem.className = 'benchmark-set';
-                    addTitleToElement(setElem, `Compare platform for ${groupBy}`);
+                    addTitleToElement(setElem, `${benchSet} by ${groupBy}`);
 
                     // group datasets by the relevant keys
                     const groupedData = Object.groupBy(traces, (trace) => buildTraceGroupKey(trace, groupBy));
@@ -515,7 +539,16 @@
                 }
 
                 await init();
-                renderAllCharts();
+
+                // retrieve the data for the benchmark set with the first name
+                const benchSets = window.BENCHMARK_DATA.entries;
+                const [benchSet, entry] = Object.entries(benchSets)[0];
+
+                // TODO: build the dropdown for all files
+
+                // build the dropdown for all benchmark sets
+                populateBenchSetDropdown(Object.keys(benchSets));
+                renderAllCharts(benchSet);
             })();
         </script>
     </body>
