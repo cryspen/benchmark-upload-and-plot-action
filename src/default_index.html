@@ -153,6 +153,9 @@
 
                     // add the plot to the elem
                     Plotly.newPlot(elem, filteredTraces, layout);
+
+                    // return the element
+                    return elem;
                 }
 
                 function buildKey(benchItem, schema) {
@@ -286,6 +289,79 @@
                         elem.setAttribute(key, value);
                     });
                 }
+                function setChartHiddenStatus(hide, key, value) {
+                    const charts = document.getElementsByClassName('benchmark-graphs');
+                    const filteredCharts = Array.from(charts).filter((chart) => {
+                        const chartValue = chart.getAttribute(key);
+                        return chartValue === value;
+                    });
+                    filteredCharts.forEach((chart) => {
+                        const display = hide ? 'none' : null;
+                        chart.style.setProperty('display', display);
+                    });
+                }
+                function getUniqueValuesForKey(groupKeys, groupBy) {
+                    // get the unique values for each group
+                    const uniqueValues = {};
+                    groupBy.forEach((key) => {
+                        const keys = groupKeys.map((k) => k[key]);
+                        const set = [...new Set(keys)];
+                        uniqueValues[key] = set;
+                    });
+
+                    return uniqueValues;
+                }
+                function createFilterInterface(elem, groupKeys, groupBy) {
+                    const uniqueValues = getUniqueValuesForKey(groupKeys, groupBy);
+
+                    Object.entries(uniqueValues).forEach(([key, values]) => {
+                        const checklist = document.createElement('div');
+                        checklist.className = 'checklist';
+                        checklist.textContent = key;
+
+                        values.forEach((value) => {
+                            // generate the filter interface from the unique values
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'checklist-entry';
+
+                            // id to match checkbox to label
+                            const id = `${key}-${value}`;
+
+                            // single checkbox with label
+                            const checkBox = document.createElement('input');
+                            checkBox.setAttribute('type', 'checkbox');
+                            checkBox.setAttribute('id', id);
+
+                            // start with checkbox checked
+                            checkBox.checked = true;
+
+                            // set the key and value attributes
+                            checkBox.setAttribute('key', key);
+                            checkBox.setAttribute('value', value);
+
+                            // create the label for thecheckbox
+                            const label = document.createElement('label');
+                            label.setAttribute('for', id);
+                            label.textContent = value;
+
+                            checkBox.addEventListener('change', function () {
+                                const key = this.getAttribute('key');
+                                const value = this.getAttribute('value');
+                                if (this.checked) {
+                                    setChartHiddenStatus(false, key, value);
+                                } else {
+                                    setChartHiddenStatus(true, key, value);
+                                }
+                            });
+                            wrapper.appendChild(checkBox);
+                            wrapper.appendChild(label);
+
+                            checklist.appendChild(wrapper);
+                        });
+
+                        elem.appendChild(checklist);
+                    });
+                }
                 function renderAllCharts() {
                     // retrieve the data for the benchmark with the first name
                     // TODO: don't just support a single overarching name
@@ -307,15 +383,23 @@
                     // there should be one plot per combination of these values
                     const groupBy = retrieveGroupBy();
 
-                    // create a div for the benchmark set
                     const main = document.getElementById('main');
+
+                    // create a div for the filter interface
+                    const filterElem = document.createElement('div');
+                    filterElem.className = 'filter-interface';
+
+                    // create a div for the benchmark set
                     const setElem = document.createElement('div');
                     setElem.className = 'benchmark-set';
-                    main.appendChild(setElem);
                     addTitleToElement(setElem, `Compare platform for ${groupBy}`);
 
                     // group datasets by the relevant keys
                     const groupedData = Object.groupBy(traces, (trace) => buildTraceGroupKey(trace, groupBy));
+                    const groupKeys = Object.keys(groupedData).map((keyString) => parseKey(keyString, groupBy));
+
+                    // create the interface at the top of the page for filtering
+                    createFilterInterface(filterElem, groupKeys, groupBy);
 
                     // create  a chart for each group
                     Object.entries(groupedData).forEach(([groupKeyString, filteredTraces]) => {
@@ -327,10 +411,14 @@
                         // as well as the tooltip text for each point in each trace
                         filteredTraces.forEach((trace) => addLegendNameAndTooltip(trace, groupBy, schema));
 
-                        addAttributesToChartElement(setElem, groupKey);
-
-                        chartFilteredTraces(setElem, title, filteredTraces);
+                        const chartElem = chartFilteredTraces(setElem, title, filteredTraces);
+                        if (chartElem) {
+                            addAttributesToChartElement(chartElem, groupKey);
+                        }
                     });
+
+                    main.appendChild(filterElem);
+                    main.appendChild(setElem);
                 }
                 function init() {
                     const data = window.BENCHMARK_DATA;
