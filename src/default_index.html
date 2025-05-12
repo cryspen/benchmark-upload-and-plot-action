@@ -136,6 +136,9 @@
                         return;
                     }
 
+                    // adjust data to have the appropriate unit
+                    const unit = adjustDataAndUnit(filteredTraces);
+
                     // create elem for plot
                     const elem = document.createElement('div');
                     elem.className = 'benchmark-graphs';
@@ -146,7 +149,6 @@
                     // get the unit from the first item
                     // this is possible because there is at least one data point,
                     // and the unit is the same across all data points.
-                    const unit = filteredTraces[0].metadata.unit;
                     layout.yaxis = { title: { text: `Value (${unit})` } };
 
                     layout.title = { text: title };
@@ -188,6 +190,7 @@
                         // micro
                         case '\u03bc':
                         case '\u00b5':
+                        case 'u':
                             newValue = value * 1000;
                             break;
                         case 'n':
@@ -205,24 +208,34 @@
                     return newValue;
                 }
                 // adjust all data to same unit and get optimal unit
-                function adjustDataAndUnit(dataset) {
-                    // first convert to nanoseconds
-                    const dataNs = dataset.map((d) => getNanoseconds(d.bench.value, d.bench.unit));
+                // returns the unit, and adjusts the traces in place
+                function adjustDataAndUnit(traces) {
+                    // get the max value across all traces
+                    const maxes = traces.map((trace) => Math.max(...trace.dataNs));
+                    const maxValue = Math.max(...maxes);
 
                     // determine best unit
-                    const maxValue = Math.max(...dataNs);
+                    let scaleFactor;
+                    let unit;
                     if (maxValue > 1_000_000_000) {
-                        const dataSeconds = dataNs.map((d) => d / 1_000_000_000.0);
-                        return [dataSeconds, 's/iter'];
+                        scaleFactor = 1_000_000_000.0;
+                        unit = 's/iter';
                     } else if (maxValue > 1_000_000) {
-                        const dataMilliseconds = dataNs.map((d) => d / 1_000_000.0);
-                        return [dataMilliseconds, 'ms/iter'];
+                        scaleFactor = 1_000_000.0;
+                        unit = 'ms/iter';
                     } else if (maxValue > 1_000) {
-                        const dataMicroseconds = dataNs.map((d) => d / 1_000.0);
-                        return [dataMicroseconds, '\u03BCs/iter'];
+                        scaleFactor = 1_000.0;
+                        unit = '\u03BCs/iter';
                     } else {
-                        return [dataNs, 'ns/iter'];
+                        scaleFactor = 1.0;
+                        unit = 'ns/iter';
                     }
+                    // add the correct y axis data
+                    traces.forEach((trace) => {
+                        trace.y = trace.dataNs.map((d) => d / scaleFactor);
+                    });
+
+                    return unit;
                 }
                 // separates the data into traces by key
                 function separateAllTraces(commits, schema) {
@@ -244,14 +257,15 @@
                     // prepare for plotting
                     const traces = Object.entries(groupedData).map(([keyString, dataset]) => {
                         const metadata = parseKey(keyString, schema);
-
-                        const [y, unit] = adjustDataAndUnit(dataset);
-                        metadata.unit = unit;
+                        // first convert to nanoseconds
+                        const dataNs = dataset.map((d) => getNanoseconds(d.bench.value, d.bench.unit));
+                        metadata.unit = 'ns/iter';
 
                         return {
                             metadata,
                             x: dataset.map((d) => new Date(d.date)),
-                            y,
+                            // y will be constructed later
+                            dataNs,
                             dataset,
                             showlegend: true,
                             hoverinfo: 'text',
