@@ -179,6 +179,51 @@
                     }
                     return key;
                 }
+                function getNanoseconds(value, unit) {
+                    // XXX: should unify unit format
+                    const unitIdentifier = unit[0];
+
+                    let newValue;
+                    switch (unitIdentifier) {
+                        // micro
+                        case '\u03bc':
+                        case '\u00b5':
+                            newValue = value * 1000;
+                            break;
+                        case 'n':
+                            newValue = value;
+                            break;
+                        case 'm':
+                            newValue = value * 1_000_000;
+                            break;
+                        case 's':
+                            newValue = value * 1_000_000_000;
+                            break;
+                        default:
+                            throw new Error(`undefined unit: ${unitIdentifier}`);
+                    }
+                    return newValue;
+                }
+                // adjust all data to same unit and get optimal unit
+                function adjustDataAndUnit(dataset) {
+                    // first convert to nanoseconds
+                    const dataNs = dataset.map((d) => getNanoseconds(d.bench.value, d.bench.unit));
+
+                    // determine best unit
+                    const maxValue = Math.max(...dataNs);
+                    if (maxValue > 1_000_000_000) {
+                        const dataSeconds = dataNs.map((d) => d / 1_000_000_000.0);
+                        return [dataSeconds, 's/iter'];
+                    } else if (maxValue > 1_000_000) {
+                        const dataMilliseconds = dataNs.map((d) => d / 1_000_000.0);
+                        return [dataMilliseconds, 'ms/iter'];
+                    } else if (maxValue > 1_000) {
+                        const dataMicroseconds = dataNs.map((d) => d / 1_000.0);
+                        return [dataMicroseconds, '\u03BCs/iter'];
+                    } else {
+                        return [dataNs, 'ns/iter'];
+                    }
+                }
                 // separates the data into traces by key
                 function separateAllTraces(commits, schema) {
                     // flatten and keep commit data
@@ -200,10 +245,13 @@
                     const traces = Object.entries(groupedData).map(([keyString, dataset]) => {
                         const metadata = parseKey(keyString, schema);
 
+                        const [y, unit] = adjustDataAndUnit(dataset);
+                        metadata.unit = unit;
+
                         return {
                             metadata,
                             x: dataset.map((d) => new Date(d.date)),
-                            y: dataset.map((d) => d.bench.value),
+                            y,
                             dataset,
                             showlegend: true,
                             hoverinfo: 'text',
@@ -253,8 +301,9 @@
                     const commitId = observation.commit.id;
                     const message = observation.commit.message;
                     const url = observation.commit.url;
+                    const rangeText = range ? range : '';
 
-                    return `<b>${name}</b><br>value: ${value} ${unit} ${range}<br>commit id: ${commitId}<br>commit name: ${message}<br>commit url: ${url}`;
+                    return `<b>${name}</b><br>value: ${value} ${unit} ${rangeText}<br>commit id: ${commitId}<br>commit name: ${message}<br>commit url: ${url}`;
                 }
                 // return the name for the graph legend,
                 // using only the metadata entries that are not included in the
