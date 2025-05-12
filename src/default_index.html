@@ -418,10 +418,10 @@
                             checkBox.setAttribute('key', key);
                             checkBox.setAttribute('value', value);
 
-                            // create the label for thecheckbox
+                            // create the label for the checkbox
                             const label = document.createElement('label');
                             label.setAttribute('for', id);
-                            label.textContent = value;
+                            label.textContent = value ? value : 'undefined';
 
                             checkBox.addEventListener('change', function () {
                                 const key = this.getAttribute('key');
