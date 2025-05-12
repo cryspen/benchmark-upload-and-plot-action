@@ -460,21 +460,27 @@
 
                     branches.forEach((name) => {
                         const option = document.createElement('option');
-                        option.setAttribute('value', name);
-                        option.textContent = `branch ${name}`;
+                        const text = `branch ${name}`;
+                        option.setAttribute('value', text);
+                        option.textContent = text;
                         select.appendChild(option);
                     });
                     prs.forEach((name) => {
                         const option = document.createElement('option');
-                        option.setAttribute('value', name);
-                        option.textContent = `pr ${name}`;
+                        const text = `pr ${name}`;
+                        option.setAttribute('value', text);
+                        option.textContent = text;
                         select.appendChild(option);
                     });
 
                     select.addEventListener('change', async function () {
-                        // TODO: set default benchSet
-                        // rerender other dropdown
-                        // and rerender charts
+                        const [type, value] = this.value.split(' ');
+                        if (type === 'pr') {
+                            await loadDataFromPr(value);
+                        } else {
+                            await loadDataFromBranch(value);
+                        }
+                        rerenderAll();
                     });
                 }
                 function populateBenchSetDropdown(names) {
@@ -568,16 +574,34 @@
                             throw new Error(`Error retrieving data: ${e}`);
                         });
                 }
-                async function init() {
-                    const listing = await loadDataFromUrl('listing.json');
-
-                    // TODO: error handling
-                    const branch = listing.branches[0];
+                async function loadDataFromBranch(branch) {
                     const dataUrl = `branch/${branch}.json`;
                     window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
-                    const data = window.BENCHMARK_DATA;
+                }
+                async function loadDataFromPr(pr) {
+                    const dataUrl = `pr/${pr}.json`;
+                    window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
+                }
+                function rerenderAll() {
+                    console.log(window.BENCHMARK_DATA);
+                    // retrieve the data for the benchmark set with the first name
+                    const benchSets = window.BENCHMARK_DATA.entries;
+                    const [benchSet, entry] = Object.entries(benchSets)[0];
 
+                    // build the dropdown for all benchmark sets
+                    populateBenchSetDropdown(Object.keys(benchSets));
+                    renderAllCharts(benchSet);
+                }
+
+                async function init() {
+                    const listing = await loadDataFromUrl('listing.json');
                     populateBranchPrDropdown(listing.branches, listing.prs);
+
+                    // TODO: error handling
+                    // TODO: default to main?
+                    const branch = listing.branches[0];
+                    await loadDataFromBranch(branch);
+                    const data = window.BENCHMARK_DATA;
 
                     // Render header
                     document.getElementById('last-update').textContent = new Date(data.lastUpdate).toString();
@@ -585,15 +609,7 @@
                     repoLink.href = data.repoUrl;
                     repoLink.textContent = data.repoUrl;
 
-                    // retrieve the data for the benchmark set with the first name
-                    const benchSets = window.BENCHMARK_DATA.entries;
-                    const [benchSet, entry] = Object.entries(benchSets)[0];
-
-                    // TODO: build the dropdown for all files
-
-                    // build the dropdown for all benchmark sets
-                    populateBenchSetDropdown(Object.keys(benchSets));
-                    renderAllCharts(benchSet);
+                    rerenderAll();
                 }
 
                 await init();
