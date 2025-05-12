@@ -60,6 +60,14 @@
             .header-label {
                 margin-right: 4px;
             }
+            .filter-interface {
+                display: flex;
+                gap: 25px;
+            }
+            .checklist-title {
+                font-weight: bold;
+                text-align: center;
+            }
             .benchmark-set {
                 margin: 8px 0;
                 width: 100%;
@@ -375,12 +383,17 @@
                     return uniqueValues;
                 }
                 function createFilterInterface(elem, groupKeys, groupBy) {
+                    elem.className = 'filter-interface';
                     const uniqueValues = getUniqueValuesForKey(groupKeys, groupBy);
 
                     Object.entries(uniqueValues).forEach(([key, values]) => {
                         const checklist = document.createElement('div');
                         checklist.className = 'checklist';
-                        checklist.textContent = key;
+
+                        const title = document.createElement('div');
+                        title.className = 'checklist-title';
+                        title.textContent = key;
+                        checklist.appendChild(title);
 
                         values.forEach((value) => {
                             // generate the filter interface from the unique values
