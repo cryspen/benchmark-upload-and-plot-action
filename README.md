@@ -98,9 +98,6 @@ Path to a file which contains the output from benchmark tool, in the standardize
 
 Name of your GitHub pages branch.
 
-Note: If you're using `docs/` directory of `main` branch for GitHub pages, please set `gh-pages-branch`
-to `main` and `benchmark-data-dir-path` to the directory under `docs` like `docs/dev/bench`.
-
 #### `gh-repository`
 
 - Type: String
@@ -109,16 +106,6 @@ Url to an optional different repository to store benchmark results (eg. `github.
 
 NOTE: if you want to auto push to a different repository you need to use a separate Personal Access Token that has a write access to the specified repository.
 If you are not using the `auto-push` option then you can avoid passing the `gh-token` if your data repository is public
-
-#### `benchmark-data-dir-path` (Required)
-
-- Type: String
-- Default: `"dev/bench"`
-
-Path to a directory that contains benchmark files on the GitHub pages branch. For example, when this value
-is set to `"path/to/bench"`, `https://you.github.io/repo-name/path/to/bench` will be available as benchmarks
-dashboard page. If it does not contain `index.html`, this action automatically generates it at first run.
-The path can be relative to repository root.
 
 #### `github-token` (Optional)
 
@@ -273,16 +260,6 @@ might be bigger.
 
 If the amplitude is not acceptable, please prepare a stable environment to run benchmarks.
 GitHub action supports [self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners).
-
-
-### Customizing the benchmarks result page
-
-This action creates the default `index.html` in the directory specified with `benchmark-data-dir-path`
-input. By default, every benchmark test case has own chart on the page. Charts are drawn with
-[Chart.js](https://www.chartjs.org/).
-
-If it does not fit your use case, please modify the HTML file or replace it with your favorite one.
-Every benchmark data is stored in `window.BENCHMARK_DATA` so you can create your favorite view.
 
 
 ### Versioning

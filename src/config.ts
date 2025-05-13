@@ -11,7 +11,6 @@ export interface Config {
     inputDataPath: string; // path to out data
     ghPagesBranch: string;
     ghRepository: string | undefined;
-    benchmarkDataDirPath: string;
     githubToken: string | undefined;
     autoPush: boolean;
     skipFetchGhPages: boolean;
@@ -286,7 +285,6 @@ export async function configFromJobInput(): Promise<Config> {
         inputDataPath,
         ghPagesBranch,
         ghRepository,
-        benchmarkDataDirPath,
         githubToken,
         autoPush,
         skipFetchGhPages,

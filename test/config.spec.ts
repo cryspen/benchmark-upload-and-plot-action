@@ -34,7 +34,6 @@ describe('configFromJobInput()', function () {
         'bigger-is-better': 'false',
         'input-data-path': 'out.txt',
         'gh-pages-branch': 'gh-pages',
-        'benchmark-data-dir-path': '.',
         'github-token': '',
         'auto-push': 'false',
         'skip-fetch-gh-pages': 'false',
@@ -71,8 +70,6 @@ describe('configFromJobInput()', function () {
             inputs: { ...defaultInputs, 'gh-pages-branch': '' },
             expected: /^Error: Branch value must not be empty/,
         },
-        // Cannot check 'benchmark-data-dir-path' invalidation because it throws an error only when
-        // current working directory is not obtainable.
         {
             what: 'auto-push is set but github-token is not set',
             inputs: { ...defaultInputs, 'auto-push': 'true', 'github-token': '' },
@@ -288,7 +285,6 @@ describe('configFromJobInput()', function () {
         A.equal(actual.alertThreshold, test.expected.alertThreshold);
         A.deepEqual(actual.alertCommentCcUsers, test.expected.alertCommentCcUsers);
         A.ok(path.isAbsolute(actual.inputDataPath), actual.inputDataPath);
-        A.ok(path.isAbsolute(actual.benchmarkDataDirPath), actual.benchmarkDataDirPath);
         A.equal(actual.maxItemsInChart, test.expected.maxItemsInChart);
         if (test.expected.failThreshold === null) {
             A.equal(actual.failThreshold, test.expected.alertThreshold);
@@ -308,29 +304,23 @@ describe('configFromJobInput()', function () {
         mockInputs({
             ...defaultInputs,
             'input-data-path': 'out.txt',
-            'benchmark-data-dir-path': 'path/to/output',
         });
 
         const config = await configFromJobInput();
         A.equal(config.name, 'Benchmark');
         A.ok(path.isAbsolute(config.inputDataPath), config.inputDataPath);
         A.ok(config.inputDataPath.endsWith('out.txt'), config.inputDataPath);
-        A.ok(path.isAbsolute(config.benchmarkDataDirPath), config.benchmarkDataDirPath);
-        A.ok(config.benchmarkDataDirPath.endsWith('output'), config.benchmarkDataDirPath);
     });
 
     it('does not change absolute paths in config', async function () {
         const outFile = path.resolve('out.txt');
-        const dataDir = path.resolve('path/to/output');
         mockInputs({
             ...defaultInputs,
             'input-data-path': outFile,
-            'benchmark-data-dir-path': dataDir,
         });
 
         const config = await configFromJobInput();
         A.equal(config.inputDataPath, outFile);
-        A.equal(config.benchmarkDataDirPath, dataDir);
     });
 
     it('resolves home directory in output directory path', async function () {
@@ -343,18 +333,14 @@ describe('configFromJobInput()', function () {
 
         const cwd = path.join('~', absCwd.slice(home.length));
         const file = path.join(cwd, 'out.txt');
-        const dir = path.join(cwd, 'outdir');
 
         mockInputs({
             ...defaultInputs,
             'input-data-path': file,
-            'benchmark-data-dir-path': dir,
         });
 
         const config = await configFromJobInput();
         A.ok(path.isAbsolute(config.inputDataPath), config.inputDataPath);
         A.equal(config.inputDataPath, path.join(absCwd, 'out.txt'));
-        A.ok(path.isAbsolute(config.benchmarkDataDirPath), config.benchmarkDataDirPath);
-        A.equal(config.benchmarkDataDirPath, path.join(absCwd, 'outdir'));
     });
 });

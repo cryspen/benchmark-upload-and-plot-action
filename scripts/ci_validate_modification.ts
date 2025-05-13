@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { promises as fs } from 'fs';
 import * as cp from 'child_process';
-import { BenchmarkSuites, DataJson, SCRIPT_PREFIX } from '../src/write';
+import { BenchmarkSuites, DataJson } from '../src/write';
 import { Benchmark } from '../src/load';
 import { diff, Diff, DiffArray, DiffEdit, DiffNew } from 'deep-diff';
 import { getServerUrl } from '../src/git';
@@ -29,7 +29,7 @@ async function exec(cmd: string): Promise<string> {
 
 async function readDataJson(file: string): Promise<DataJson> {
     const content = await fs.readFile(file, 'utf8');
-    return JSON.parse(content.slice(SCRIPT_PREFIX.length));
+    return JSON.parse(content);
 }
 
 function validateDataJson(data: DataJson) {
