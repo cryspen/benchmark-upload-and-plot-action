@@ -523,7 +523,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     // TODO: retrieve these values differently
     const [type, file] = dataPath.split('/');
     const isPr = type === 'pr';
-    const id = file.replace('.json', '');
+    const id = path.basename(file).replace('.json', '');
     await updateAndStoreListing(listingPath, listing, isPr, id);
     await git.cmd(extraGitArguments, 'add', listingPath);
 
