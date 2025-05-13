@@ -65,11 +65,11 @@ function getComparePathAndSha(): [string, string] | undefined {
     if (pr) {
         const branch = pr.base.ref;
         sha = pr.base.sha;
-        file = `branches/${branch}.json`;
+        file = `${branch}.json`;
     } else if (mergeGroup) {
         const branch = mergeGroup.base_ref;
         sha = mergeGroup.base_sha;
-        file = `branches/${branch}.json`;
+        file = `${branch}.json`;
     } else if (push) {
         // do not compare
         return undefined;
