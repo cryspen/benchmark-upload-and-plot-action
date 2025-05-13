@@ -42,7 +42,7 @@ function getDataPath() {
     const push = github.context.payload.push;
 
     if (pr) {
-        const file = `${pr.number}.json`;
+        const file = `${github.context.payload.number}.json`;
         return path.join('pr', file);
     }
     if (mergeGroup) {
@@ -63,12 +63,12 @@ function getComparePathAndSha(): [string, string] | undefined {
     let sha;
     let file;
     if (pr) {
-        const branch = pr.pull_request.base.ref;
-        sha = pr.pull_request.base.sha;
+        const branch = pr.base.ref;
+        sha = pr.base.sha;
         file = `branches/${branch}.json`;
     } else if (mergeGroup) {
-        const branch = mergeGroup.merge_group.base_ref;
-        sha = mergeGroup.merge_group.base_sha;
+        const branch = mergeGroup.base_ref;
+        sha = mergeGroup.base_sha;
         file = `branches/${branch}.json`;
     } else if (push) {
         // do not compare
