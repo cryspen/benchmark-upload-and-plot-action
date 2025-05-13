@@ -212,10 +212,10 @@
                             newValue = value;
                             break;
                         case 'm':
-                            newValue = value * 1_000_000;
+                            newValue = value * 1000000;
                             break;
                         case 's':
-                            newValue = value * 1_000_000_000;
+                            newValue = value * 1000000000;
                             break;
                         default:
                             throw new Error(`undefined unit: ${unitIdentifier}`);
@@ -232,14 +232,14 @@
                     // determine best unit
                     let scaleFactor;
                     let unit;
-                    if (maxValue > 1_000_000_000) {
-                        scaleFactor = 1_000_000_000.0;
+                    if (maxValue > 1000000000) {
+                        scaleFactor = 1000000000.0;
                         unit = 's/iter';
-                    } else if (maxValue > 1_000_000) {
-                        scaleFactor = 1_000_000.0;
+                    } else if (maxValue > 1000000) {
+                        scaleFactor = 1000000.0;
                         unit = 'ms/iter';
-                    } else if (maxValue > 1_000) {
-                        scaleFactor = 1_000.0;
+                    } else if (maxValue > 1000) {
+                        scaleFactor = 1000.0;
                         unit = '\u03BCs/iter';
                     } else {
                         scaleFactor = 1.0;
@@ -384,6 +384,7 @@
                         elem.setAttribute(key, value);
                     });
                 }
+
                 function setChartHiddenStatus(hide, key, value) {
                     const charts = document.getElementsByClassName('benchmark-graphs');
                     const filteredCharts = Array.from(charts).filter((chart) => {
@@ -391,7 +392,8 @@
                         return chartValue === value;
                     });
                     filteredCharts.forEach((chart) => {
-                        let hiddenBy = chart.getAttribute('hidden-by') ?? 0;
+                        let hiddenByAttribute = chart.getAttribute('hidden-by');
+                        let hiddenBy = hiddenByAttribute ? hiddenByAttribute : 0;
 
                         if (hide) {
                             chart.style.setProperty('display', 'none');
@@ -411,6 +413,7 @@
                         chart.setAttribute('hidden-by', hiddenBy);
                     });
                 }
+
                 function getUniqueValuesForKey(groupKeys, groupBy) {
                     // get the unique values for each group
                     const uniqueValues = {};
