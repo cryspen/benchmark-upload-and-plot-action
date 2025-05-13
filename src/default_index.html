@@ -391,8 +391,24 @@
                         return chartValue === value;
                     });
                     filteredCharts.forEach((chart) => {
-                        const display = hide ? 'none' : null;
-                        chart.style.setProperty('display', display);
+                        let hiddenBy = chart.getAttribute('hidden-by') ?? 0;
+
+                        if (hide) {
+                            chart.style.setProperty('display', 'none');
+                            hiddenBy += 1;
+                        } else {
+                            if (hiddenBy) {
+                                hiddenBy -= 1;
+                            } else {
+                                hiddenBy = 0;
+                            }
+
+                            // only unhide if not hidden by another
+                            if (hiddenBy == 0) {
+                                chart.style.setProperty('display', null);
+                            }
+                        }
+                        chart.setAttribute('hidden-by', hiddenBy);
                     });
                 }
                 function getUniqueValuesForKey(groupKeys, groupBy) {
