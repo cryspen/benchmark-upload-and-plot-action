@@ -50,7 +50,8 @@ function getDataPath() {
         return undefined;
     }
     if (push) {
-        return push.base_ref;
+        const file = `${push.base_ref}.json`;
+        return path.join('branch', file);
     }
 
     return undefined;
@@ -506,6 +507,11 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     // so we need to convert it to relative to be able to prepend the `benchmarkBaseDir`
 
     const dataRelativePath = getDataPath();
+    if (!dataRelativePath) {
+        // sometimes we don't want to push the benchmark data (e.g. on the merge queue).
+        // in this case, skip the below.
+        return;
+    }
     const dataPath = path.join(benchmarkBaseDir, dataRelativePath);
 
     await io.mkdirP('./branch');
@@ -521,9 +527,9 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     const listing = await loadListing(listingPath);
 
     // TODO: retrieve these values differently
-    const [type, file] = dataPath.split('/');
+    const [type, _] = dataRelativePath.split('/');
     const isPr = type === 'pr';
-    const id = path.basename(file).replace('.json', '');
+    const id = path.basename(dataRelativePath).replace('.json', '');
     await updateAndStoreListing(listingPath, listing, isPr, id);
     await git.cmd(extraGitArguments, 'add', listingPath);
 
