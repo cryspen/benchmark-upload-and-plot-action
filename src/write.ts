@@ -415,10 +415,11 @@ function addBenchmarkToDataJson(
     bench: Benchmark,
     data: DataJson,
     maxItems: number | null,
-) {
+): Benchmark | null {
     const repoMetadata = getCurrentRepoMetadata();
     const htmlUrl = repoMetadata.html_url ?? '';
 
+    let prevBench: Benchmark | null = null;
     data.lastUpdate = Date.now();
     data.groupBy[benchName] = groupBy;
     data.repoUrl = htmlUrl;
@@ -430,7 +431,12 @@ function addBenchmarkToDataJson(
         core.debug(`No suite was found for benchmark '${benchName}' in existing data. Created`);
     } else {
         const suites = data.entries[benchName];
-
+        for (const e of suites.slice().reverse()) {
+            if (e.commit.id !== bench.commit.id) {
+                prevBench = e;
+                break;
+            }
+        }
         suites.push(bench);
 
         if (maxItems !== null && suites.length > maxItems) {
@@ -440,6 +446,8 @@ function addBenchmarkToDataJson(
             );
         }
     }
+
+    return prevBench;
 }
 
 function isRemoteRejectedError(err: unknown): err is Error {
@@ -598,14 +606,18 @@ async function writeBenchmarkToGitHubPages(bench: Benchmark, config: Config) {
     }
 }
 
-async function writeBenchmarkToExternalJson(bench: Benchmark, jsonFilePath: string, config: Config) {
+async function writeBenchmarkToExternalJson(
+    bench: Benchmark,
+    jsonFilePath: string,
+    config: Config,
+): Promise<Benchmark | null> {
     const { name, maxItemsInChart, saveDataFile, groupBy, schema } = config;
     const data = await loadDataJson(jsonFilePath);
-    addBenchmarkToDataJson(groupBy, schema, name, bench, data, maxItemsInChart);
+    const prevBench = addBenchmarkToDataJson(groupBy, schema, name, bench, data, maxItemsInChart);
 
     if (!saveDataFile) {
         core.debug('Skipping storing benchmarks in external data file');
-        return;
+        return null;
     }
 
     try {
@@ -616,7 +628,7 @@ async function writeBenchmarkToExternalJson(bench: Benchmark, jsonFilePath: stri
         throw new Error(`Could not store benchmark data as JSON at ${jsonFilePath}: ${err}`);
     }
 
-    return;
+    return prevBench;
 }
 
 export async function writeBenchmark(bench: Benchmark, config: Config) {
