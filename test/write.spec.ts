@@ -67,11 +67,37 @@ const gitHubContext = {
             private: false,
             html_url: 'https://github.com/user/repo',
         } as RepositoryPayloadSubset | null,
-        push: { base_ref: 'main' } as any,
-        // TODO: pull_request, merge_group
+        push: null as any,
+        pull_request: null as any,
+        number: null as number | null, // PR number
+        merge_group: null as any,
     },
     workflow: 'Workflow name',
 };
+
+function contextSetPush(context: any, base_ref: string) {
+    context.payload.pull_request = null;
+    context.payload.merge_group = null;
+    context.payload.number = null;
+    context.payload.push = { base_ref };
+}
+/*
+function contextSetPullRequest(context: any, prNumber: number, ref: string, sha: string) {
+
+    context.payload.push = null;
+    context.payload.merge_group = null;
+    context.payload.number = prNumber;
+    context.payload.pull_request = { base: { ref, sha } }; 
+
+}
+function contextSetMergeGroup(context: any, base_ref: string, base_sha: string) {
+
+    context.payload.push = null;
+    context.payload.pull_request = null;
+    context.payload.number = null;
+    context.payload.merge_group = { base_ref, base_sha };
+}
+*/
 
 jest.mock('@actions/core', () => ({
     debug: () => {
@@ -761,6 +787,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 private: false,
                 html_url: `${serverUrl}/user/repo`,
             } as RepositoryPayloadSubset | null;
+
+            contextSetPush(gitHubContext, 'main');
 
             if (t.repoPayload !== undefined) {
                 gitHubContext.payload.repository = t.repoPayload;
