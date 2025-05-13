@@ -358,10 +358,26 @@
 
                 // Display the fields in the group as a comma-separated list
                 function buildTitleFromGroupKey(groupKey, groupBy) {
-                    return groupBy
+                    const entries = groupBy
                         .map((field) => [field, groupKey[field]])
-                        .map(([field, value]) => `${field}: ${value}`)
-                        .join(', ');
+                        .map(([field, value]) => {
+                            if (value === undefined) {
+                                return `undefined ${field}`;
+                            }
+                            return `the ${field} ${value}`;
+                        });
+
+                    if (entries.length === 0) {
+                        return 'Results';
+                    }
+                    if (entries.length === 1) {
+                        return 'Results for run with ' + entries[0];
+                    }
+
+                    let joinedEntries = '';
+                    joinedEntries += entries.slice(0, entries.length - 1).join(', ');
+                    joinedEntries += ' and ' + entries[entries.length - 1];
+                    return 'Results for run with ' + joinedEntries;
                 }
                 function addAttributesToChartElement(elem, groupKey) {
                     Object.entries(groupKey).forEach(([key, value]) => {
@@ -587,7 +603,6 @@
                     window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
                 }
                 function rerenderAll() {
-                    console.log(window.BENCHMARK_DATA);
                     // retrieve the data for the benchmark set with the first name
                     const benchSets = window.BENCHMARK_DATA.entries;
                     const [benchSet, entry] = Object.entries(benchSets)[0];
