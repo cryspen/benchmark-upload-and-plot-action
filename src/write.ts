@@ -96,7 +96,7 @@ async function getPrevBench(benchName: string): Promise<Benchmark | null> {
         return null;
     }
 
-    for (let benchmark of Array.from(suite).reverse()) {
+    for (const benchmark of Array.from(suite).reverse()) {
         if (benchmark.commit.id === compareSha) {
             return benchmark;
         }

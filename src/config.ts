@@ -71,14 +71,6 @@ function validateGhPagesBranch(branch: string) {
     throw new Error(`Branch value must not be empty for 'gh-pages-branch' input`);
 }
 
-function validateBenchmarkDataDirPath(dirPath: string): string {
-    try {
-        return resolvePath(dirPath);
-    } catch (e) {
-        throw new Error(`Invalid value for 'benchmark-data-dir-path': ${e}`);
-    }
-}
-
 function validateName(name: string) {
     if (name) {
         return;
@@ -234,7 +226,6 @@ export async function configFromJobInput(): Promise<Config> {
     const biggerIsBetter = getBoolInput('bigger-is-better');
     const ghPagesBranch: string = core.getInput('gh-pages-branch');
     const ghRepository: string = core.getInput('gh-repository');
-    let benchmarkDataDirPath: string = core.getInput('benchmark-data-dir-path');
     const name: string = core.getInput('name');
     const githubToken: string | undefined = core.getInput('github-token') || undefined;
     const ref: string | undefined = core.getInput('ref') || undefined;
@@ -255,7 +246,6 @@ export async function configFromJobInput(): Promise<Config> {
     const schema = validateSchema(schemaString);
     inputDataPath = await validateInputDataPath(inputDataPath);
     validateGhPagesBranch(ghPagesBranch);
-    benchmarkDataDirPath = validateBenchmarkDataDirPath(benchmarkDataDirPath);
     validateName(name);
     if (autoPush) {
         validateGitHubToken('auto-push', githubToken, 'to push GitHub pages branch to remote');
