@@ -197,7 +197,8 @@
                     return key;
                 }
                 function getNanoseconds(value, unit) {
-                    // XXX: should unify unit format
+                    // XXX: should unify unit format in action output
+                    // XXX: assumes duration
                     const unitIdentifier = unit[0];
 
                     let newValue;
