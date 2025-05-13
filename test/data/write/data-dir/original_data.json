@@ -1,4 +1,4 @@
-window.BENCHMARK_DATA = {
+{
     "lastUpdate": 1574927128603,
     "repoUrl": "https://github.com/user/repo",
     "entries": {
