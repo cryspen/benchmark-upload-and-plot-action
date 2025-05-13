@@ -116,7 +116,7 @@ async function loadListing(dataPath: string): Promise<Listing> {
     }
 }
 
-async function updateAndStoreListing(dataPath: string, data: Listing, isPr: boolean, id: string) {
+async function updateAndStoreListing(listingPath: string, data: Listing, isPr: boolean, id: string) {
     if (!isPr) {
         if (!data.branches.includes(id)) {
             data.branches.push(id);
@@ -127,8 +127,8 @@ async function updateAndStoreListing(dataPath: string, data: Listing, isPr: bool
         }
     }
     const script = JSON.stringify(data, null, 2);
-    await fs.writeFile(dataPath, script, 'utf8');
-    core.debug(`Overwrote ${dataPath} for adding new data`);
+    await fs.writeFile(listingPath, script, 'utf8');
+    core.debug(`Overwrote the listing at ${listingPath}`);
 }
 
 async function loadDataJson(dataPath: string): Promise<DataJson> {
@@ -505,8 +505,6 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     // `benchmarkDataDirPath` is an absolute path at this stage,
     // so we need to convert it to relative to be able to prepend the `benchmarkBaseDir`
 
-    const listingPath = path.join(benchmarkBaseDir, 'listing.json');
-
     const dataRelativePath = getDataPath();
     const dataPath = path.join(benchmarkBaseDir, dataRelativePath);
 
@@ -518,11 +516,8 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
 
     await storeDataJson(dataPath, data);
 
-    await git.cmd(extraGitArguments, 'add', dataRelativePath);
-    await addIndexHtmlIfNeeded(extraGitArguments, benchmarkBaseDir);
-    await git.cmd(extraGitArguments, 'commit', '-m', `add ${name} benchmark result for ${bench.commit.id}`);
-
     // handle the listing
+    const listingPath = path.join(benchmarkBaseDir, 'listing.json');
     const listing = await loadListing(listingPath);
 
     // TODO: retrieve these values differently
@@ -530,6 +525,11 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     const isPr = type === 'pr';
     const id = file.replace('.json', '');
     await updateAndStoreListing(listingPath, listing, isPr, id);
+    await git.cmd(extraGitArguments, 'add', listingPath);
+
+    await git.cmd(extraGitArguments, 'add', dataRelativePath);
+    await addIndexHtmlIfNeeded(extraGitArguments, benchmarkBaseDir);
+    await git.cmd(extraGitArguments, 'commit', '-m', `add ${name} benchmark result for ${bench.commit.id}`);
 
     if (githubToken && autoPush) {
         try {
