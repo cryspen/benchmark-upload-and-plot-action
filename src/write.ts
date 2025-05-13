@@ -153,8 +153,8 @@ async function storeDataJson(dataPath: string, data: DataJson) {
     core.debug(`Overwrote ${dataPath} for adding new data`);
 }
 
-async function addIndexHtmlIfNeeded(additionalGitArguments: string[], dir: string, baseDir: string) {
-    const indexHtmlRelativePath = path.join(dir, 'index.html');
+async function addIndexHtmlIfNeeded(additionalGitArguments: string[], baseDir: string) {
+    const indexHtmlRelativePath = 'index.html';
     const indexHtmlFullPath = path.join(baseDir, indexHtmlRelativePath);
     try {
         await fs.stat(indexHtmlFullPath);
@@ -523,7 +523,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     await storeDataJson(dataPath, data);
 
     await git.cmd(extraGitArguments, 'add', dataRelativePath);
-    await addIndexHtmlIfNeeded(extraGitArguments, 'index.html', benchmarkBaseDir);
+    await addIndexHtmlIfNeeded(extraGitArguments, benchmarkBaseDir);
     await git.cmd(extraGitArguments, 'commit', '-m', `add ${name} benchmark result for ${bench.commit.id}`);
 
     // handle the listing
