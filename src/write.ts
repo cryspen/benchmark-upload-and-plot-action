@@ -522,8 +522,10 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     }
     const dataPath = path.join(benchmarkBaseDir, dataRelativePath);
 
-    await io.mkdirP('./branch');
-    await io.mkdirP('./pr');
+    const branchPath = path.join(benchmarkBaseDir, 'branch');
+    const prPath = path.join(benchmarkBaseDir, 'pr');
+    await io.mkdirP(branchPath);
+    await io.mkdirP(prPath);
 
     const data = await loadDataJson(dataPath);
     addBenchmarkToDataJson(groupBy, schema, name, bench, data, maxItemsInChart);
