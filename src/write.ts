@@ -116,12 +116,8 @@ async function loadListing(dataPath: string): Promise<Listing> {
     }
 }
 
-async function updateAndStoreListing(dataPath: string, data: Listing) {
-    // TODO: pass these in differently
-    const [type, file] = dataPath.split('/');
-    const id = file.replace('.json', '');
-
-    if (type === 'branch') {
+async function updateAndStoreListing(dataPath: string, data: Listing, isPr: boolean, id: string) {
+    if (!isPr) {
         if (!data.branches.includes(id)) {
             data.branches.push(id);
         }
@@ -528,7 +524,12 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
 
     // handle the listing
     const listing = await loadListing(listingPath);
-    await updateAndStoreListing(listingPath, listing);
+
+    // TODO: retrieve these values differently
+    const [type, file] = dataPath.split('/');
+    const isPr = type === 'pr';
+    const id = file.replace('.json', '');
+    await updateAndStoreListing(listingPath, listing, isPr, id);
 
     if (githubToken && autoPush) {
         try {
