@@ -12,11 +12,11 @@
                     "message": "dummy message",
                     "timestamp": "dummy stamp",
                     "tree_id": "dummy tree id",
-                    "url": "https://github.com/user/repo/commit/prev commit id"
+                    "url": "https://github.com/user/repo/commit/pr commit id"
                 },
                 "date": 1574927127604,
                 "tool": "cargo",
-                "benches": [{ "name": "bench_fib_10", "range": "± 20", "unit": "ns/iter", "value": 100, "os": "ubuntu-latest"  }]
+                "benches": [{ "name": "bench_fib_10", "range": "± 20", "unit": "ns/iter", "value": 500, "os": "ubuntu-latest"  }]
             }
         ]
     }
