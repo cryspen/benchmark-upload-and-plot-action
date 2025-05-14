@@ -243,7 +243,6 @@ export async function configFromJobInput(): Promise<Config> {
     const maxItemsInChart = getUintInput('max-items-in-chart');
     let failThreshold = getPercentageInput('fail-threshold');
 
-    // TODO: validate
     const basePath: string = core.getInput('base-path');
     const groupBy = validateGroupBy(groupByString);
     const schema = validateSchema(schemaString);
