@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1747211132372,
+  "lastUpdate": 1747211134395,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test fail if exceed threshold": [
@@ -1087,6 +1087,40 @@
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/27/commits/ff09fd16a36370949500f14b2b5c8620033d1670"
         },
         "date": 1747139689922,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "value": 135,
+            "range": "± 24",
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "name": "bench_fib_10"
+          },
+          {
+            "value": 18149,
+            "range": "± 755",
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "name": "bench_fib_20"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "5343605b95061b86da437fe0220519715e2849c6",
+          "message": "Reorganize file structure and improve plot interface",
+          "timestamp": "2025-05-05T13:42:20Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/27/commits/5343605b95061b86da437fe0220519715e2849c6"
+        },
+        "date": 1747211133580,
         "bigger_is_better": false,
         "benches": [
           {
