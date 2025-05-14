@@ -59,6 +59,8 @@ function getDataPath(config) {
         directory = 'branch';
     }
     else {
+        console.warn(`Unsupported event type: ', ${github.context.eventName}`);
+        core.debug(JSON.stringify(github.context.payload));
         return undefined;
     }
     return path.join(config.basePath, directory, file);
