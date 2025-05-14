@@ -98,7 +98,7 @@ Path to a file which contains the output from benchmark tool, in the standardize
 
 Name of your GitHub pages branch.
 
-#### `gh-repository`
+#### `gh-repository` (Optional)
 
 - Type: String
 
@@ -107,7 +107,7 @@ Url to an optional different repository to store benchmark results (eg. `github.
 NOTE: if you want to auto push to a different repository you need to use a separate Personal Access Token that has a write access to the specified repository.
 If you are not using the `auto-push` option then you can avoid passing the `gh-token` if your data repository is public
 
-#### `base-path`
+#### `base-path` (Required)
 
 - Type: String
 
