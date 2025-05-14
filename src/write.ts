@@ -36,55 +36,57 @@ const DEFAULT_LISTING = {
     branches: ['main'],
     prs: [],
 };
-function getDataPath() {
+function getDataPath(config: Config) {
     const pr = github.context.payload.pull_request;
     const mergeGroup = github.context.payload.merge_group;
     const push = github.context.payload.push;
 
-    if (pr) {
-        const file = `${github.context.payload.number}.json`;
-        return path.join('pr', file);
-    }
-    if (mergeGroup) {
-        // don't write to path
-        return undefined;
-    }
-    if (push) {
-        const file = `${push.base_ref}.json`;
-        return path.join('branch', file);
-    }
-
-    return undefined;
-}
-function getComparePathAndSha(): [string, string] | undefined {
-    const pr = github.context.payload.pull_request;
-    const mergeGroup = github.context.payload.merge_group;
-    const push = github.context.payload.push;
-
-    let sha;
     let file;
     if (pr) {
-        const branch = pr.base.ref;
-        sha = pr.base.sha;
-        file = `${branch}.json`;
+        file = `${github.context.payload.number}.json`;
     } else if (mergeGroup) {
-        const branch = mergeGroup.base_ref;
-        sha = mergeGroup.base_sha;
-        file = `${branch}.json`;
-    } else if (push) {
-        // do not compare
+        // don't write to path
         return undefined;
+    } else if (push) {
+        file = `${push.base_ref}.json`;
     } else {
         return undefined;
     }
 
-    const comparePath = path.join('branch', file);
+    return path.join(config.basePath, 'branch', file);
+}
+function getComparePathAndSha(config: Config): [string, string] | undefined {
+    const pr = github.context.payload.pull_request;
+    const mergeGroup = github.context.payload.merge_group;
+    const push = github.context.payload.push;
+
+    let branch;
+    let sha;
+    if (pr) {
+        branch = pr.base.ref;
+        sha = pr.base.sha;
+    } else if (mergeGroup) {
+        branch = mergeGroup.base_ref;
+        sha = mergeGroup.base_sha;
+    } else if (push) {
+        branch = push.base_ref;
+        sha = push.before;
+    } else {
+        return undefined;
+    }
+
+    if (!sha) {
+        return undefined;
+    }
+
+    const file = `${branch}.json`;
+    const comparePath = path.join(config.basePath, 'branch', file);
 
     return [comparePath, sha];
 }
-async function getPrevBench(benchName: string): Promise<Benchmark | null> {
+async function getPrevBench(benchName: string, config: Config): Promise<Benchmark | null> {
     // TODO: error handling
-    const comparePathAndSha = getComparePathAndSha();
+    const comparePathAndSha = getComparePathAndSha(config);
     if (!comparePathAndSha) {
         return null;
     }
@@ -105,7 +107,8 @@ async function getPrevBench(benchName: string): Promise<Benchmark | null> {
 
     return null;
 }
-async function loadListing(dataPath: string): Promise<Listing> {
+async function loadListing(baseDir: string, listingPath: string): Promise<Listing> {
+    const dataPath = path.join(baseDir, listingPath);
     try {
         const json = await fs.readFile(dataPath, 'utf8');
         const parsed = JSON.parse(json);
@@ -117,7 +120,7 @@ async function loadListing(dataPath: string): Promise<Listing> {
     }
 }
 
-async function updateAndStoreListing(listingPath: string, data: Listing, isPr: boolean, id: string) {
+async function updateAndStoreListing(baseDir: string, listingPath: string, data: Listing, isPr: boolean, id: string) {
     if (!isPr) {
         if (!data.branches.includes(id)) {
             data.branches.push(id);
@@ -128,30 +131,31 @@ async function updateAndStoreListing(listingPath: string, data: Listing, isPr: b
         }
     }
     const script = JSON.stringify(data, null, 2);
-    await fs.writeFile(listingPath, script, 'utf8');
-    core.debug(`Overwrote the listing at ${listingPath}`);
+    const writePath = path.join(baseDir, listingPath);
+    await fs.writeFile(writePath, script, 'utf8');
+    core.debug(`Overwrote the listing at ${writePath}`);
 }
 
 async function loadDataJson(dataPath: string): Promise<DataJson> {
     try {
         const json = await fs.readFile(dataPath, 'utf8');
         const parsed = JSON.parse(json);
-        core.debug(`Loaded data.json at ${dataPath}`);
+        core.debug(`Loaded ${dataPath}`);
         return parsed;
     } catch (err) {
-        console.log(`Could not find data.json at ${dataPath}. Using empty default: ${err}`);
+        console.log(`Could not find ${dataPath}. Using empty default: ${err}`);
         return { ...DEFAULT_DATA_JSON };
     }
 }
 
 async function storeDataJson(dataPath: string, data: DataJson) {
     const script = JSON.stringify(data, null, 2);
+
     await fs.writeFile(dataPath, script, 'utf8');
     core.debug(`Overwrote ${dataPath} for adding new data`);
 }
 
-async function addIndexHtmlIfNeeded(additionalGitArguments: string[], baseDir: string) {
-    const indexHtmlRelativePath = 'index.html';
+async function addIndexHtmlIfNeeded(additionalGitArguments: string[], baseDir: string, indexHtmlRelativePath: string) {
     const indexHtmlFullPath = path.join(baseDir, indexHtmlRelativePath);
     try {
         await fs.stat(indexHtmlFullPath);
@@ -188,7 +192,7 @@ function benchmarkKey(benchmark: BenchmarkResult, schema: string[]): string {
 function findAlerts(curSuite: Benchmark, prevSuite: Benchmark, threshold: number, schema: string[]): Alert[] {
     core.debug(`Comparing current:${curSuite.commit.id} and prev:${prevSuite.commit.id} for alert`);
 
-    const alerts = [];
+    const alerts: Alert[] = [];
     for (const current of curSuite.benches) {
         const currentKey = benchmarkKey(current, schema);
         const prev = prevSuite.benches.find((b: BenchmarkResult) => benchmarkKey(b, schema) === currentKey);
@@ -421,6 +425,12 @@ function addBenchmarkToDataJson(
 
     let prevBench: Benchmark | null = null;
     data.lastUpdate = Date.now();
+    if (!data.groupBy) {
+        data.groupBy = {};
+    }
+    if (!data.schema) {
+        data.schema = {};
+    }
     data.groupBy[benchName] = groupBy;
     data.repoUrl = htmlUrl;
     data.schema[benchName] = schema;
@@ -468,6 +478,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
         maxItemsInChart,
         groupBy,
         schema,
+        basePath,
     } = config;
     const rollbackActions = new Array<() => Promise<void>>();
 
@@ -514,7 +525,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     // `benchmarkDataDirPath` is an absolute path at this stage,
     // so we need to convert it to relative to be able to prepend the `benchmarkBaseDir`
 
-    const dataRelativePath = getDataPath();
+    const dataRelativePath = getDataPath(config);
     if (!dataRelativePath) {
         // sometimes we don't want to push the benchmark data (e.g. on the merge queue).
         // in this case, skip the below.
@@ -522,8 +533,9 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     }
     const dataPath = path.join(benchmarkBaseDir, dataRelativePath);
 
-    const branchPath = path.join(benchmarkBaseDir, 'branch');
-    const prPath = path.join(benchmarkBaseDir, 'pr');
+    const branchPath = path.join(benchmarkBaseDir, basePath, 'branch');
+    const prPath = path.join(benchmarkBaseDir, basePath, 'pr');
+    await io.mkdirP(path.join(benchmarkBaseDir, basePath));
     await io.mkdirP(branchPath);
     await io.mkdirP(prPath);
 
@@ -533,18 +545,18 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     await storeDataJson(dataPath, data);
 
     // handle the listing
-    const listingPath = path.join(benchmarkBaseDir, 'listing.json');
-    const listing = await loadListing(listingPath);
+    const listingPath = path.join(basePath, 'listing.json');
+    const listing = await loadListing(benchmarkBaseDir, listingPath);
 
     // TODO: retrieve these values differently
     const [type, _] = dataRelativePath.split('/');
     const isPr = type === 'pr';
     const id = path.basename(dataRelativePath).replace('.json', '');
-    await updateAndStoreListing(listingPath, listing, isPr, id);
+    await updateAndStoreListing(benchmarkBaseDir, listingPath, listing, isPr, id);
     await git.cmd(extraGitArguments, 'add', listingPath);
 
     await git.cmd(extraGitArguments, 'add', dataRelativePath);
-    await addIndexHtmlIfNeeded(extraGitArguments, benchmarkBaseDir);
+    await addIndexHtmlIfNeeded(extraGitArguments, benchmarkBaseDir, path.join(basePath, 'index.html'));
     await git.cmd(extraGitArguments, 'commit', '-m', `add ${name} benchmark result for ${bench.commit.id}`);
 
     if (githubToken && autoPush) {
@@ -640,19 +652,13 @@ export async function writeBenchmark(bench: Benchmark, config: Config) {
     if (externalDataJsonPath) {
         prevBench = await writeBenchmarkToExternalJson(bench, externalDataJsonPath, config);
     } else {
+        prevBench = await getPrevBench(name, config);
         await writeBenchmarkToGitHubPages(bench, config);
-
-        prevBench = await getPrevBench(name);
-    }
-
-    if (!prevBench) {
-        // no previous benchmark to compare
-        return;
     }
 
     // Put this after `git push` for reducing possibility to get conflict on push. Since sending
     // comment take time due to API call, do it after updating remote branch.
-    if (prevBench === null) {
+    if (!prevBench) {
         core.debug('Alert check was skipped because previous benchmark result was not found');
     } else {
         await handleComment(name, bench, prevBench, config);
@@ -680,6 +686,8 @@ async function handleSummary(benchName: string, currBench: Benchmark, prevBench:
 }
 
 function getRatio(biggerIsBetter: boolean, prev: BenchmarkResult, current: BenchmarkResult) {
+    // TODO: take units into account
+
     if (prev.value === 0 && current.value === 0) return 1;
 
     return biggerIsBetter

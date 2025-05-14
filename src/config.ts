@@ -23,6 +23,7 @@ export interface Config {
     failThreshold: number;
     alertCommentCcUsers: string[];
     externalDataJsonPath: string | undefined;
+    basePath: string;
     maxItemsInChart: number | null;
     ref: string | undefined;
 }
@@ -242,6 +243,8 @@ export async function configFromJobInput(): Promise<Config> {
     const maxItemsInChart = getUintInput('max-items-in-chart');
     let failThreshold = getPercentageInput('fail-threshold');
 
+    // TODO: validate
+    const basePath: string = core.getInput('base-path');
     const groupBy = validateGroupBy(groupByString);
     const schema = validateSchema(schemaString);
     inputDataPath = await validateInputDataPath(inputDataPath);
@@ -289,5 +292,6 @@ export async function configFromJobInput(): Promise<Config> {
         maxItemsInChart,
         failThreshold,
         ref,
+        basePath,
     };
 }
