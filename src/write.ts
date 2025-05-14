@@ -42,18 +42,21 @@ function getDataPath(config: Config) {
     const push = github.context.payload.push;
 
     let file;
+    let directory;
     if (pr) {
         file = `${github.context.payload.number}.json`;
+        directory = 'pr';
     } else if (mergeGroup) {
         // don't write to path
         return undefined;
     } else if (push) {
         file = `${push.base_ref}.json`;
+        directory = 'branch';
     } else {
         return undefined;
     }
 
-    return path.join(config.basePath, 'branch', file);
+    return path.join(config.basePath, directory, file);
 }
 function getComparePathAndSha(config: Config): [string, string] | undefined {
     const pr = github.context.payload.pull_request;
