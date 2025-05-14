@@ -67,12 +67,13 @@ const gitHubContext = {
             private: false,
             html_url: 'https://github.com/user/repo',
         } as RepositoryPayloadSubset | null,
-        push: null as any,
+        before: null as any, // for push
         pull_request: null as any,
         number: null as number | null, // PR number
         merge_group: null as any,
     },
     workflow: 'Workflow name',
+    ref: 'main', // TODO: set separately for pull request tests
 };
 
 enum PayloadType {
@@ -81,24 +82,27 @@ enum PayloadType {
     MergeGroup = 3,
 }
 
-function contextSetPush(context: any, base_ref: string, sha_before: string) {
+function contextSetPush(context: any, sha_before: string) {
     context.payload.pull_request = null;
     context.payload.merge_group = null;
     context.payload.number = null;
-    context.payload.push = { base_ref, before: sha_before };
+    context.payload.before = sha_before;
+    context.eventName = 'push';
 }
 
 function contextSetPullRequest(context: any, prNumber: number, ref: string, sha: string) {
-    context.payload.push = null;
+    context.payload.before = null;
     context.payload.merge_group = null;
     context.payload.number = prNumber;
     context.payload.pull_request = { base: { ref, sha } };
+    context.eventName = 'pull_request';
 }
 function contextSetMergeGroup(context: any, base_ref: string, base_sha: string) {
-    context.payload.push = null;
+    context.payload.before = null;
     context.payload.pull_request = null;
     context.payload.number = null;
     context.payload.merge_group = { base_ref, base_sha };
+    context.eventName = 'merge_group';
 }
 
 jest.mock('@actions/core', () => ({
@@ -896,12 +900,12 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
     describe('with gh-pages branch', function () {
         beforeEach(async function () {
             // reset the context
-            contextSetPush(gitHubContext, 'main', 'prev commit id');
+            contextSetPush(gitHubContext, 'prev commit id');
             (global as any).window = {}; // Fake window object on browser
         });
         afterEach(async function () {
             // reset the context
-            contextSetPush(gitHubContext, 'main', 'prev commit id');
+            contextSetPush(gitHubContext, 'prev commit id');
             gitSpy.clear();
             delete (global as any).window;
             for (const p of [
@@ -1438,7 +1442,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 } else if (t.payloadType === PayloadType.MergeGroup) {
                     contextSetMergeGroup(gitHubContext, 'main', 'prev commit id');
                 } else {
-                    contextSetPush(gitHubContext, 'main', 'prev commit id');
+                    contextSetPush(gitHubContext, 'prev commit id');
                 }
                 if (t.privateRepo) {
                     gitHubContext.payload.repository = gitHubContext.payload.repository
@@ -1597,7 +1601,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
 
         it.each(retryCases)('$it', async function (t) {
             // update the payload type
-            contextSetPush(gitHubContext, 'main', 'prev commit id');
+            contextSetPush(gitHubContext, 'prev commit id');
 
             gitSpy.pushFailure = t.pushErrorMessage;
             gitSpy.pushFailureCount = t.pushErrorCount;

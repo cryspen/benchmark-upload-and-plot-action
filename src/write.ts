@@ -37,23 +37,19 @@ const DEFAULT_LISTING = {
     prs: [],
 };
 function getDataPath(config: Config) {
-    const pr = github.context.payload.pull_request;
-    const mergeGroup = github.context.payload.merge_group;
-    const push = github.context.payload.push;
+    const eventName = github.context.eventName;
 
-    let file;
-    let directory;
-    if (pr) {
+    let file: string;
+    let directory: string;
+    if (eventName === 'pull_request') {
         file = `${github.context.payload.number}.json`;
         directory = 'pr';
-    } else if (mergeGroup) {
-        // don't write to path
-        return undefined;
-    } else if (push) {
-        file = `${push.base_ref}.json`;
+    } else if (eventName === 'push') {
+        const ref = github.context.ref;
+        file = `${ref}.json`;
         directory = 'branch';
     } else {
-        console.warn(`Unsupported event type: ', ${github.context.eventName}`);
+        console.warn(`Unsupported event type: ${eventName}`);
         core.debug(JSON.stringify(github.context.payload));
         return undefined;
     }
@@ -61,21 +57,23 @@ function getDataPath(config: Config) {
     return path.join(config.basePath, directory, file);
 }
 function getComparePathAndSha(config: Config): [string, string] | undefined {
-    const pr = github.context.payload.pull_request;
-    const mergeGroup = github.context.payload.merge_group;
-    const push = github.context.payload.push;
+    const eventName = github.context.eventName;
 
-    let branch;
-    let sha;
-    if (pr) {
-        branch = pr.base.ref;
-        sha = pr.base.sha;
-    } else if (mergeGroup) {
-        branch = mergeGroup.base_ref;
-        sha = mergeGroup.base_sha;
-    } else if (push) {
-        branch = push.base_ref;
-        sha = push.before;
+    let branch: string;
+    let sha: string;
+    if (eventName === 'pull_request') {
+        branch = github.context.payload.pull_request?.base.ref;
+        sha = github.context.payload.pull_request?.base.sha;
+        if (!branch || !sha) {
+            console.warn(`ref ${branch} or sha ${sha} is null; skipping`);
+            return undefined;
+        }
+    } else if (eventName === 'merge_group') {
+        branch = github.context.payload.merge_group.base_ref;
+        sha = github.context.payload.merge_group.base_sha;
+    } else if (eventName === 'push') {
+        branch = github.context.ref;
+        sha = github.context.payload.before;
     } else {
         return undefined;
     }
