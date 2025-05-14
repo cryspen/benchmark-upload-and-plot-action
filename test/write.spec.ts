@@ -67,9 +67,39 @@ const gitHubContext = {
             private: false,
             html_url: 'https://github.com/user/repo',
         } as RepositoryPayloadSubset | null,
+        push: null as any,
+        pull_request: null as any,
+        number: null as number | null, // PR number
+        merge_group: null as any,
     },
     workflow: 'Workflow name',
 };
+
+enum PayloadType {
+    Push = 1,
+    PullRequest = 2,
+    MergeGroup = 3,
+}
+
+function contextSetPush(context: any, base_ref: string, sha_before: string) {
+    context.payload.pull_request = null;
+    context.payload.merge_group = null;
+    context.payload.number = null;
+    context.payload.push = { base_ref, before: sha_before };
+}
+
+function contextSetPullRequest(context: any, prNumber: number, ref: string, sha: string) {
+    context.payload.push = null;
+    context.payload.merge_group = null;
+    context.payload.number = prNumber;
+    context.payload.pull_request = { base: { ref, sha } };
+}
+function contextSetMergeGroup(context: any, base_ref: string, base_sha: string) {
+    context.payload.push = null;
+    context.payload.pull_request = null;
+    context.payload.number = null;
+    context.payload.merge_group = { base_ref, base_sha };
+}
 
 jest.mock('@actions/core', () => ({
     debug: () => {
@@ -167,7 +197,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
         keySize = undefined,
         category = undefined,
     ) {
-        return {
+        const entry = {
             name,
             range,
             unit,
@@ -178,11 +208,15 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             keySize,
             category,
         };
+
+        // remove undefined fields
+        return JSON.parse(JSON.stringify(entry));
     }
 
     describe('with external json file', function () {
         const dataJson = 'data.json';
         const defaultCfg: Config = {
+            basePath: 'data-dir',
             groupBy: ['os'],
             schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             name: 'Test benchmark',
@@ -190,7 +224,6 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             inputDataPath: 'dummy', // Should not affect
             ghPagesBranch: 'dummy', // Should not affect
             ghRepository: undefined,
-            benchmarkDataDirPath: 'dummy', // Should not affect
             githubToken: undefined,
             autoPush: false,
             skipFetchGhPages: false, // Should not affect
@@ -237,8 +270,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'appends new result to existing data',
                 config: defaultCfg,
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -275,8 +308,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'creates new result suite to existing data file',
                 config: defaultCfg,
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Other benchmark': ['os'] },
+                    schema: { 'Other benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -301,8 +334,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'appends new result to existing multiple benchmarks data',
                 config: defaultCfg,
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -335,8 +368,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'raises an alert when exceeding threshold 2.0',
                 config: defaultCfg,
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -376,8 +409,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'raises an alert with tool whose result value is bigger-is-better',
                 config: defaultCfg,
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -416,8 +449,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'raises an alert without benchmark name with default benchmark name',
                 config: { ...defaultCfg, name: 'Benchmark' },
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -456,8 +489,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'raises an alert without CC names',
                 config: { ...defaultCfg, alertCommentCcUsers: [] },
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -494,8 +527,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'sends commit comment on alert with GitHub API',
                 config: { ...defaultCfg, commentOnAlert: true, githubToken: 'dummy token' },
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -521,8 +554,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'does not raise an alert when both comment-on-alert and fail-on-alert are disabled',
                 config: { ...defaultCfg, commentOnAlert: false, failOnAlert: false },
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -549,8 +582,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'ignores other bench case on detecting alerts',
                 config: defaultCfg,
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -577,8 +610,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'throws an error when GitHub token is not set (though this case should not happen in favor of validation)',
                 config: { ...defaultCfg, commentOnAlert: true },
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -605,8 +638,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'truncates data items if it exceeds max-items-in-chart',
                 config: { ...defaultCfg, maxItemsInChart: 1 },
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -648,8 +681,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'changes title when threshold is zero which means comment always happens',
                 config: { ...defaultCfg, alertThreshold: 0, failThreshold: 0 },
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -688,8 +721,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'raises an alert with different failure threshold from alert threshold',
                 config: { ...defaultCfg, failThreshold: 3 },
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -730,8 +763,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 it: 'does not raise an alert when not exceeding failure threshold',
                 config: { ...defaultCfg, failThreshold: 3 },
                 data: {
-                    groupBy: ['os'],
-                    schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
+                    groupBy: { 'Test benchmark': ['os'] },
+                    schema: { 'Test benchmark': ['name', 'platform', 'os', 'keySize', 'api', 'category'] },
                     lastUpdate,
                     repoUrl,
                     entries: {
@@ -807,7 +840,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 }
             }
 
-            if (t.error) {
+            if (t.error && t.error !== null) {
                 ok(caughtError);
                 const expected = t.error.join('\n');
                 expect(caughtError.message).toEqual(expected);
@@ -862,19 +895,34 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
     // Tests for updating GitHub Pages branch
     describe('with gh-pages branch', function () {
         beforeEach(async function () {
+            // reset the context
+            contextSetPush(gitHubContext, 'main', 'prev commit id');
             (global as any).window = {}; // Fake window object on browser
         });
         afterEach(async function () {
+            // reset the context
+            contextSetPush(gitHubContext, 'main', 'prev commit id');
             gitSpy.clear();
             delete (global as any).window;
             for (const p of [
-                path.join('data-dir', 'data.js'),
+                path.join('data-dir', 'branch'),
+                path.join('data-dir', 'pr', '10.json'),
                 path.join('data-dir', 'index.html'),
+                path.join('data-dir', 'listing.json'),
                 'new-data-dir',
-                path.join('with-index-html', 'data.js'),
-                path.join('benchmark-data-repository', 'data-dir', 'data.js'),
+                path.join('with-index-html', 'branch'),
+                path.join('with-index-html', 'pr'),
+                path.join('with-index-html', 'listing.json'),
+                path.join('with-index-html', 'data.json'),
+                path.join('benchmark-data-repository', 'data-dir', 'data.json'),
+                path.join('benchmark-data-repository', 'data-dir', 'listing.json'),
+                path.join('benchmark-data-repository', 'data-dir', 'branch'),
                 path.join('benchmark-data-repository', 'data-dir', 'index.html'),
                 path.join('benchmark-data-repository', 'new-data-dir'),
+                path.join('benchmark-data-repository', 'branch'),
+                path.join('benchmark-data-repository', 'pr'),
+                path.join('benchmark-data-repository', 'listing.json'),
+                path.join('benchmark-data-repository', 'index.html'),
             ]) {
                 // Ignore exception
                 await new Promise((resolve) => rimraf(p, resolve));
@@ -899,20 +947,22 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             }
         }
 
-        async function loadDataJs(dataDir: string, serverUrl: string) {
-            const dataJs = path.join(dataDir, 'data.js');
-            if (!(await isDir(dataDir)) || !(await isFile(dataJs))) {
+        async function loadDataJson(dataJs: string, serverUrl: string) {
+            if (!(await isFile(dataJs))) {
                 return null;
             }
             let dataSource = await fs.readFile(dataJs, 'utf8');
             if (serverUrl !== 'https://github.com') {
                 dataSource = dataSource.replace(/https:\/\/github.com/gm, serverUrl);
             }
-            eval(dataSource);
-            return (global as any).window.BENCHMARK_DATA as DataJson;
+
+            const dataJson = JSON.parse(dataSource);
+
+            return dataJson as DataJson;
         }
 
         const defaultCfg: Config = {
+            basePath: 'data-dir',
             groupBy: ['os'],
             schema: ['name', 'platform', 'os', 'keySize', 'api', 'category'],
             name: 'Test benchmark',
@@ -920,7 +970,6 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             inputDataPath: 'dummy', // Should not affect
             ghPagesBranch: 'gh-pages',
             ghRepository: undefined,
-            benchmarkDataDirPath: 'data-dir', // Should not affect
             githubToken: 'dummy token',
             autoPush: true,
             skipFetchGhPages: false, // Should not affect
@@ -939,34 +988,55 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
 
         function gitHistory(
             cfg: {
-                dir?: string;
+                dataPath?: string;
+                baseDir?: string;
                 addIndexHtml?: boolean;
                 autoPush?: boolean;
                 token?: string | undefined;
                 fetch?: boolean;
                 skipFetch?: boolean;
+                payloadType?: PayloadType;
             } = {},
         ): [GitFunc, unknown[]][] {
-            const dir = cfg.dir ?? 'data-dir';
+            const baseDir = cfg.baseDir ?? 'data-dir';
+            const dataPathRelative = cfg.dataPath ?? path.join('branch', 'main.json');
+            const dataPath = path.join(baseDir, dataPathRelative);
+            const listingPath = path.join(baseDir, 'listing.json');
+            const indexHtmlPath = path.join(baseDir, 'index.html');
             const token = 'token' in cfg ? cfg.token : 'dummy token';
             const fetch = cfg.fetch ?? true;
             const addIndexHtml = cfg.addIndexHtml ?? true;
+            const addListing = dataPath ?? false;
             const autoPush = cfg.autoPush ?? true;
             const skipFetch = cfg.skipFetch ?? false;
-            const hist: Array<[GitFunc, unknown[]] | undefined> = [
-                skipFetch ? undefined : ['fetch', [token, 'gh-pages']],
-                ['cmd', [[], 'switch', 'gh-pages']],
-                fetch ? ['pull', [token, 'gh-pages']] : undefined,
-                ['cmd', [[], 'add', path.join(dir, 'data.js')]],
-                addIndexHtml ? ['cmd', [[], 'add', path.join(dir, 'index.html')]] : undefined,
-                ['cmd', [[], 'commit', '-m', 'add Test benchmark benchmark result for current commit id']],
-                autoPush ? ['push', [token, undefined, 'gh-pages', []]] : undefined,
-                ['cmd', [[], 'checkout', '-']], // Return from gh-pages
-            ];
+            const payloadType = cfg.payloadType ?? PayloadType.Push;
+
+            let hist: Array<[GitFunc, unknown[]] | undefined>;
+
+            if (payloadType === PayloadType.MergeGroup) {
+                hist = [
+                    skipFetch ? undefined : ['fetch', [token, 'gh-pages']],
+                    ['cmd', [[], 'switch', 'gh-pages']],
+                    fetch ? ['pull', [token, 'gh-pages']] : undefined,
+                    ['cmd', [[], 'checkout', '-']], // Return from gh-pages
+                ];
+            } else {
+                hist = [
+                    skipFetch ? undefined : ['fetch', [token, 'gh-pages']],
+                    ['cmd', [[], 'switch', 'gh-pages']],
+                    fetch ? ['pull', [token, 'gh-pages']] : undefined,
+                    addListing ? ['cmd', [[], 'add', listingPath]] : undefined,
+                    dataPath ? ['cmd', [[], 'add', dataPath]] : undefined,
+                    addIndexHtml ? ['cmd', [[], 'add', indexHtmlPath]] : undefined,
+                    ['cmd', [[], 'commit', '-m', 'add Test benchmark benchmark result for current commit id']],
+                    autoPush ? ['push', [token, undefined, 'gh-pages', []]] : undefined,
+                    ['cmd', [[], 'checkout', '-']], // Return from gh-pages
+                ];
+            }
             return hist.filter((x: [GitFunc, unknown[]] | undefined): x is [GitFunc, unknown[]] => x !== undefined);
         }
 
-        const normalCases: Array<{
+        const normalCasesWithPayloadType: Array<{
             it: string;
             config: Config;
             added: Benchmark;
@@ -975,10 +1045,11 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             privateRepo?: boolean;
             error?: string[];
             expectedDataBaseDirectory?: string;
+            payloadType?: PayloadType;
         }> = [
             {
                 it: 'appends new data',
-                config: defaultCfg,
+                config: { ...defaultCfg },
                 added: {
                     commit: commit('current commit id'),
                     date: lastUpdate,
@@ -990,7 +1061,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             },
             {
                 it: 'creates new data file',
-                config: { ...defaultCfg, benchmarkDataDirPath: 'new-data-dir' },
+                config: { ...defaultCfg },
                 added: {
                     commit: commit('current commit id'),
                     date: lastUpdate,
@@ -998,14 +1069,14 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                     bigger_is_better: false,
                 },
                 gitServerUrl: serverUrl,
-                gitHistory: gitHistory({ dir: 'new-data-dir' }),
+                gitHistory: gitHistory({ dataPath: 'branch/main.json' }),
             },
             {
                 it: 'appends new data in other repository',
                 config: {
                     ...defaultCfg,
                     ghRepository: 'https://github.com/user/other-repo',
-                    benchmarkDataDirPath: 'data-dir',
+                    basePath: 'data-dir',
                 },
                 added: {
                     commit: commit('current commit id'),
@@ -1028,7 +1099,15 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                         [
                             ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
                             'add',
-                            path.join('data-dir', 'data.js'),
+                            path.join('data-dir', 'listing.json'),
+                        ],
+                    ],
+                    [
+                        'cmd',
+                        [
+                            ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
+                            'add',
+                            path.join('data-dir', 'branch/main.json'),
                         ],
                     ],
                     [
@@ -1065,6 +1144,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 config: {
                     ...defaultCfg,
                     ghRepository: 'https://github.com/user/other-repo',
+                    basePath: './',
                 },
                 added: {
                     commit: commit('current commit id'),
@@ -1087,7 +1167,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                         [
                             ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
                             'add',
-                            path.join('data-dir', 'data.js'),
+                            'listing.json',
                         ],
                     ],
                     [
@@ -1095,7 +1175,15 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                         [
                             ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
                             'add',
-                            path.join('data-dir', 'index.html'),
+                            path.join('branch', 'main.json'),
+                        ],
+                    ],
+                    [
+                        'cmd',
+                        [
+                            ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
+                            'add',
+                            'index.html',
                         ],
                     ],
                     [
@@ -1133,7 +1221,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             },
             {
                 it: 'does not create index.html if it already exists',
-                config: { ...defaultCfg, benchmarkDataDirPath: 'with-index-html' },
+                config: { ...defaultCfg, basePath: 'with-index-html' },
                 added: {
                     commit: commit('current commit id'),
                     date: lastUpdate,
@@ -1141,7 +1229,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                     bigger_is_better: false,
                 },
                 gitServerUrl: serverUrl,
-                gitHistory: gitHistory({ dir: 'with-index-html', addIndexHtml: false }),
+                gitHistory: gitHistory({ addIndexHtml: false, baseDir: 'with-index-html' }),
+                expectedDataBaseDirectory: './',
             },
             {
                 it: 'does not push to remote when auto-push is off',
@@ -1235,23 +1324,149 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 gitHistory: gitHistory(),
                 error: undefined,
             },
+            {
+                it: 'does not write data for merge group event',
+                config: defaultCfg,
+                payloadType: PayloadType.MergeGroup,
+                added: {
+                    commit: commit('current commit id'),
+                    date: lastUpdate,
+                    benches: [bench('bench_fib_10', 135)],
+                    bigger_is_better: false,
+                },
+                gitServerUrl: serverUrl,
+                gitHistory: gitHistory({ payloadType: PayloadType.MergeGroup }),
+            },
+            {
+                it: 'raises an alert when exceeding threshold 2.0 for different units',
+                config: defaultCfg,
+                payloadType: PayloadType.MergeGroup,
+                added: {
+                    commit: commit('current commit id'),
+                    date: lastUpdate,
+                    benches: [
+                        bench('bench_fib_10', 500.0 / 1_000_000.0, undefined, 'ms/iter'),
+                        bench('bench_fib_20', 25000),
+                    ], // Exceeds 2.0 threshold
+                    bigger_is_better: false,
+                },
+                gitServerUrl: serverUrl,
+                gitHistory: gitHistory(),
+                error: [
+                    '# :warning: **Performance Alert** :warning:',
+                    '',
+                    "Possible performance regression was detected for benchmark **'Test benchmark'**.",
+                    'Benchmark result of this commit is worse than the previous benchmark result exceeding threshold `2`.',
+                    '',
+                    '| Benchmark suite | Current: current commit id | Previous: prev commit id | Ratio |',
+                    '|-|-|-|-|',
+                    '| `bench_fib_10` | `0.0005` ms/iter (`± 20`) | `100` ns/iter (`± 20`) | `5` |',
+                    '',
+                    `This comment was automatically generated by [workflow](${serverUrl}/user/repo/actions?query=workflow%3AWorkflow%20name) using [github-action-benchmark](https://github.com/marketplace/actions/continuous-benchmark).`,
+                ],
+            },
+            {
+                it: 'raises an alert when exceeding threshold 2.0 for merge group event',
+                config: defaultCfg,
+                payloadType: PayloadType.MergeGroup,
+                added: {
+                    commit: commit('current commit id'),
+                    date: lastUpdate,
+                    benches: [bench('bench_fib_10', 500), bench('bench_fib_20', 25000)], // Exceeds 2.0 threshold
+                    bigger_is_better: false,
+                },
+                gitServerUrl: serverUrl,
+                gitHistory: gitHistory(),
+                error: [
+                    '# :warning: **Performance Alert** :warning:',
+                    '',
+                    "Possible performance regression was detected for benchmark **'Test benchmark'**.",
+                    'Benchmark result of this commit is worse than the previous benchmark result exceeding threshold `2`.',
+                    '',
+                    '| Benchmark suite | Current: current commit id | Previous: prev commit id | Ratio |',
+                    '|-|-|-|-|',
+                    '| `bench_fib_10` | `500` ns/iter (`± 20`) | `100` ns/iter (`± 20`) | `5` |',
+                    '',
+                    `This comment was automatically generated by [workflow](${serverUrl}/user/repo/actions?query=workflow%3AWorkflow%20name) using [github-action-benchmark](https://github.com/marketplace/actions/continuous-benchmark).`,
+                ],
+            },
+            {
+                it: 'raises an alert when exceeding threshold 2.0 for pull request event',
+                config: defaultCfg,
+                payloadType: PayloadType.PullRequest,
+                added: {
+                    commit: commit('current commit id'),
+                    date: lastUpdate,
+                    benches: [bench('bench_fib_10', 500), bench('bench_fib_20', 25000)], // Exceeds 2.0 threshold
+                    bigger_is_better: false,
+                },
+                gitServerUrl: serverUrl,
+                gitHistory: gitHistory(),
+                error: [
+                    '# :warning: **Performance Alert** :warning:',
+                    '',
+                    "Possible performance regression was detected for benchmark **'Test benchmark'**.",
+                    'Benchmark result of this commit is worse than the previous benchmark result exceeding threshold `2`.',
+                    '',
+                    '| Benchmark suite | Current: current commit id | Previous: prev commit id | Ratio |',
+                    '|-|-|-|-|',
+                    '| `bench_fib_10` | `500` ns/iter (`± 20`) | `100` ns/iter (`± 20`) | `5` |',
+                    '',
+                    `This comment was automatically generated by [workflow](${serverUrl}/user/repo/actions?query=workflow%3AWorkflow%20name) using [github-action-benchmark](https://github.com/marketplace/actions/continuous-benchmark).`,
+                ],
+            },
+            {
+                it: 'writes data for pull request event',
+                config: defaultCfg,
+                payloadType: PayloadType.PullRequest,
+                added: {
+                    commit: commit('current commit id'),
+                    date: lastUpdate,
+                    benches: [bench('bench_fib_10', 135)],
+                    bigger_is_better: false,
+                },
+                gitServerUrl: serverUrl,
+                gitHistory: gitHistory({ payloadType: PayloadType.PullRequest, dataPath: 'pr/10.json' }),
+            },
         ];
-        for (const t of normalCases) {
+        for (const t of normalCasesWithPayloadType) {
             // FIXME: can't use `it.each` currently as tests running in parallel interfere with each other
             it(t.it, async function () {
+                const dataJsRelative = path.join('branch', 'main.json');
+                if (t.payloadType === PayloadType.PullRequest) {
+                    contextSetPullRequest(gitHubContext, 10, 'main', 'prev commit id');
+                } else if (t.payloadType === PayloadType.MergeGroup) {
+                    contextSetMergeGroup(gitHubContext, 'main', 'prev commit id');
+                } else {
+                    contextSetPush(gitHubContext, 'main', 'prev commit id');
+                }
                 if (t.privateRepo) {
                     gitHubContext.payload.repository = gitHubContext.payload.repository
                         ? { ...gitHubContext.payload.repository, private: true }
                         : null;
                 }
-
-                const dataDirPath = path.join(t.expectedDataBaseDirectory ?? '', t.config.benchmarkDataDirPath);
-                const originalDataJs = path.join(dataDirPath, 'original_data.js');
-                const dataJs = path.join(dataDirPath, 'data.js');
+                const dataDirPath = path.join(t.expectedDataBaseDirectory ?? '', t.config.basePath);
+                ok(dataJsRelative);
+                const dataJs = path.join(dataDirPath, dataJsRelative);
+                const originalDataJson = path.join(dataDirPath, 'original_data.json');
                 const indexHtml = path.join(dataDirPath, 'index.html');
 
-                if (await isFile(originalDataJs)) {
-                    await fs.copyFile(originalDataJs, dataJs);
+                if (await isFile(originalDataJson)) {
+                    await fs.mkdir(path.dirname(dataJs), { recursive: true });
+                    await fs.copyFile(originalDataJson, dataJs);
+                }
+
+                // copy pull request data
+                let dataJsonPr;
+                let prDataBefore;
+                if (t.payloadType === PayloadType.PullRequest) {
+                    const originalDataJsonPr = path.join(dataDirPath, 'pr', 'original_data.json');
+                    dataJsonPr = path.join(dataDirPath, 'pr', '10.json');
+                    await fs.mkdir(path.dirname(originalDataJsonPr), { recursive: true });
+                    await fs.copyFile(originalDataJsonPr, dataJsonPr);
+
+                    prDataBefore = await loadDataJson(dataJsonPr, t.gitServerUrl);
+                    ok(prDataBefore);
                 }
 
                 let indexHtmlBefore = null;
@@ -1262,7 +1477,8 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 }
 
                 let caughtError: Error | null = null;
-                const beforeData = await loadDataJs(dataDirPath, t.gitServerUrl);
+                const beforeData = await loadDataJson(dataJs, t.gitServerUrl);
+                const lenBefore = beforeData?.entries[t.config.name].length ?? 0;
                 const beforeDate = Date.now();
                 try {
                     await writeBenchmark(t.added, t.config);
@@ -1284,30 +1500,40 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
 
                 const afterDate = Date.now();
 
+                ok(await isDir(dataDirPath));
+                if (t.payloadType !== PayloadType.MergeGroup) {
+                    ok(await isFile(path.join(dataDirPath, 'index.html')));
+                }
+
                 expect(gitSpy.history).toEqual(t.gitHistory);
 
-                ok(await isDir(dataDirPath));
-                ok(await isFile(path.join(dataDirPath, 'index.html')));
                 ok(await isFile(dataJs));
-
-                const data = await loadDataJs(dataDirPath, t.gitServerUrl);
+                const data = await loadDataJson(dataJs, t.gitServerUrl);
                 ok(data);
 
                 expect('number').toEqual(typeof data.lastUpdate);
-                ok(
-                    beforeDate <= data.lastUpdate && data.lastUpdate <= afterDate,
-                    `Should be ${beforeDate} <= ${data.lastUpdate} <= ${afterDate}`,
-                );
+                if (t.payloadType === PayloadType.Push) {
+                    ok(
+                        beforeDate <= data.lastUpdate && data.lastUpdate <= afterDate,
+                        `Should be ${beforeDate} <= ${data.lastUpdate} <= ${afterDate}`,
+                    );
+                }
                 ok(data.entries[t.config.name]);
-                const len = data.entries[t.config.name].length;
-                ok(len > 0);
-                expect(t.added).toEqual(data.entries[t.config.name][len - 1]); // Check last item is the newest
+                const lenAfter = data.entries[t.config.name].length;
+                ok(lenAfter > 0);
+                if (t.payloadType === PayloadType.Push) {
+                    expect(t.added).toEqual(data.entries[t.config.name][lenAfter - 1]); // Check last item is the newest
+                } else if (t.payloadType === PayloadType.MergeGroup) {
+                    expect(lenBefore).toEqual(lenAfter);
+                }
 
                 if (beforeData !== null) {
                     expect(data.repoUrl).toEqual(beforeData.repoUrl);
                     for (const name of Object.keys(beforeData.entries)) {
                         if (name === t.config.name) {
-                            expect(data.entries[name].slice(0, -1)).toEqual(beforeData.entries[name]); // New data was appended
+                            if (t.payloadType === PayloadType.Push) {
+                                expect(data.entries[name].slice(0, -1)).toEqual(beforeData.entries[name]); // New data was appended
+                            }
                         } else {
                             expect(data.entries[name]).toEqual(beforeData.entries[name]);
                         }
@@ -1317,6 +1543,22 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 if (indexHtmlBefore !== null) {
                     const indexHtmlAfter = await fs.readFile(indexHtml);
                     expect(indexHtmlAfter).toEqual(indexHtmlBefore); // If index.html is already existing, do not touch it
+                }
+
+                // check PR data
+                if (t.payloadType === PayloadType.PullRequest) {
+                    ok(dataJsonPr);
+                    ok(prDataBefore);
+                    const prDataAfter = await loadDataJson(dataJsonPr, t.gitServerUrl);
+                    ok(prDataAfter);
+                    for (const name of Object.keys(prDataBefore.entries)) {
+                        if (name === t.config.name) {
+                            expect(prDataAfter.entries[name].slice(0, -1)).toEqual(prDataBefore.entries[name]); // New data was appended
+                        }
+                    }
+                    const lenAfter = prDataAfter.entries[t.config.name].length;
+                    ok(lenAfter > 0);
+                    expect(t.added).toEqual(prDataAfter.entries[t.config.name][lenAfter - 1]); // Check last item is the newest
                 }
             });
         }
@@ -1354,9 +1596,12 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
         ];
 
         it.each(retryCases)('$it', async function (t) {
+            // update the payload type
+            contextSetPush(gitHubContext, 'main', 'prev commit id');
+
             gitSpy.pushFailure = t.pushErrorMessage;
             gitSpy.pushFailureCount = t.pushErrorCount;
-            const config = { ...defaultCfg, benchmarkDataDirPath: 'with-index-html' };
+            const config = { ...defaultCfg, basePath: 'with-index-html' };
             const added: Benchmark = {
                 commit: commit('current commit id'),
                 date: lastUpdate,
@@ -1364,11 +1609,16 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 bigger_is_better: false,
             };
 
-            const originalDataJs = path.join(config.benchmarkDataDirPath, 'original_data.js');
-            const dataJs = path.join(config.benchmarkDataDirPath, 'data.js');
+            const originalDataJs = path.join(config.basePath, 'original_data.json');
+            const dataJs = path.join(config.basePath, 'branch', 'main.json');
+            await fs.mkdir(path.join(config.basePath, 'branch'), { recursive: true });
             await fs.copyFile(originalDataJs, dataJs);
 
-            const history = gitHistory({ dir: 'with-index-html', addIndexHtml: false });
+            const history = gitHistory({
+                addIndexHtml: false,
+                dataPath: 'branch/main.json',
+                baseDir: 'with-index-html',
+            });
             if (t.pushErrorCount > 0) {
                 // First 2 commands are fetch and switch. They are not repeated on retry
                 const retryHistory = history.slice(2, -1);

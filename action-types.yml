@@ -13,7 +13,7 @@ inputs:
     type: string
   gh-repository:
     type: string
-  benchmark-data-dir-path:
+  base-path:
     type: string
   github-token:
     type: string

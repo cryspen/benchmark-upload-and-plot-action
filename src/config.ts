@@ -11,7 +11,6 @@ export interface Config {
     inputDataPath: string; // path to out data
     ghPagesBranch: string;
     ghRepository: string | undefined;
-    benchmarkDataDirPath: string;
     githubToken: string | undefined;
     autoPush: boolean;
     skipFetchGhPages: boolean;
@@ -24,6 +23,7 @@ export interface Config {
     failThreshold: number;
     alertCommentCcUsers: string[];
     externalDataJsonPath: string | undefined;
+    basePath: string;
     maxItemsInChart: number | null;
     ref: string | undefined;
 }
@@ -70,14 +70,6 @@ function validateGhPagesBranch(branch: string) {
         return;
     }
     throw new Error(`Branch value must not be empty for 'gh-pages-branch' input`);
-}
-
-function validateBenchmarkDataDirPath(dirPath: string): string {
-    try {
-        return resolvePath(dirPath);
-    } catch (e) {
-        throw new Error(`Invalid value for 'benchmark-data-dir-path': ${e}`);
-    }
 }
 
 function validateName(name: string) {
@@ -235,7 +227,6 @@ export async function configFromJobInput(): Promise<Config> {
     const biggerIsBetter = getBoolInput('bigger-is-better');
     const ghPagesBranch: string = core.getInput('gh-pages-branch');
     const ghRepository: string = core.getInput('gh-repository');
-    let benchmarkDataDirPath: string = core.getInput('benchmark-data-dir-path');
     const name: string = core.getInput('name');
     const githubToken: string | undefined = core.getInput('github-token') || undefined;
     const ref: string | undefined = core.getInput('ref') || undefined;
@@ -252,11 +243,11 @@ export async function configFromJobInput(): Promise<Config> {
     const maxItemsInChart = getUintInput('max-items-in-chart');
     let failThreshold = getPercentageInput('fail-threshold');
 
+    const basePath: string = core.getInput('base-path');
     const groupBy = validateGroupBy(groupByString);
     const schema = validateSchema(schemaString);
     inputDataPath = await validateInputDataPath(inputDataPath);
     validateGhPagesBranch(ghPagesBranch);
-    benchmarkDataDirPath = validateBenchmarkDataDirPath(benchmarkDataDirPath);
     validateName(name);
     if (autoPush) {
         validateGitHubToken('auto-push', githubToken, 'to push GitHub pages branch to remote');
@@ -286,7 +277,6 @@ export async function configFromJobInput(): Promise<Config> {
         inputDataPath,
         ghPagesBranch,
         ghRepository,
-        benchmarkDataDirPath,
         githubToken,
         autoPush,
         skipFetchGhPages,
@@ -301,5 +291,6 @@ export async function configFromJobInput(): Promise<Config> {
         maxItemsInChart,
         failThreshold,
         ref,
+        basePath,
     };
 }
