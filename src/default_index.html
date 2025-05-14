@@ -482,9 +482,12 @@
                         elem.appendChild(checklist);
                     });
                 }
-                function populateBranchPrDropdown(branches, prs) {
+                function populateBranchPrDropdown(branchesOpt, prsOpt) {
                     let elem = document.getElementById('branch-pr-dropdown');
                     elem.innerHTML = '';
+
+                    const branches = branchesOpt ? branchesOpt : [];
+                    const prs = prsOpt ? prsOpt : [];
 
                     // if there are no branches or prs, remove the dropdown
                     if (branches.length == 0 && prs.length == 0) {
@@ -611,16 +614,18 @@
                     return fetch(url)
                         .then((response) => response.json())
                         .catch((e) => {
-                            throw new Error(`Error retrieving data: ${e}`);
+                            throw new Error(`Error retrieving data from ${url}: ${e}`);
                         });
                 }
                 async function loadDataFromBranch(branch) {
                     const dataUrl = `branch/${branch}.json`;
                     window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
+                    return window.BENCHMARK_DATA;
                 }
                 async function loadDataFromPr(pr) {
                     const dataUrl = `pr/${pr}.json`;
                     window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
+                    return window.BENCHMARK_DATA;
                 }
                 function rerenderAll() {
                     // retrieve the data for the benchmark set with the first name
@@ -631,17 +636,34 @@
                     populateBenchSetDropdown(Object.keys(benchSets));
                     renderAllCharts(benchSet);
                 }
+                async function loadFirstDataset(listing) {
+                    if (listing.branches) {
+                        for (const branch of listing.branches) {
+                            try {
+                                return await loadDataFromBranch(branch);
+                            } catch (e) {
+                                console.error(e);
+                                continue;
+                            }
+                        }
+                    } else {
+                        for (const pr of listing.prs) {
+                            try {
+                                return await loadDataFromPr(pr);
+                            } catch (e) {
+                                console.error(e);
+                                continue;
+                            }
+                        }
+                    }
+                    throw new Error('listing contains no valid datasets');
+                }
 
                 async function init() {
                     const listing = await loadDataFromUrl('listing.json');
                     populateBranchPrDropdown(listing.branches, listing.prs);
 
-                    // TODO: error handling
-                    // TODO: default to main?
-                    const branch = listing.branches[0];
-                    await loadDataFromBranch(branch);
-                    const data = window.BENCHMARK_DATA;
-
+                    const data = await loadFirstDataset(listing);
                     // Render header
                     document.getElementById('last-update').textContent = new Date(data.lastUpdate).toString();
                     const repoLink = document.getElementById('repository-link');
