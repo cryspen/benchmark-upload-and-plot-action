@@ -107,6 +107,12 @@ Url to an optional different repository to store benchmark results (eg. `github.
 NOTE: if you want to auto push to a different repository you need to use a separate Personal Access Token that has a write access to the specified repository.
 If you are not using the `auto-push` option then you can avoid passing the `gh-token` if your data repository is public
 
+#### `base-path`
+
+- Type: String
+
+Path to a directory that contains benchmark files on the GitHub pages branch. The file `index.html` will be placed in the root of this directory.
+
 #### `github-token` (Optional)
 
 - Type: String
