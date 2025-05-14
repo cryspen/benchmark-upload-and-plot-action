@@ -658,8 +658,10 @@ export async function writeBenchmark(bench: Benchmark, config: Config) {
 
     let prevBench;
     if (externalDataJsonPath) {
+        console.log('Writing to external JSON');
         prevBench = await writeBenchmarkToExternalJson(bench, externalDataJsonPath, config);
     } else {
+        console.log('Writing to GitHub Pages');
         prevBench = await getPrevBench(name, config);
         await writeBenchmarkToGitHubPages(bench, config);
     }
