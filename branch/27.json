@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1747206150402,
+  "lastUpdate": 1747206158063,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test fail if exceed threshold": [
@@ -79,17 +79,65 @@
           }
         ]
       }
+    ],
+    "Test second action": [
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "5d5e33a144f52a2d526deb172f32a9b1183dcba9",
+          "message": "Reorganize file structure and improve plot interface",
+          "timestamp": "2025-05-05T13:42:20Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/27/commits/5d5e33a144f52a2d526deb172f32a9b1183dcba9"
+        },
+        "date": 1747206157093,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "value": 135,
+            "range": "± 24",
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "name": "bench_fib_10"
+          },
+          {
+            "value": 18149,
+            "range": "± 755",
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "name": "bench_fib_20"
+          }
+        ]
+      }
     ]
   },
   "groupBy": {
     "Test fail if exceed threshold": [
       "os"
+    ],
+    "Test second action": [
+      "os",
+      "keySize"
     ]
   },
   "schema": {
     "Test fail if exceed threshold": [
       "name",
       "os"
+    ],
+    "Test second action": [
+      "os",
+      "keySize",
+      "name",
+      "platform",
+      "api",
+      "category"
     ]
   }
 }
