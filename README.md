@@ -11,6 +11,8 @@ and `value`. You can also provide optional `range` (results' variance) and
 `extra` (any additional information that might be useful to your benchmark's
 context) properties. Like this:
 
+NOTE: currently, only durations are supported, e.g. `ns/iter`, `ns`.
+
 ```json
 [
     {
@@ -19,14 +21,6 @@ context) properties. Like this:
         "os": "ubuntu-latest",
         "value": 50
     },
-    {
-        "name": "My Custom Smaller Is Better Benchmark - Memory Used",
-        "unit": "Megabytes",
-        "os": "ubuntu-latest",
-        "value": 100,
-        "range": "3",
-        "extra": "Value for Tooltip: 25\nOptional Num #2: 100\nAnything Else!"
-    }
 ]
 ```
 
