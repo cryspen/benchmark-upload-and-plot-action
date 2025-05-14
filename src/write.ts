@@ -33,7 +33,7 @@ const DEFAULT_DATA_JSON = {
 };
 
 const DEFAULT_LISTING = {
-    branches: ['main'],
+    branches: [],
     prs: [],
 };
 function getDataPath(config: Config) {
