@@ -612,10 +612,10 @@
                 }
                 async function loadDataFromUrl(url) {
                     return fetch(url)
-                        .then((response) => response.json())
                         .catch((e) => {
                             throw new Error(`Error retrieving data from ${url}: ${e}`);
-                        });
+                        })
+                        .then((response) => response.json());
                 }
                 async function loadDataFromBranch(branch) {
                     const dataUrl = `branch/${branch}.json`;
@@ -646,7 +646,8 @@
                                 continue;
                             }
                         }
-                    } else {
+                    }
+                    if (listing.prs) {
                         for (const pr of listing.prs) {
                             try {
                                 return await loadDataFromPr(pr);
