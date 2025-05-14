@@ -382,14 +382,14 @@
                 }
                 function addAttributesToChartElement(elem, groupKey) {
                     Object.entries(groupKey).forEach(([key, value]) => {
-                        elem.setAttribute(key, value);
+                        elem.setAttribute(key.replace(' ', ''), value);
                     });
                 }
 
                 function setChartHiddenStatus(hide, key, value) {
                     const charts = document.getElementsByClassName('benchmark-graphs');
                     const filteredCharts = Array.from(charts).filter((chart) => {
-                        const chartValue = chart.getAttribute(key);
+                        const chartValue = chart.getAttribute(key.replace(' ', ''));
                         return chartValue === value;
                     });
                     filteredCharts.forEach((chart) => {
@@ -618,7 +618,7 @@
                         .then((response) => response.json());
                 }
                 async function loadDataFromBranch(branch) {
-                    const dataUrl = `branch/${branch}.json`;
+                    const dataUrl = `branch/refs/heads/${branch}.json`;
                     window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
                     return window.BENCHMARK_DATA;
                 }
