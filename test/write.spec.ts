@@ -73,7 +73,7 @@ const gitHubContext = {
         merge_group: null as any,
     },
     workflow: 'Workflow name',
-    ref: 'main', // TODO: set separately for pull request tests
+    ref: 'refs/heads/main', // TODO: set separately for pull request tests
 };
 
 enum PayloadType {
@@ -1003,7 +1003,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             } = {},
         ): [GitFunc, unknown[]][] {
             const baseDir = cfg.baseDir ?? 'data-dir';
-            const dataPathRelative = cfg.dataPath ?? path.join('branch', 'main.json');
+            const dataPathRelative = cfg.dataPath ?? path.join('branch', 'refs', 'heads', 'main.json');
             const dataPath = path.join(baseDir, dataPathRelative);
             const listingPath = path.join(baseDir, 'listing.json');
             const indexHtmlPath = path.join(baseDir, 'index.html');
@@ -1073,7 +1073,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                     bigger_is_better: false,
                 },
                 gitServerUrl: serverUrl,
-                gitHistory: gitHistory({ dataPath: 'branch/main.json' }),
+                gitHistory: gitHistory({ dataPath: 'branch/refs/heads/main.json' }),
             },
             {
                 it: 'appends new data in other repository',
@@ -1111,7 +1111,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                         [
                             ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
                             'add',
-                            path.join('data-dir', 'branch/main.json'),
+                            path.join('data-dir', 'branch/refs/heads/main.json'),
                         ],
                     ],
                     [
@@ -1179,7 +1179,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                         [
                             ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
                             'add',
-                            path.join('branch', 'main.json'),
+                            path.join('branch', 'refs', 'heads', 'main.json'),
                         ],
                     ],
                     [
@@ -1436,11 +1436,11 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
         for (const t of normalCasesWithPayloadType) {
             // FIXME: can't use `it.each` currently as tests running in parallel interfere with each other
             it(t.it, async function () {
-                const dataJsRelative = path.join('branch', 'main.json');
+                const dataJsRelative = path.join('branch', 'refs', 'heads', 'main.json');
                 if (t.payloadType === PayloadType.PullRequest) {
                     contextSetPullRequest(gitHubContext, 10, 'main', 'prev commit id');
                 } else if (t.payloadType === PayloadType.MergeGroup) {
-                    contextSetMergeGroup(gitHubContext, 'main', 'prev commit id');
+                    contextSetMergeGroup(gitHubContext, 'refs/heads/main', 'prev commit id');
                 } else {
                     contextSetPush(gitHubContext, 'prev commit id');
                 }
@@ -1614,13 +1614,13 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             };
 
             const originalDataJs = path.join(config.basePath, 'original_data.json');
-            const dataJs = path.join(config.basePath, 'branch', 'main.json');
-            await fs.mkdir(path.join(config.basePath, 'branch'), { recursive: true });
+            const dataJs = path.join(config.basePath, 'branch', 'refs', 'heads', 'main.json');
+            await fs.mkdir(path.join(config.basePath, 'branch', 'refs', 'heads'), { recursive: true });
             await fs.copyFile(originalDataJs, dataJs);
 
             const history = gitHistory({
                 addIndexHtml: false,
-                dataPath: 'branch/main.json',
+                dataPath: 'branch/refs/heads/main.json',
                 baseDir: 'with-index-html',
             });
             if (t.pushErrorCount > 0) {

@@ -59,20 +59,21 @@ function getDataPath(config: Config) {
 function getComparePathAndSha(config: Config): [string, string] | undefined {
     const eventName = github.context.eventName;
 
-    let branch: string;
+    let ref: string;
     let sha: string;
     if (eventName === 'pull_request') {
-        branch = github.context.payload.pull_request?.base.ref;
+        const branch = github.context.payload.pull_request?.base.ref;
         sha = github.context.payload.pull_request?.base.sha;
         if (!branch || !sha) {
             console.warn(`ref ${branch} or sha ${sha} is null; skipping`);
             return undefined;
         }
+        ref = path.join('refs', 'heads', branch);
     } else if (eventName === 'merge_group') {
-        branch = github.context.payload.merge_group.base_ref;
+        ref = github.context.payload.merge_group.base_ref;
         sha = github.context.payload.merge_group.base_sha;
     } else if (eventName === 'push') {
-        branch = github.context.ref;
+        ref = github.context.ref;
         sha = github.context.payload.before;
     } else {
         return undefined;
@@ -82,7 +83,7 @@ function getComparePathAndSha(config: Config): [string, string] | undefined {
         return undefined;
     }
 
-    const file = `${branch}.json`;
+    const file = `${ref}.json`;
     const comparePath = path.join(config.basePath, 'branch', file);
 
     return [comparePath, sha];
@@ -538,7 +539,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     }
     const dataPath = path.join(benchmarkBaseDir, dataRelativePath);
 
-    const branchPath = path.join(benchmarkBaseDir, basePath, 'branch');
+    const branchPath = path.join(benchmarkBaseDir, basePath, 'branch', 'refs', 'heads');
     const prPath = path.join(benchmarkBaseDir, basePath, 'pr');
     await io.mkdirP(path.join(benchmarkBaseDir, basePath));
     await io.mkdirP(branchPath);
