@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1747212096447,
+  "lastUpdate": 1747212098060,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test fail if exceed threshold": [
@@ -906,6 +906,44 @@
             "unit": "Megabytes",
             "os": "ubuntu-latest_64",
             "value": 1
+          },
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 3",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 2
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "3e45d6a9f1ea78feba35f09fe649174ce1e54712",
+          "message": "Reorganize file structure and improve plot interface",
+          "timestamp": "2025-05-05T13:42:20Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/27/commits/3e45d6a9f1ea78feba35f09fe649174ce1e54712"
+        },
+        "date": 1747212097431,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 1",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 200
+          },
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 2",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 200
           },
           {
             "name": "My Custom Smaller Is Better Benchmark - Bench 3",
