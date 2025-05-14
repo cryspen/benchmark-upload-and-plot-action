@@ -53,6 +53,8 @@ function getDataPath(config: Config) {
         file = `${push.base_ref}.json`;
         directory = 'branch';
     } else {
+        console.warn(`Unsupported event type: ', ${github.context.eventName}`);
+        core.debug(JSON.stringify(github.context.payload));
         return undefined;
     }
 
