@@ -895,9 +895,13 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
     // Tests for updating GitHub Pages branch
     describe('with gh-pages branch', function () {
         beforeEach(async function () {
+            // reset the context
+            contextSetPush(gitHubContext, 'main', 'prev commit id');
             (global as any).window = {}; // Fake window object on browser
         });
         afterEach(async function () {
+            // reset the context
+            contextSetPush(gitHubContext, 'main', 'prev commit id');
             gitSpy.clear();
             delete (global as any).window;
             for (const p of [
@@ -990,6 +994,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 token?: string | undefined;
                 fetch?: boolean;
                 skipFetch?: boolean;
+                mergeGroup?: boolean;
             } = {},
         ): [GitFunc, unknown[]][] {
             const baseDir = cfg.baseDir ?? 'data-dir';
@@ -1003,17 +1008,30 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             const addListing = dataPath ?? false;
             const autoPush = cfg.autoPush ?? true;
             const skipFetch = cfg.skipFetch ?? false;
-            const hist: Array<[GitFunc, unknown[]] | undefined> = [
-                skipFetch ? undefined : ['fetch', [token, 'gh-pages']],
-                ['cmd', [[], 'switch', 'gh-pages']],
-                fetch ? ['pull', [token, 'gh-pages']] : undefined,
-                addListing ? ['cmd', [[], 'add', listingPath]] : undefined,
-                dataPath ? ['cmd', [[], 'add', dataPath]] : undefined,
-                addIndexHtml ? ['cmd', [[], 'add', indexHtmlPath]] : undefined,
-                ['cmd', [[], 'commit', '-m', 'add Test benchmark benchmark result for current commit id']],
-                autoPush ? ['push', [token, undefined, 'gh-pages', []]] : undefined,
-                ['cmd', [[], 'checkout', '-']], // Return from gh-pages
-            ];
+            const mergeGroup = cfg.mergeGroup ?? false;
+
+            let hist: Array<[GitFunc, unknown[]] | undefined>;
+
+            if (mergeGroup) {
+                hist = [
+                    skipFetch ? undefined : ['fetch', [token, 'gh-pages']],
+                    ['cmd', [[], 'switch', 'gh-pages']],
+                    fetch ? ['pull', [token, 'gh-pages']] : undefined,
+                    ['cmd', [[], 'checkout', '-']], // Return from gh-pages
+                ];
+            } else {
+                hist = [
+                    skipFetch ? undefined : ['fetch', [token, 'gh-pages']],
+                    ['cmd', [[], 'switch', 'gh-pages']],
+                    fetch ? ['pull', [token, 'gh-pages']] : undefined,
+                    addListing ? ['cmd', [[], 'add', listingPath]] : undefined,
+                    dataPath ? ['cmd', [[], 'add', dataPath]] : undefined,
+                    addIndexHtml ? ['cmd', [[], 'add', indexHtmlPath]] : undefined,
+                    ['cmd', [[], 'commit', '-m', 'add Test benchmark benchmark result for current commit id']],
+                    autoPush ? ['push', [token, undefined, 'gh-pages', []]] : undefined,
+                    ['cmd', [[], 'checkout', '-']], // Return from gh-pages
+                ];
+            }
             return hist.filter((x: [GitFunc, unknown[]] | undefined): x is [GitFunc, unknown[]] => x !== undefined);
         }
 
@@ -1305,11 +1323,23 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 gitHistory: gitHistory(),
                 error: undefined,
             },
-            /*
+            {
+                it: 'does not write data for merge group event',
+                config: defaultCfg,
+                payloadType: PayloadType.MergeGroup,
+                added: {
+                    commit: commit('current commit id'),
+                    date: lastUpdate,
+                    benches: [bench('bench_fib_10', 135)],
+                    bigger_is_better: false,
+                },
+                gitServerUrl: serverUrl,
+                gitHistory: gitHistory({ mergeGroup: true }),
+            },
             {
                 it: 'raises an alert when exceeding threshold 2.0 for merge group event',
                 config: defaultCfg,
-                //payloadType: PayloadType.MergeGroup,
+                payloadType: PayloadType.MergeGroup,
                 added: {
                     commit: commit('current commit id'),
                     date: lastUpdate,
@@ -1326,29 +1356,26 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                     '',
                     '| Benchmark suite | Current: current commit id | Previous: prev commit id | Ratio |',
                     '|-|-|-|-|',
-                    '| `bench_fib_10` | `500` ns/iter (`± 20`) | `210` ns/iter (`± 20`) | `2.10` |',
+                    '| `bench_fib_10` | `500` ns/iter (`± 20`) | `100` ns/iter (`± 20`) | `5` |',
                     '',
                     `This comment was automatically generated by [workflow](${serverUrl}/user/repo/actions?query=workflow%3AWorkflow%20name) using [github-action-benchmark](https://github.com/marketplace/actions/continuous-benchmark).`,
-                    '',
-                    'CC: @user',
                 ],
             },
-	    */
         ];
         for (const t of normalCasesWithPayloadType) {
-            let dataJsRelative: string | null;
-            if (t.payloadType === PayloadType.PullRequest) {
-                contextSetPullRequest(gitHubContext, 10, 'main', 'prev commit id');
-                dataJsRelative = path.join('pr', '10.json');
-            } else if (t.payloadType === PayloadType.MergeGroup) {
-                contextSetMergeGroup(gitHubContext, 'main', 'prev commit id');
-                dataJsRelative = path.join('branch', 'main.json');
-            } else {
-                contextSetPush(gitHubContext, 'main', 'prev commit id');
-                dataJsRelative = path.join('branch', 'main.json');
-            }
             // FIXME: can't use `it.each` currently as tests running in parallel interfere with each other
             it(t.it, async function () {
+                let dataJsRelative: string | null;
+                if (t.payloadType === PayloadType.PullRequest) {
+                    contextSetPullRequest(gitHubContext, 10, 'main', 'prev commit id');
+                    dataJsRelative = path.join('pr', '10.json');
+                } else if (t.payloadType === PayloadType.MergeGroup) {
+                    contextSetMergeGroup(gitHubContext, 'main', 'prev commit id');
+                    dataJsRelative = path.join('branch', 'main.json');
+                } else {
+                    contextSetPush(gitHubContext, 'main', 'prev commit id');
+                    dataJsRelative = path.join('branch', 'main.json');
+                }
                 if (t.privateRepo) {
                     gitHubContext.payload.repository = gitHubContext.payload.repository
                         ? { ...gitHubContext.payload.repository, private: true }
@@ -1364,10 +1391,6 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                     await fs.mkdir(path.dirname(dataJs), { recursive: true });
                     await fs.copyFile(originalDataJson, dataJs);
                 }
-                // TODO: still check the comparison error
-                if (t.payloadType === PayloadType.MergeGroup) {
-                    return;
-                }
 
                 let indexHtmlBefore = null;
                 try {
@@ -1378,6 +1401,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
 
                 let caughtError: Error | null = null;
                 const beforeData = await loadDataJson(dataJs, t.gitServerUrl);
+                const lenBefore = beforeData?.entries[t.config.name].length ?? 0;
                 const beforeDate = Date.now();
                 try {
                     await writeBenchmark(t.added, t.config);
@@ -1400,7 +1424,9 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 const afterDate = Date.now();
 
                 ok(await isDir(dataDirPath));
-                ok(await isFile(path.join(dataDirPath, 'index.html')));
+                if (t.payloadType !== PayloadType.MergeGroup) {
+                    ok(await isFile(path.join(dataDirPath, 'index.html')));
+                }
 
                 expect(gitSpy.history).toEqual(t.gitHistory);
 
@@ -1418,17 +1444,21 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                 ok(data.entries[t.config.name]);
                 const lenAfter = data.entries[t.config.name].length;
                 ok(lenAfter > 0);
-                expect(t.added).toEqual(data.entries[t.config.name][lenAfter - 1]); // Check last item is the newest
+                if (t.payloadType !== PayloadType.MergeGroup) {
+                    expect(t.added).toEqual(data.entries[t.config.name][lenAfter - 1]); // Check last item is the newest
+                } else {
+                    expect(lenBefore).toEqual(lenAfter);
+                }
 
-                if (t.payloadType === PayloadType.Push) {
-                    if (beforeData !== null) {
-                        expect(data.repoUrl).toEqual(beforeData.repoUrl);
-                        for (const name of Object.keys(beforeData.entries)) {
-                            if (name === t.config.name) {
+                if (beforeData !== null) {
+                    expect(data.repoUrl).toEqual(beforeData.repoUrl);
+                    for (const name of Object.keys(beforeData.entries)) {
+                        if (name === t.config.name) {
+                            if (t.payloadType !== PayloadType.MergeGroup) {
                                 expect(data.entries[name].slice(0, -1)).toEqual(beforeData.entries[name]); // New data was appended
-                            } else {
-                                expect(data.entries[name]).toEqual(beforeData.entries[name]);
                             }
+                        } else {
+                            expect(data.entries[name]).toEqual(beforeData.entries[name]);
                         }
                     }
                 }
