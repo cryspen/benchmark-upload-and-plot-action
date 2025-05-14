@@ -304,6 +304,7 @@ function buildAlertComment(
     threshold: number,
     cc: string[],
 ): string {
+    // TODO: display with matching units
     // Do not show benchmark name if it is the default value 'Benchmark'.
     const benchmarkText = benchName === 'Benchmark' ? '' : ` **'${benchName}'**`;
     const title = threshold === 0 ? '# Performance Report' : '# :warning: **Performance Alert** :warning:';
@@ -685,12 +686,52 @@ async function handleSummary(benchName: string, currBench: Benchmark, prevBench:
     await summary.write();
 }
 
-function getRatio(biggerIsBetter: boolean, prev: BenchmarkResult, current: BenchmarkResult) {
-    // TODO: take units into account
+function adjustUnitValue(result: BenchmarkResult): number {
+    // XXX: should unify unit format in action output
+    // XXX: assumes duration
 
+    const unit = result.unit;
+    const value = result.value;
+
+    let newValue;
+    switch (unit) {
+        // micro
+        case '\u03bcs/iter':
+        case '\u00b5s/iter':
+        case 'us/iter':
+            newValue = value * 1000;
+            break;
+        case 'ns/iter':
+            newValue = value;
+            break;
+        case 'ms/iter':
+            newValue = value * 1000000;
+            break;
+        case 's/iter':
+            newValue = value * 1000000000;
+            break;
+        default:
+            // XXX: could not parse unit
+            core.debug(`Could not convert unit: ${unit}.`);
+            return value;
+    }
+    return newValue;
+}
+
+function getRatio(biggerIsBetter: boolean, prev: BenchmarkResult, current: BenchmarkResult) {
     if (prev.value === 0 && current.value === 0) return 1;
 
+    let prevValue;
+    let currentValue;
+    if (prev.unit === current.unit) {
+        prevValue = prev.value;
+        currentValue = current.value;
+    } else {
+        prevValue = adjustUnitValue(prev);
+        currentValue = adjustUnitValue(current);
+    }
+
     return biggerIsBetter
-        ? prev.value / current.value // e.g. current=100, prev=200
-        : current.value / prev.value; // e.g. current=200, prev=100
+        ? prevValue / currentValue // e.g. current=100, prev=200
+        : currentValue / prevValue; // e.g. current=200, prev=100
 }
