@@ -36,7 +36,7 @@ const DEFAULT_LISTING = {
     branches: [],
     prs: [],
 };
-function getDataPath(config: Config) {
+function getDataPath() {
     const eventName = github.context.eventName;
 
     let file: string;
@@ -54,9 +54,9 @@ function getDataPath(config: Config) {
         return undefined;
     }
 
-    return path.join(config.basePath, directory, file);
+    return path.join(directory, file);
 }
-function getComparePathAndSha(config: Config): [string, string] | undefined {
+function getComparePathAndSha(): [string, string] | undefined {
     const eventName = github.context.eventName;
 
     let ref: string;
@@ -84,18 +84,18 @@ function getComparePathAndSha(config: Config): [string, string] | undefined {
     }
 
     const file = `${ref}.json`;
-    const comparePath = path.join(config.basePath, 'branch', file);
+    const comparePath = path.join('branch', file);
 
     return [comparePath, sha];
 }
 async function getPrevBench(benchName: string, config: Config): Promise<Benchmark | null> {
     // TODO: error handling
-    const comparePathAndSha = getComparePathAndSha(config);
+    const comparePathAndSha = getComparePathAndSha();
     if (!comparePathAndSha) {
         return null;
     }
     const [comparePath, compareSha] = comparePathAndSha;
-    const data = await loadDataJson(comparePath);
+    const data = await loadDataJson(path.join(config.basePath, comparePath));
 
     const suite = data.entries[benchName];
 
@@ -530,20 +530,18 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     // `benchmarkDataDirPath` is an absolute path at this stage,
     // so we need to convert it to relative to be able to prepend the `benchmarkBaseDir`
 
-    const dataRelativePath = getDataPath(config);
+    let dataRelativePath = getDataPath();
     if (!dataRelativePath) {
         // sometimes we don't want to push the benchmark data (e.g. on the merge queue).
         // in this case, skip the below.
         console.warn('No data path could be built');
         return;
     }
+
+    dataRelativePath = path.join(basePath, dataRelativePath);
     const dataPath = path.join(benchmarkBaseDir, dataRelativePath);
 
-    const branchPath = path.join(benchmarkBaseDir, basePath, 'branch', 'refs', 'heads');
-    const prPath = path.join(benchmarkBaseDir, basePath, 'pr');
-    await io.mkdirP(path.join(benchmarkBaseDir, basePath));
-    await io.mkdirP(branchPath);
-    await io.mkdirP(prPath);
+    await io.mkdirP(path.dirname(dataPath));
 
     const data = await loadDataJson(dataPath);
     addBenchmarkToDataJson(groupBy, schema, name, bench, data, maxItemsInChart);
