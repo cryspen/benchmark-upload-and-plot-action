@@ -446,6 +446,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench, config, retry) {
     if (!dataRelativePath) {
         // sometimes we don't want to push the benchmark data (e.g. on the merge queue).
         // in this case, skip the below.
+        console.warn('No data path could be built');
         return;
     }
     const dataPath = path.join(benchmarkBaseDir, dataRelativePath);
@@ -513,6 +514,10 @@ async function writeBenchmarkToGitHubPages(bench, config) {
         await writeBenchmarkToGitHubPagesWithRetry(bench, config, 10);
         return;
     }
+    catch (e) {
+        console.warn(e);
+        throw e;
+    }
     finally {
         if (!ghRepository) {
             // `git switch` does not work for backing to detached head
@@ -542,9 +547,11 @@ async function writeBenchmark(bench, config) {
     const { name, externalDataJsonPath } = config;
     let prevBench;
     if (externalDataJsonPath) {
+        console.log('Writing to external JSON');
         prevBench = await writeBenchmarkToExternalJson(bench, externalDataJsonPath, config);
     }
     else {
+        console.log('Writing to GitHub Pages');
         prevBench = await getPrevBench(name, config);
         await writeBenchmarkToGitHubPages(bench, config);
     }
