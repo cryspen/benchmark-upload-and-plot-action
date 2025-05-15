@@ -611,11 +611,17 @@
                     main.appendChild(setElem);
                 }
                 async function loadDataFromUrl(url) {
-                    return fetch(url)
-                        .catch((e) => {
-                            throw new Error(`Error retrieving data from ${url}: ${e}`);
-                        })
-                        .then((response) => response.json());
+                    const response = await fetch(url).catch((e) => {
+                        throw new Error(`Error retrieving data from ${url}: ${e}`);
+                    });
+                    if (response.status !== 200) {
+                        throw new Error(`Error retrieving data from ${url}: ${response.statusText}`);
+                    }
+                    try {
+                        return response.json();
+                    } catch (e) {
+                        throw new Error(`Error parsing JSON from ${url}: ${e}`);
+                    }
                 }
                 async function loadDataFromRef(ref) {
                     const dataUrl = `${ref}.json`;
@@ -636,32 +642,55 @@
                     populateBenchSetDropdown(Object.keys(benchSets));
                     renderAllCharts(benchSet);
                 }
-                async function loadFirstDataset(listing) {
+                async function filterListing(listing) {
                     if (listing.refs) {
-                        for (const ref of listing.refs) {
+                        const promises = listing.refs.map(async (ref) => {
+                            let keep = true;
                             try {
-                                return await loadDataFromRef(ref);
+                                await loadDataFromRef(ref);
                             } catch (e) {
-                                console.error(e);
-                                continue;
+                                console.error(`Skipping ref in listing: ${e}`);
+                                keep = false;
                             }
-                        }
+                            return { keep, ref };
+                        });
+
+                        listing.refs = (await Promise.all(promises))
+                            .filter((result) => result.keep)
+                            .map((result) => result.ref);
                     }
                     if (listing.prs) {
-                        for (const pr of listing.prs) {
+                        const promises = listing.prs.map(async (pr) => {
+                            let keep = true;
                             try {
-                                return await loadDataFromPr(pr);
+                                await loadDataFromPr(pr);
                             } catch (e) {
-                                console.error(e);
-                                continue;
+                                console.error(`Skipping pr in listing: ${e}`);
+                                keep = false;
                             }
-                        }
+                            return { keep, pr };
+                        });
+
+                        listing.prs = (await Promise.all(promises))
+                            .filter((result) => result.keep)
+                            .map((result) => result.pr);
+                    }
+                }
+                async function loadFirstDataset(listing) {
+                    if (listing.refs) {
+                        return await loadDataFromRef(listing.refs[0]);
+                    }
+                    if (listing.prs) {
+                        return await loadDataFromPr(listing.prs[0]);
                     }
                     throw new Error('listing contains no valid datasets');
                 }
 
                 async function init() {
                     const listing = await loadDataFromUrl('listing.json');
+
+                    await filterListing(listing);
+
                     populateRefPrDropdown(listing.refs, listing.prs);
 
                     const data = await loadFirstDataset(listing);
