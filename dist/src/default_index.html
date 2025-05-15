@@ -109,7 +109,7 @@
         </header>
         <main id="main">
             <div class="dropdowns">
-                <div id="branch-pr-dropdown"></div>
+                <div id="ref-pr-dropdown"></div>
                 <div id="benchmark-set-dropdown"></div>
             </div>
             <div id="body"></div>
@@ -482,28 +482,28 @@
                         elem.appendChild(checklist);
                     });
                 }
-                function populateBranchPrDropdown(branchesOpt, prsOpt) {
-                    let elem = document.getElementById('branch-pr-dropdown');
+                function populateRefPrDropdown(refsOpt, prsOpt) {
+                    let elem = document.getElementById('ref-pr-dropdown');
                     elem.innerHTML = '';
 
-                    const branches = branchesOpt ? branchesOpt : [];
+                    const refs = refsOpt ? refsOpt : [];
                     const prs = prsOpt ? prsOpt : [];
 
-                    // if there are no branches or prs, remove the dropdown
-                    if (branches.length == 0 && prs.length == 0) {
+                    // if there are no refs or prs, remove the dropdown
+                    if (refs.length == 0 && prs.length == 0) {
                         return;
                     }
                     const label = document.createElement('label');
-                    label.setAttribute('for', 'branch-pr-dropdown');
+                    label.setAttribute('for', 'ref-pr-dropdown');
                     elem.appendChild(label);
 
                     const select = document.createElement('select');
-                    select.id = 'branch-pr-dropdown';
+                    select.id = 'ref-pr-dropdown';
                     elem.appendChild(select);
 
-                    branches.forEach((name) => {
+                    refs.forEach((name) => {
                         const option = document.createElement('option');
-                        const text = `branch ${name}`;
+                        const text = `ref ${name}`;
                         option.setAttribute('value', text);
                         option.textContent = text;
                         select.appendChild(option);
@@ -521,7 +521,7 @@
                         if (type === 'pr') {
                             await loadDataFromPr(value);
                         } else {
-                            await loadDataFromBranch(value);
+                            await loadDataFromRef(value);
                         }
                         rerenderAll();
                     });
@@ -617,8 +617,8 @@
                         })
                         .then((response) => response.json());
                 }
-                async function loadDataFromBranch(branch) {
-                    const dataUrl = `branch/refs/heads/${branch}.json`;
+                async function loadDataFromRef(ref) {
+                    const dataUrl = `${ref}.json`;
                     window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
                     return window.BENCHMARK_DATA;
                 }
@@ -637,10 +637,10 @@
                     renderAllCharts(benchSet);
                 }
                 async function loadFirstDataset(listing) {
-                    if (listing.branches) {
-                        for (const branch of listing.branches) {
+                    if (listing.refs) {
+                        for (const ref of listing.refs) {
                             try {
-                                return await loadDataFromBranch(branch);
+                                return await loadDataFromRef(ref);
                             } catch (e) {
                                 console.error(e);
                                 continue;
@@ -662,7 +662,7 @@
 
                 async function init() {
                     const listing = await loadDataFromUrl('listing.json');
-                    populateBranchPrDropdown(listing.branches, listing.prs);
+                    populateRefPrDropdown(listing.refs, listing.prs);
 
                     const data = await loadFirstDataset(listing);
                     // Render header
