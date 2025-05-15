@@ -685,10 +685,10 @@
                     }
                 }
                 async function loadFirstDataset(listing) {
-                    if (listing.refs) {
+                    if (listing.refs[0]) {
                         return await loadDataFromRef(listing.refs[0]);
                     }
-                    if (listing.prs) {
+                    if (listing.prs[0]) {
                         return await loadDataFromPr(listing.prs[0]);
                     }
                     throw new Error('listing contains no valid datasets');
