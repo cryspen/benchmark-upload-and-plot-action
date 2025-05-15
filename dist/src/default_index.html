@@ -610,6 +610,14 @@
                     main.appendChild(filterElem);
                     main.appendChild(setElem);
                 }
+                async function checkFileAvailable(url) {
+                    const response = await fetch(url, { method: 'HEAD' }).catch((e) => {
+                        throw new Error(`Error retrieving data from ${url}: ${e}`);
+                    });
+                    if (response.status !== 200) {
+                        throw new Error(`Error retrieving data from ${url}: ${response.statusText}`);
+                    }
+                }
                 async function loadDataFromUrl(url) {
                     const response = await fetch(url).catch((e) => {
                         throw new Error(`Error retrieving data from ${url}: ${e}`);
@@ -647,7 +655,7 @@
                         const promises = listing.refs.map(async (ref) => {
                             let keep = true;
                             try {
-                                await loadDataFromRef(ref);
+                                await checkFileAvailable(`${ref}.json`);
                             } catch (e) {
                                 console.error(`Skipping ref in listing: ${e}`);
                                 keep = false;
@@ -663,7 +671,7 @@
                         const promises = listing.prs.map(async (pr) => {
                             let keep = true;
                             try {
-                                await loadDataFromPr(pr);
+                                await checkFileAvailable(`pr/${pr}.json`);
                             } catch (e) {
                                 console.error(`Skipping pr in listing: ${e}`);
                                 keep = false;
