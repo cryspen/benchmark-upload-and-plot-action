@@ -109,7 +109,7 @@
         </header>
         <main id="main">
             <div class="dropdowns">
-                <div id="branch-pr-dropdown"></div>
+                <div id="ref-pr-dropdown"></div>
                 <div id="benchmark-set-dropdown"></div>
             </div>
             <div id="body"></div>
@@ -382,19 +382,20 @@
                 }
                 function addAttributesToChartElement(elem, groupKey) {
                     Object.entries(groupKey).forEach(([key, value]) => {
-                        elem.setAttribute(key, value);
+                        elem.setAttribute(key.replace(' ', ''), value);
                     });
                 }
 
                 function setChartHiddenStatus(hide, key, value) {
                     const charts = document.getElementsByClassName('benchmark-graphs');
                     const filteredCharts = Array.from(charts).filter((chart) => {
-                        const chartValue = chart.getAttribute(key);
+                        const chartValue = chart.getAttribute(key.replace(' ', ''));
                         return chartValue === value;
                     });
                     filteredCharts.forEach((chart) => {
                         let hiddenByAttribute = chart.getAttribute('hidden-by');
-                        let hiddenBy = hiddenByAttribute ? hiddenByAttribute : 0;
+                        let hiddenBy = hiddenByAttribute ? Number(hiddenByAttribute) : 0;
+                        hiddenBy = hiddenBy ? hiddenBy : 0;
 
                         if (hide) {
                             chart.style.setProperty('display', 'none');
@@ -482,28 +483,28 @@
                         elem.appendChild(checklist);
                     });
                 }
-                function populateBranchPrDropdown(branchesOpt, prsOpt) {
-                    let elem = document.getElementById('branch-pr-dropdown');
+                function populateRefPrDropdown(refsOpt, prsOpt) {
+                    let elem = document.getElementById('ref-pr-dropdown');
                     elem.innerHTML = '';
 
-                    const branches = branchesOpt ? branchesOpt : [];
+                    const refs = refsOpt ? refsOpt : [];
                     const prs = prsOpt ? prsOpt : [];
 
-                    // if there are no branches or prs, remove the dropdown
-                    if (branches.length == 0 && prs.length == 0) {
+                    // if there are no refs or prs, remove the dropdown
+                    if (refs.length == 0 && prs.length == 0) {
                         return;
                     }
                     const label = document.createElement('label');
-                    label.setAttribute('for', 'branch-pr-dropdown');
+                    label.setAttribute('for', 'ref-pr-dropdown');
                     elem.appendChild(label);
 
                     const select = document.createElement('select');
-                    select.id = 'branch-pr-dropdown';
+                    select.id = 'ref-pr-dropdown';
                     elem.appendChild(select);
 
-                    branches.forEach((name) => {
+                    refs.forEach((name) => {
                         const option = document.createElement('option');
-                        const text = `branch ${name}`;
+                        const text = `ref ${name}`;
                         option.setAttribute('value', text);
                         option.textContent = text;
                         select.appendChild(option);
@@ -521,7 +522,7 @@
                         if (type === 'pr') {
                             await loadDataFromPr(value);
                         } else {
-                            await loadDataFromBranch(value);
+                            await loadDataFromRef(value);
                         }
                         rerenderAll();
                     });
@@ -610,15 +611,29 @@
                     main.appendChild(filterElem);
                     main.appendChild(setElem);
                 }
-                async function loadDataFromUrl(url) {
-                    return fetch(url)
-                        .catch((e) => {
-                            throw new Error(`Error retrieving data from ${url}: ${e}`);
-                        })
-                        .then((response) => response.json());
+                async function checkFileAvailable(url) {
+                    const response = await fetch(url, { method: 'HEAD' }).catch((e) => {
+                        throw new Error(`Error retrieving data from ${url}: ${e}`);
+                    });
+                    if (response.status !== 200) {
+                        throw new Error(`Error retrieving data from ${url}: ${response.statusText}`);
+                    }
                 }
-                async function loadDataFromBranch(branch) {
-                    const dataUrl = `branch/${branch}.json`;
+                async function loadDataFromUrl(url) {
+                    const response = await fetch(url).catch((e) => {
+                        throw new Error(`Error retrieving data from ${url}: ${e}`);
+                    });
+                    if (response.status !== 200) {
+                        throw new Error(`Error retrieving data from ${url}: ${response.statusText}`);
+                    }
+                    try {
+                        return response.json();
+                    } catch (e) {
+                        throw new Error(`Error parsing JSON from ${url}: ${e}`);
+                    }
+                }
+                async function loadDataFromRef(ref) {
+                    const dataUrl = `${ref}.json`;
                     window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
                     return window.BENCHMARK_DATA;
                 }
@@ -636,33 +651,56 @@
                     populateBenchSetDropdown(Object.keys(benchSets));
                     renderAllCharts(benchSet);
                 }
-                async function loadFirstDataset(listing) {
-                    if (listing.branches) {
-                        for (const branch of listing.branches) {
+                async function filterListing(listing) {
+                    if (listing.refs) {
+                        const promises = listing.refs.map(async (ref) => {
+                            let keep = true;
                             try {
-                                return await loadDataFromBranch(branch);
+                                await checkFileAvailable(`${ref}.json`);
                             } catch (e) {
-                                console.error(e);
-                                continue;
+                                console.error(`Skipping ref in listing: ${e}`);
+                                keep = false;
                             }
-                        }
+                            return { keep, ref };
+                        });
+
+                        listing.refs = (await Promise.all(promises))
+                            .filter((result) => result.keep)
+                            .map((result) => result.ref);
                     }
                     if (listing.prs) {
-                        for (const pr of listing.prs) {
+                        const promises = listing.prs.map(async (pr) => {
+                            let keep = true;
                             try {
-                                return await loadDataFromPr(pr);
+                                await checkFileAvailable(`pr/${pr}.json`);
                             } catch (e) {
-                                console.error(e);
-                                continue;
+                                console.error(`Skipping pr in listing: ${e}`);
+                                keep = false;
                             }
-                        }
+                            return { keep, pr };
+                        });
+
+                        listing.prs = (await Promise.all(promises))
+                            .filter((result) => result.keep)
+                            .map((result) => result.pr);
+                    }
+                }
+                async function loadFirstDataset(listing) {
+                    if (listing.refs[0]) {
+                        return await loadDataFromRef(listing.refs[0]);
+                    }
+                    if (listing.prs[0]) {
+                        return await loadDataFromPr(listing.prs[0]);
                     }
                     throw new Error('listing contains no valid datasets');
                 }
 
                 async function init() {
                     const listing = await loadDataFromUrl('listing.json');
-                    populateBranchPrDropdown(listing.branches, listing.prs);
+
+                    await filterListing(listing);
+
+                    populateRefPrDropdown(listing.refs, listing.prs);
 
                     const data = await loadFirstDataset(listing);
                     // Render header

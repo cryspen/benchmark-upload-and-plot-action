@@ -67,12 +67,13 @@ const gitHubContext = {
             private: false,
             html_url: 'https://github.com/user/repo',
         } as RepositoryPayloadSubset | null,
-        push: null as any,
+        before: null as any, // for push
         pull_request: null as any,
         number: null as number | null, // PR number
         merge_group: null as any,
     },
     workflow: 'Workflow name',
+    ref: 'refs/heads/main', // TODO: set separately for pull request tests
 };
 
 enum PayloadType {
@@ -81,24 +82,27 @@ enum PayloadType {
     MergeGroup = 3,
 }
 
-function contextSetPush(context: any, base_ref: string, sha_before: string) {
+function contextSetPush(context: any, sha_before: string) {
     context.payload.pull_request = null;
     context.payload.merge_group = null;
     context.payload.number = null;
-    context.payload.push = { base_ref, before: sha_before };
+    context.payload.before = sha_before;
+    context.eventName = 'push';
 }
 
 function contextSetPullRequest(context: any, prNumber: number, ref: string, sha: string) {
-    context.payload.push = null;
+    context.payload.before = null;
     context.payload.merge_group = null;
     context.payload.number = prNumber;
     context.payload.pull_request = { base: { ref, sha } };
+    context.eventName = 'pull_request';
 }
 function contextSetMergeGroup(context: any, base_ref: string, base_sha: string) {
-    context.payload.push = null;
+    context.payload.before = null;
     context.payload.pull_request = null;
     context.payload.number = null;
     context.payload.merge_group = { base_ref, base_sha };
+    context.eventName = 'merge_group';
 }
 
 jest.mock('@actions/core', () => ({
@@ -896,30 +900,30 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
     describe('with gh-pages branch', function () {
         beforeEach(async function () {
             // reset the context
-            contextSetPush(gitHubContext, 'main', 'prev commit id');
+            contextSetPush(gitHubContext, 'prev commit id');
             (global as any).window = {}; // Fake window object on browser
         });
         afterEach(async function () {
             // reset the context
-            contextSetPush(gitHubContext, 'main', 'prev commit id');
+            contextSetPush(gitHubContext, 'prev commit id');
             gitSpy.clear();
             delete (global as any).window;
             for (const p of [
-                path.join('data-dir', 'branch'),
+                path.join('data-dir', 'refs'),
                 path.join('data-dir', 'pr', '10.json'),
                 path.join('data-dir', 'index.html'),
                 path.join('data-dir', 'listing.json'),
                 'new-data-dir',
-                path.join('with-index-html', 'branch'),
+                path.join('with-index-html', 'refs'),
                 path.join('with-index-html', 'pr'),
                 path.join('with-index-html', 'listing.json'),
                 path.join('with-index-html', 'data.json'),
                 path.join('benchmark-data-repository', 'data-dir', 'data.json'),
                 path.join('benchmark-data-repository', 'data-dir', 'listing.json'),
-                path.join('benchmark-data-repository', 'data-dir', 'branch'),
+                path.join('benchmark-data-repository', 'data-dir', 'refs'),
                 path.join('benchmark-data-repository', 'data-dir', 'index.html'),
                 path.join('benchmark-data-repository', 'new-data-dir'),
-                path.join('benchmark-data-repository', 'branch'),
+                path.join('benchmark-data-repository', 'refs'),
                 path.join('benchmark-data-repository', 'pr'),
                 path.join('benchmark-data-repository', 'listing.json'),
                 path.join('benchmark-data-repository', 'index.html'),
@@ -999,7 +1003,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             } = {},
         ): [GitFunc, unknown[]][] {
             const baseDir = cfg.baseDir ?? 'data-dir';
-            const dataPathRelative = cfg.dataPath ?? path.join('branch', 'main.json');
+            const dataPathRelative = cfg.dataPath ?? path.join('refs', 'heads', 'main.json');
             const dataPath = path.join(baseDir, dataPathRelative);
             const listingPath = path.join(baseDir, 'listing.json');
             const indexHtmlPath = path.join(baseDir, 'index.html');
@@ -1069,7 +1073,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                     bigger_is_better: false,
                 },
                 gitServerUrl: serverUrl,
-                gitHistory: gitHistory({ dataPath: 'branch/main.json' }),
+                gitHistory: gitHistory({ dataPath: 'refs/heads/main.json' }),
             },
             {
                 it: 'appends new data in other repository',
@@ -1107,7 +1111,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                         [
                             ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
                             'add',
-                            path.join('data-dir', 'branch/main.json'),
+                            path.join('data-dir', 'refs/heads/main.json'),
                         ],
                     ],
                     [
@@ -1175,7 +1179,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                         [
                             ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
                             'add',
-                            path.join('branch', 'main.json'),
+                            path.join('refs', 'heads', 'main.json'),
                         ],
                     ],
                     [
@@ -1432,13 +1436,13 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
         for (const t of normalCasesWithPayloadType) {
             // FIXME: can't use `it.each` currently as tests running in parallel interfere with each other
             it(t.it, async function () {
-                const dataJsRelative = path.join('branch', 'main.json');
+                const dataJsRelative = path.join('refs', 'heads', 'main.json');
                 if (t.payloadType === PayloadType.PullRequest) {
                     contextSetPullRequest(gitHubContext, 10, 'main', 'prev commit id');
                 } else if (t.payloadType === PayloadType.MergeGroup) {
-                    contextSetMergeGroup(gitHubContext, 'main', 'prev commit id');
+                    contextSetMergeGroup(gitHubContext, 'refs/heads/main', 'prev commit id');
                 } else {
-                    contextSetPush(gitHubContext, 'main', 'prev commit id');
+                    contextSetPush(gitHubContext, 'prev commit id');
                 }
                 if (t.privateRepo) {
                     gitHubContext.payload.repository = gitHubContext.payload.repository
@@ -1597,7 +1601,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
 
         it.each(retryCases)('$it', async function (t) {
             // update the payload type
-            contextSetPush(gitHubContext, 'main', 'prev commit id');
+            contextSetPush(gitHubContext, 'prev commit id');
 
             gitSpy.pushFailure = t.pushErrorMessage;
             gitSpy.pushFailureCount = t.pushErrorCount;
@@ -1610,13 +1614,13 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             };
 
             const originalDataJs = path.join(config.basePath, 'original_data.json');
-            const dataJs = path.join(config.basePath, 'branch', 'main.json');
-            await fs.mkdir(path.join(config.basePath, 'branch'), { recursive: true });
+            const dataJs = path.join(config.basePath, 'refs', 'heads', 'main.json');
+            await fs.mkdir(path.join(config.basePath, 'refs', 'heads'), { recursive: true });
             await fs.copyFile(originalDataJs, dataJs);
 
             const history = gitHistory({
                 addIndexHtml: false,
-                dataPath: 'branch/main.json',
+                dataPath: 'refs/heads/main.json',
                 baseDir: 'with-index-html',
             });
             if (t.pushErrorCount > 0) {

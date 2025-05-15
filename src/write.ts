@@ -20,7 +20,7 @@ export interface DataJson {
 }
 
 export interface Listing {
-    branches: string[];
+    refs: string[];
     prs: string[];
 }
 
@@ -33,47 +33,66 @@ const DEFAULT_DATA_JSON = {
 };
 
 const DEFAULT_LISTING = {
-    branches: [],
+    refs: [],
     prs: [],
 };
-function getDataPath(config: Config) {
-    const pr = github.context.payload.pull_request;
-    const mergeGroup = github.context.payload.merge_group;
-    const push = github.context.payload.push;
 
-    let file;
-    let directory;
-    if (pr) {
-        file = `${github.context.payload.number}.json`;
-        directory = 'pr';
-    } else if (mergeGroup) {
-        // don't write to path
-        return undefined;
-    } else if (push) {
-        file = `${push.base_ref}.json`;
-        directory = 'branch';
+enum DataEntryType {
+    pullRequest,
+    ref,
+}
+
+interface DataEntry {
+    type: DataEntryType;
+    id: string;
+}
+
+function getDataEntry(): DataEntry | undefined {
+    const eventName = github.context.eventName;
+
+    let type: DataEntryType;
+    let id: string;
+    if (eventName === 'pull_request') {
+        id = github.context.payload.number;
+        type = DataEntryType.pullRequest;
+    } else if (eventName === 'push') {
+        id = github.context.ref;
+        type = DataEntryType.ref;
     } else {
+        console.warn(`Unsupported event type: ${eventName}`);
+        core.debug(JSON.stringify(github.context.payload));
         return undefined;
     }
 
-    return path.join(config.basePath, directory, file);
+    return { type, id };
 }
-function getComparePathAndSha(config: Config): [string, string] | undefined {
-    const pr = github.context.payload.pull_request;
-    const mergeGroup = github.context.payload.merge_group;
-    const push = github.context.payload.push;
 
-    let branch;
-    let sha;
-    if (pr) {
-        branch = pr.base.ref;
-        sha = pr.base.sha;
-    } else if (mergeGroup) {
-        branch = mergeGroup.base_ref;
-        sha = mergeGroup.base_sha;
-    } else if (push) {
-        branch = push.base_ref;
-        sha = push.before;
+function getDataPath(dataEntry: DataEntry): string {
+    if (dataEntry.type === DataEntryType.pullRequest) {
+        return path.join('pr', `${dataEntry.id}.json`);
+    } else {
+        return `${dataEntry.id}.json`;
+    }
+}
+function getComparePathAndSha(): [string, string] | undefined {
+    const eventName = github.context.eventName;
+
+    let ref: string;
+    let sha: string;
+    if (eventName === 'pull_request') {
+        const branch = github.context.payload.pull_request?.base.ref;
+        sha = github.context.payload.pull_request?.base.sha;
+        if (!branch || !sha) {
+            console.warn(`ref ${branch} or sha ${sha} is null; skipping`);
+            return undefined;
+        }
+        ref = path.join('refs', 'heads', branch);
+    } else if (eventName === 'merge_group') {
+        ref = github.context.payload.merge_group.base_ref;
+        sha = github.context.payload.merge_group.base_sha;
+    } else if (eventName === 'push') {
+        ref = github.context.ref;
+        sha = github.context.payload.before;
     } else {
         return undefined;
     }
@@ -82,19 +101,21 @@ function getComparePathAndSha(config: Config): [string, string] | undefined {
         return undefined;
     }
 
-    const file = `${branch}.json`;
-    const comparePath = path.join(config.basePath, 'branch', file);
+    const file = `${ref}.json`;
+
+    // already includes 'refs'
+    const comparePath = file;
 
     return [comparePath, sha];
 }
 async function getPrevBench(benchName: string, config: Config): Promise<Benchmark | null> {
     // TODO: error handling
-    const comparePathAndSha = getComparePathAndSha(config);
+    const comparePathAndSha = getComparePathAndSha();
     if (!comparePathAndSha) {
         return null;
     }
     const [comparePath, compareSha] = comparePathAndSha;
-    const data = await loadDataJson(comparePath);
+    const data = await loadDataJson(path.join(config.basePath, comparePath));
 
     const suite = data.entries[benchName];
 
@@ -123,17 +144,17 @@ async function loadListing(baseDir: string, listingPath: string): Promise<Listin
     }
 }
 
-async function updateAndStoreListing(baseDir: string, listingPath: string, data: Listing, isPr: boolean, id: string) {
-    if (!isPr) {
-        if (!data.branches.includes(id)) {
-            data.branches.push(id);
+async function updateAndStoreListing(baseDir: string, listingPath: string, listing: Listing, dataEntry: DataEntry) {
+    if (dataEntry.type === DataEntryType.ref) {
+        if (!listing.refs.includes(dataEntry.id)) {
+            listing.refs.push(dataEntry.id);
         }
     } else {
-        if (!data.prs.includes(id)) {
-            data.prs.push(id);
+        if (!listing.prs.includes(dataEntry.id)) {
+            listing.prs.push(dataEntry.id);
         }
     }
-    const script = JSON.stringify(data, null, 2);
+    const script = JSON.stringify(listing, null, 2);
     const writePath = path.join(baseDir, listingPath);
     await fs.writeFile(writePath, script, 'utf8');
     core.debug(`Overwrote the listing at ${writePath}`);
@@ -529,19 +550,19 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     // `benchmarkDataDirPath` is an absolute path at this stage,
     // so we need to convert it to relative to be able to prepend the `benchmarkBaseDir`
 
-    const dataRelativePath = getDataPath(config);
-    if (!dataRelativePath) {
+    const dataEntry = getDataEntry();
+    if (!dataEntry) {
         // sometimes we don't want to push the benchmark data (e.g. on the merge queue).
         // in this case, skip the below.
+        console.warn('No data path could be built');
         return;
     }
+
+    let dataRelativePath = getDataPath(dataEntry);
+    dataRelativePath = path.join(basePath, dataRelativePath);
     const dataPath = path.join(benchmarkBaseDir, dataRelativePath);
 
-    const branchPath = path.join(benchmarkBaseDir, basePath, 'branch');
-    const prPath = path.join(benchmarkBaseDir, basePath, 'pr');
-    await io.mkdirP(path.join(benchmarkBaseDir, basePath));
-    await io.mkdirP(branchPath);
-    await io.mkdirP(prPath);
+    await io.mkdirP(path.dirname(dataPath));
 
     const data = await loadDataJson(dataPath);
     addBenchmarkToDataJson(groupBy, schema, name, bench, data, maxItemsInChart);
@@ -552,11 +573,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     const listingPath = path.join(basePath, 'listing.json');
     const listing = await loadListing(benchmarkBaseDir, listingPath);
 
-    // TODO: retrieve these values differently
-    const [type, _] = dataRelativePath.split('/');
-    const isPr = type === 'pr';
-    const id = path.basename(dataRelativePath).replace('.json', '');
-    await updateAndStoreListing(benchmarkBaseDir, listingPath, listing, isPr, id);
+    await updateAndStoreListing(benchmarkBaseDir, listingPath, listing, dataEntry);
     await git.cmd(extraGitArguments, 'add', listingPath);
 
     await git.cmd(extraGitArguments, 'add', dataRelativePath);
@@ -616,6 +633,9 @@ async function writeBenchmarkToGitHubPages(bench: Benchmark, config: Config) {
     try {
         await writeBenchmarkToGitHubPagesWithRetry(bench, config, 10);
         return;
+    } catch (e) {
+        console.warn(e);
+        throw e;
     } finally {
         if (!ghRepository) {
             // `git switch` does not work for backing to detached head
@@ -654,8 +674,10 @@ export async function writeBenchmark(bench: Benchmark, config: Config) {
 
     let prevBench;
     if (externalDataJsonPath) {
+        console.log('Writing to external JSON');
         prevBench = await writeBenchmarkToExternalJson(bench, externalDataJsonPath, config);
     } else {
+        console.log('Writing to GitHub Pages');
         prevBench = await getPrevBench(name, config);
         await writeBenchmarkToGitHubPages(bench, config);
     }
