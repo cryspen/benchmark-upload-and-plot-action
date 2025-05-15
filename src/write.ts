@@ -20,7 +20,7 @@ export interface DataJson {
 }
 
 export interface Listing {
-    branches: string[];
+    refs: string[];
     prs: string[];
 }
 
@@ -33,28 +33,47 @@ const DEFAULT_DATA_JSON = {
 };
 
 const DEFAULT_LISTING = {
-    branches: [],
+    refs: [],
     prs: [],
 };
-function getDataPath() {
+
+enum DataEntryType {
+    pullRequest,
+    ref,
+}
+
+interface DataEntry {
+    type: DataEntryType;
+    id: string;
+}
+
+// TODO: break up into 'info' and 'path' functions
+function getDataEntry(): DataEntry | undefined {
     const eventName = github.context.eventName;
 
-    let file: string;
-    let directory: string;
+    let type: DataEntryType;
+    let id: string;
     if (eventName === 'pull_request') {
-        file = `${github.context.payload.number}.json`;
-        directory = 'pr';
+        id = github.context.payload.number;
+        type = DataEntryType.pullRequest;
     } else if (eventName === 'push') {
-        const ref = github.context.ref;
-        file = `${ref}.json`;
-        directory = 'branch';
+        id = github.context.ref;
+        type = DataEntryType.ref;
     } else {
         console.warn(`Unsupported event type: ${eventName}`);
         core.debug(JSON.stringify(github.context.payload));
         return undefined;
     }
 
-    return path.join(directory, file);
+    return { type, id };
+}
+
+function getDataPath(dataEntry: DataEntry): string {
+    if (dataEntry.type === DataEntryType.pullRequest) {
+        return path.join('pr', `${dataEntry.id}.json`);
+    } else {
+        return `${dataEntry.id}.json`;
+    }
 }
 function getComparePathAndSha(): [string, string] | undefined {
     const eventName = github.context.eventName;
@@ -84,7 +103,9 @@ function getComparePathAndSha(): [string, string] | undefined {
     }
 
     const file = `${ref}.json`;
-    const comparePath = path.join('branch', file);
+
+    // already includes 'refs'
+    const comparePath = file;
 
     return [comparePath, sha];
 }
@@ -124,17 +145,17 @@ async function loadListing(baseDir: string, listingPath: string): Promise<Listin
     }
 }
 
-async function updateAndStoreListing(baseDir: string, listingPath: string, data: Listing, isPr: boolean, id: string) {
-    if (!isPr) {
-        if (!data.branches.includes(id)) {
-            data.branches.push(id);
+async function updateAndStoreListing(baseDir: string, listingPath: string, listing: Listing, dataEntry: DataEntry) {
+    if (dataEntry.type === DataEntryType.ref) {
+        if (!listing.refs.includes(dataEntry.id)) {
+            listing.refs.push(dataEntry.id);
         }
     } else {
-        if (!data.prs.includes(id)) {
-            data.prs.push(id);
+        if (!listing.prs.includes(dataEntry.id)) {
+            listing.prs.push(dataEntry.id);
         }
     }
-    const script = JSON.stringify(data, null, 2);
+    const script = JSON.stringify(listing, null, 2);
     const writePath = path.join(baseDir, listingPath);
     await fs.writeFile(writePath, script, 'utf8');
     core.debug(`Overwrote the listing at ${writePath}`);
@@ -530,14 +551,15 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     // `benchmarkDataDirPath` is an absolute path at this stage,
     // so we need to convert it to relative to be able to prepend the `benchmarkBaseDir`
 
-    let dataRelativePath = getDataPath();
-    if (!dataRelativePath) {
+    const dataEntry = getDataEntry();
+    if (!dataEntry) {
         // sometimes we don't want to push the benchmark data (e.g. on the merge queue).
         // in this case, skip the below.
         console.warn('No data path could be built');
         return;
     }
 
+    let dataRelativePath = getDataPath(dataEntry);
     dataRelativePath = path.join(basePath, dataRelativePath);
     const dataPath = path.join(benchmarkBaseDir, dataRelativePath);
 
@@ -552,11 +574,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
     const listingPath = path.join(basePath, 'listing.json');
     const listing = await loadListing(benchmarkBaseDir, listingPath);
 
-    // TODO: retrieve these values differently
-    const [type, _] = dataRelativePath.split('/');
-    const isPr = type === 'pr';
-    const id = path.basename(dataRelativePath).replace('.json', '');
-    await updateAndStoreListing(benchmarkBaseDir, listingPath, listing, isPr, id);
+    await updateAndStoreListing(benchmarkBaseDir, listingPath, listing, dataEntry);
     await git.cmd(extraGitArguments, 'add', listingPath);
 
     await git.cmd(extraGitArguments, 'add', dataRelativePath);

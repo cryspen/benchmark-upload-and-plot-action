@@ -909,21 +909,21 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             gitSpy.clear();
             delete (global as any).window;
             for (const p of [
-                path.join('data-dir', 'branch'),
+                path.join('data-dir', 'refs'),
                 path.join('data-dir', 'pr', '10.json'),
                 path.join('data-dir', 'index.html'),
                 path.join('data-dir', 'listing.json'),
                 'new-data-dir',
-                path.join('with-index-html', 'branch'),
+                path.join('with-index-html', 'refs'),
                 path.join('with-index-html', 'pr'),
                 path.join('with-index-html', 'listing.json'),
                 path.join('with-index-html', 'data.json'),
                 path.join('benchmark-data-repository', 'data-dir', 'data.json'),
                 path.join('benchmark-data-repository', 'data-dir', 'listing.json'),
-                path.join('benchmark-data-repository', 'data-dir', 'branch'),
+                path.join('benchmark-data-repository', 'data-dir', 'refs'),
                 path.join('benchmark-data-repository', 'data-dir', 'index.html'),
                 path.join('benchmark-data-repository', 'new-data-dir'),
-                path.join('benchmark-data-repository', 'branch'),
+                path.join('benchmark-data-repository', 'refs'),
                 path.join('benchmark-data-repository', 'pr'),
                 path.join('benchmark-data-repository', 'listing.json'),
                 path.join('benchmark-data-repository', 'index.html'),
@@ -1003,7 +1003,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             } = {},
         ): [GitFunc, unknown[]][] {
             const baseDir = cfg.baseDir ?? 'data-dir';
-            const dataPathRelative = cfg.dataPath ?? path.join('branch', 'refs', 'heads', 'main.json');
+            const dataPathRelative = cfg.dataPath ?? path.join('refs', 'heads', 'main.json');
             const dataPath = path.join(baseDir, dataPathRelative);
             const listingPath = path.join(baseDir, 'listing.json');
             const indexHtmlPath = path.join(baseDir, 'index.html');
@@ -1073,7 +1073,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                     bigger_is_better: false,
                 },
                 gitServerUrl: serverUrl,
-                gitHistory: gitHistory({ dataPath: 'branch/refs/heads/main.json' }),
+                gitHistory: gitHistory({ dataPath: 'refs/heads/main.json' }),
             },
             {
                 it: 'appends new data in other repository',
@@ -1111,7 +1111,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                         [
                             ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
                             'add',
-                            path.join('data-dir', 'branch/refs/heads/main.json'),
+                            path.join('data-dir', 'refs/heads/main.json'),
                         ],
                     ],
                     [
@@ -1179,7 +1179,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
                         [
                             ['--work-tree=./benchmark-data-repository', '--git-dir=./benchmark-data-repository/.git'],
                             'add',
-                            path.join('branch', 'refs', 'heads', 'main.json'),
+                            path.join('refs', 'heads', 'main.json'),
                         ],
                     ],
                     [
@@ -1436,7 +1436,7 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
         for (const t of normalCasesWithPayloadType) {
             // FIXME: can't use `it.each` currently as tests running in parallel interfere with each other
             it(t.it, async function () {
-                const dataJsRelative = path.join('branch', 'refs', 'heads', 'main.json');
+                const dataJsRelative = path.join('refs', 'heads', 'main.json');
                 if (t.payloadType === PayloadType.PullRequest) {
                     contextSetPullRequest(gitHubContext, 10, 'main', 'prev commit id');
                 } else if (t.payloadType === PayloadType.MergeGroup) {
@@ -1614,13 +1614,13 @@ describe.each(['https://github.com', 'https://github.enterprise.corp'])('writeBe
             };
 
             const originalDataJs = path.join(config.basePath, 'original_data.json');
-            const dataJs = path.join(config.basePath, 'branch', 'refs', 'heads', 'main.json');
-            await fs.mkdir(path.join(config.basePath, 'branch', 'refs', 'heads'), { recursive: true });
+            const dataJs = path.join(config.basePath, 'refs', 'heads', 'main.json');
+            await fs.mkdir(path.join(config.basePath, 'refs', 'heads'), { recursive: true });
             await fs.copyFile(originalDataJs, dataJs);
 
             const history = gitHistory({
                 addIndexHtml: false,
-                dataPath: 'branch/refs/heads/main.json',
+                dataPath: 'refs/heads/main.json',
                 baseDir: 'with-index-html',
             });
             if (t.pushErrorCount > 0) {
