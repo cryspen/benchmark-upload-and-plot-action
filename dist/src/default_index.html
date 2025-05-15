@@ -394,7 +394,8 @@
                     });
                     filteredCharts.forEach((chart) => {
                         let hiddenByAttribute = chart.getAttribute('hidden-by');
-                        let hiddenBy = hiddenByAttribute ? hiddenByAttribute : 0;
+                        let hiddenBy = hiddenByAttribute ? Number(hiddenByAttribute) : 0;
+                        hiddenBy = hiddenBy ? hiddenBy : 0;
 
                         if (hide) {
                             chart.style.setProperty('display', 'none');
