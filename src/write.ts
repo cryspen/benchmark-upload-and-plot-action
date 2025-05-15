@@ -47,7 +47,6 @@ interface DataEntry {
     id: string;
 }
 
-// TODO: break up into 'info' and 'path' functions
 function getDataEntry(): DataEntry | undefined {
     const eventName = github.context.eventName;
 
