@@ -505,7 +505,7 @@
 
                     function getRefText(ref) {
                         const data = ref.split('/');
-                        const type = data[1] ?? '';
+                        const type = data[1] ? data[1] : '';
                         let typeText;
                         if (type === 'heads') {
                             typeText = 'branch ' + ref.replace('refs/heads/', '');
