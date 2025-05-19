@@ -1,0 +1,57 @@
+{
+  "lastUpdate": 1747669198775,
+  "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
+  "entries": {
+    "Test fail if exceed threshold": [
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "5e150849ec23e0fd70cfc69e2e9430c0b4e4180d",
+          "message": "better dropdown and link",
+          "timestamp": "2025-05-19T10:18:42Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/29/commits/5e150849ec23e0fd70cfc69e2e9430c0b4e4180d"
+        },
+        "date": 1747669198242,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 1",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 0
+          },
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 2",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 1
+          },
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 3",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 2
+          }
+        ]
+      }
+    ]
+  },
+  "groupBy": {
+    "Test fail if exceed threshold": [
+      "os"
+    ]
+  },
+  "schema": {
+    "Test fail if exceed threshold": [
+      "name",
+      "os"
+    ]
+  }
+}
