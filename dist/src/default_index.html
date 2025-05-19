@@ -109,7 +109,15 @@
         </header>
         <main id="main">
             <div class="dropdowns">
-                <div id="ref-pr-dropdown"></div>
+                <div id="ref-pr-dropdown">
+                    <label id="ref-pr-dropdown-label" for="ref-pr-dropdown-select"></label>
+                    <select id="ref-pr-dropdown-select"></select>
+                    <div id="pr-url" style="display: inline; visibility: hidden">
+                        [
+                        <a id="pr-url-a">github</a>
+                        ]
+                    </div>
+                </div>
                 <div id="benchmark-set-dropdown"></div>
             </div>
             <div id="body"></div>
@@ -484,9 +492,6 @@
                     });
                 }
                 function populateRefPrDropdown(refsOpt, prsOpt) {
-                    let elem = document.getElementById('ref-pr-dropdown');
-                    elem.innerHTML = '';
-
                     const refs = refsOpt ? refsOpt : [];
                     const prs = prsOpt ? prsOpt : [];
 
@@ -494,19 +499,31 @@
                     if (refs.length == 0 && prs.length == 0) {
                         return;
                     }
-                    const label = document.createElement('label');
-                    label.setAttribute('for', 'ref-pr-dropdown');
-                    elem.appendChild(label);
+                    const label = document.getElementById('ref-pr-dropdown-label');
 
-                    const select = document.createElement('select');
-                    select.id = 'ref-pr-dropdown';
-                    elem.appendChild(select);
+                    const select = document.getElementById('ref-pr-dropdown-select');
+
+                    function getRefText(ref) {
+                        const data = ref.split('/');
+                        const type = data[1] ? data[1] : '';
+                        let typeText;
+                        if (type === 'heads') {
+                            typeText = 'branch ' + ref.replace('refs/heads/', '');
+                        } else if (type === 'tags') {
+                            typeText = 'tag' + ref.replace('refs/tags/', '');
+                        } else {
+                            // fallback
+                            typeText = ref;
+                        }
+                        return typeText;
+                    }
 
                     refs.forEach((name) => {
                         const option = document.createElement('option');
-                        const text = `ref ${name}`;
-                        option.setAttribute('value', text);
-                        option.textContent = text;
+                        const attribute = `ref ${name}`;
+                        option.setAttribute('value', attribute);
+                        option.textContent = getRefText(name);
+
                         select.appendChild(option);
                     });
                     prs.forEach((name) => {
@@ -635,11 +652,28 @@
                 async function loadDataFromRef(ref) {
                     const dataUrl = `${ref}.json`;
                     window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
+
+                    const elem = document.getElementById('pr-url');
+                    elem.style.visibility = 'visible';
+
+                    const a = document.getElementById('pr-url-a');
+                    const repoUrl = window.BENCHMARK_DATA.repoUrl;
+                    a.href = `${repoUrl}/tree/${ref}`;
+
                     return window.BENCHMARK_DATA;
                 }
                 async function loadDataFromPr(pr) {
                     const dataUrl = `pr/${pr}.json`;
                     window.BENCHMARK_DATA = await loadDataFromUrl(dataUrl);
+
+                    // set the link to the PR
+                    const elem = document.getElementById('pr-url');
+                    elem.style.visibility = 'visible';
+
+                    const a = document.getElementById('pr-url-a');
+                    const repoUrl = window.BENCHMARK_DATA.repoUrl;
+                    a.href = `${repoUrl}/pull/${pr}`;
+
                     return window.BENCHMARK_DATA;
                 }
                 function rerenderAll() {
