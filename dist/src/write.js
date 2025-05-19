@@ -45,7 +45,6 @@ var DataEntryType;
     DataEntryType[DataEntryType["pullRequest"] = 0] = "pullRequest";
     DataEntryType[DataEntryType["ref"] = 1] = "ref";
 })(DataEntryType || (DataEntryType = {}));
-// TODO: break up into 'info' and 'path' functions
 function getDataEntry() {
     const eventName = github.context.eventName;
     let type;
