@@ -108,16 +108,22 @@ function getComparePathAndSha(): [string, string] | undefined {
 
     return [comparePath, sha];
 }
-async function getPrevBench(benchName: string, config: Config): Promise<Benchmark | null> {
+async function getPrevBench(config: Config): Promise<Benchmark | null> {
     // TODO: error handling
     const comparePathAndSha = getComparePathAndSha();
     if (!comparePathAndSha) {
         return null;
     }
-    const [comparePath, compareSha] = comparePathAndSha;
-    const data = await loadDataJson(path.join(config.basePath, comparePath));
+    let benchmarkBaseDir = './';
 
-    const suite = data.entries[benchName];
+    const { githubToken, skipFetchGhPages, ghRepository, basePath, name } = config;
+    if (githubToken && !skipFetchGhPages && ghRepository) {
+        benchmarkBaseDir = './benchmark-data-repository';
+    }
+    const [comparePath, compareSha] = comparePathAndSha;
+    const data = await loadDataJson(path.join(benchmarkBaseDir, basePath, comparePath));
+
+    const suite = data.entries[name];
 
     if (suite === undefined) {
         return null;
@@ -632,7 +638,7 @@ async function writeBenchmarkToGitHubPages(bench: Benchmark, config: Config) {
     }
     try {
         await writeBenchmarkToGitHubPagesWithRetry(bench, config, 10);
-        return;
+        return await getPrevBench(config);
     } catch (e) {
         console.warn(e);
         throw e;
@@ -678,8 +684,7 @@ export async function writeBenchmark(bench: Benchmark, config: Config) {
         prevBench = await writeBenchmarkToExternalJson(bench, externalDataJsonPath, config);
     } else {
         console.log('Writing to GitHub Pages');
-        prevBench = await getPrevBench(name, config);
-        await writeBenchmarkToGitHubPages(bench, config);
+        prevBench = await writeBenchmarkToGitHubPages(bench, config);
     }
 
     // Put this after `git push` for reducing possibility to get conflict on push. Since sending
