@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1747816901635,
+  "lastUpdate": 1747817359363,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test fail if exceed threshold": [
@@ -146,6 +146,44 @@
             "unit": "Megabytes",
             "os": "ubuntu-latest_64",
             "value": 200
+          },
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 3",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 2
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "8647a85df8734346162c2eff08632e1882c8efc6",
+          "message": "Fix for regression detection (retrieving previous benchmark)",
+          "timestamp": "2025-05-21T07:09:32Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/30/commits/8647a85df8734346162c2eff08632e1882c8efc6"
+        },
+        "date": 1747817358892,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 1",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 0
+          },
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 2",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 1
           },
           {
             "name": "My Custom Smaller Is Better Benchmark - Bench 3",
