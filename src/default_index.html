@@ -68,9 +68,18 @@
                 display: flex;
                 gap: 25px;
             }
+            .checklist {
+                padding-right: 10px;
+            }
             .checklist-title {
                 font-weight: bold;
                 text-align: center;
+            }
+            .select-all {
+                background: grey;
+                color: white;
+                margin-right: 2px;
+                width: 100%;
             }
             .benchmark-set {
                 margin: 8px 0;
@@ -393,8 +402,36 @@
                         elem.setAttribute(key.replace(' ', ''), value);
                     });
                 }
+                function updateSelectAllStatus(add, selectAll, max) {
+                    let numSelected = selectAll.getAttribute('num-selected');
+                    numSelected = numSelected ? Number(numSelected) : 0;
+                    numSelected = numSelected ? numSelected : 0;
+
+                    if (add) {
+                        numSelected += 1;
+                    } else if (!add && numSelected === 0) {
+                        numSelected = 0;
+                    } else {
+                        numSelected -= 1;
+                    }
+
+                    selectAll.setAttribute('num-selected', numSelected);
+
+                    // set the state
+                    if (numSelected === 0) {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = false;
+                    } else if (numSelected === max) {
+                        selectAll.checked = true;
+                        selectAll.indeterminate = false;
+                    } else {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = true;
+                    }
+                }
 
                 function setChartHiddenStatus(hide, key, value) {
+                    value = value ? value : 'undefined';
                     const charts = document.getElementsByClassName('benchmark-graphs');
                     const filteredCharts = Array.from(charts).filter((chart) => {
                         const chartValue = chart.getAttribute(key.replace(' ', ''));
@@ -448,7 +485,37 @@
                         title.textContent = key;
                         checklist.appendChild(title);
 
+                        // select all / deselect all
+                        const selectAllWrapper = document.createElement('div');
+                        selectAllWrapper.className = 'select-all';
+
+                        const selectAll = document.createElement('input');
+                        selectAll.setAttribute('id', `${key}-select-all`);
+                        selectAll.setAttribute('type', 'checkbox');
+                        const checkboxId = `${key}-select-all-checkbox`;
+                        const selectAllLabel = document.createElement('label');
+                        selectAllLabel.setAttribute('for', checkboxId);
+                        selectAllLabel.textContent = 'select all';
+                        selectAllWrapper.appendChild(selectAll);
+                        selectAllWrapper.appendChild(selectAllLabel);
+                        checklist.appendChild(selectAllWrapper);
+
+                        selectAll.addEventListener('change', function () {
+                            values.forEach((value) => {
+                                const checkbox = document.getElementById(`${key}-${value}`);
+                                checkbox.checked = this.checked;
+
+                                // hide the chart
+                                setChartHiddenStatus(!this.checked, key, value);
+                            });
+                            const numSelected = this.checked ? values.length : 0;
+                            selectAll.setAttribute('num-selected', numSelected);
+                        });
+
                         values.forEach((value) => {
+                            // select all
+                            updateSelectAllStatus(true, selectAll, values.length);
+
                             // generate the filter interface from the unique values
                             const wrapper = document.createElement('div');
                             wrapper.className = 'checklist-entry';
@@ -476,11 +543,8 @@
                             checkBox.addEventListener('change', function () {
                                 const key = this.getAttribute('key');
                                 const value = this.getAttribute('value');
-                                if (this.checked) {
-                                    setChartHiddenStatus(false, key, value);
-                                } else {
-                                    setChartHiddenStatus(true, key, value);
-                                }
+                                setChartHiddenStatus(!this.checked, key, value);
+                                updateSelectAllStatus(this.checked, selectAll, values.length);
                             });
                             wrapper.appendChild(checkBox);
                             wrapper.appendChild(label);
