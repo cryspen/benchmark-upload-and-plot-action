@@ -108,7 +108,7 @@ function getComparePathAndSha(): [string, string] | undefined {
 
     return [comparePath, sha];
 }
-async function getPrevBench(benchmarkBaseDir: string, config: Config): Promise<Benchmark | null> {
+async function getPrevBench(benchmarkRepoDir: string, config: Config): Promise<Benchmark | null> {
     // TODO: error handling
     const comparePathAndSha = getComparePathAndSha();
     if (!comparePathAndSha) {
@@ -116,7 +116,7 @@ async function getPrevBench(benchmarkBaseDir: string, config: Config): Promise<B
     }
     const { basePath, name } = config;
     const [comparePath, compareSha] = comparePathAndSha;
-    const data = await loadDataJson(path.join(benchmarkBaseDir, basePath, comparePath));
+    const data = await loadDataJson(path.join(benchmarkRepoDir, basePath, comparePath));
 
     const suite = data.entries[name];
 
@@ -525,16 +525,16 @@ async function writeBenchmarkToGitHubPagesWithRetry(
         }
     }
 
-    let benchmarkBaseDir = './';
+    let benchmarkRepoDir = './';
     let extraGitArguments: string[] = [];
 
     if (githubToken && !skipFetchGhPages && ghRepository) {
-        benchmarkBaseDir = './benchmark-data-repository';
-        await git.clone(githubToken, ghRepository, benchmarkBaseDir);
+        benchmarkRepoDir = './benchmark-data-repository';
+        await git.clone(githubToken, ghRepository, benchmarkRepoDir);
         rollbackActions.push(async () => {
-            await io.rmRF(benchmarkBaseDir);
+            await io.rmRF(benchmarkRepoDir);
         });
-        extraGitArguments = [`--work-tree=${benchmarkBaseDir}`, `--git-dir=${benchmarkBaseDir}/.git`];
+        extraGitArguments = [`--work-tree=${benchmarkRepoDir}`, `--git-dir=${benchmarkRepoDir}/.git`];
         await git.checkout(ghPagesBranch, extraGitArguments);
     } else if (!skipFetchGhPages && (isPrivateRepo === false || githubToken)) {
         await git.pull(githubToken, ghPagesBranch);
@@ -551,10 +551,10 @@ async function writeBenchmarkToGitHubPagesWithRetry(
             githubToken: !!githubToken,
         });
     }
-    const prevBench = await getPrevBench(benchmarkBaseDir, config);
+    const prevBench = await getPrevBench(benchmarkRepoDir, config);
 
     // `benchmarkDataDirPath` is an absolute path at this stage,
-    // so we need to convert it to relative to be able to prepend the `benchmarkBaseDir`
+    // so we need to convert it to relative to be able to prepend the `benchmarkRepoDir`
 
     const dataEntry = getDataEntry();
     if (!dataEntry) {
@@ -566,7 +566,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(
 
     let dataRelativePath = getDataPath(dataEntry);
     dataRelativePath = path.join(basePath, dataRelativePath);
-    const dataPath = path.join(benchmarkBaseDir, dataRelativePath);
+    const dataPath = path.join(benchmarkRepoDir, dataRelativePath);
 
     await io.mkdirP(path.dirname(dataPath));
 
@@ -577,13 +577,13 @@ async function writeBenchmarkToGitHubPagesWithRetry(
 
     // handle the listing
     const listingPath = path.join(basePath, 'listing.json');
-    const listing = await loadListing(benchmarkBaseDir, listingPath);
+    const listing = await loadListing(benchmarkRepoDir, listingPath);
 
-    await updateAndStoreListing(benchmarkBaseDir, listingPath, listing, dataEntry);
+    await updateAndStoreListing(benchmarkRepoDir, listingPath, listing, dataEntry);
     await git.cmd(extraGitArguments, 'add', listingPath);
 
     await git.cmd(extraGitArguments, 'add', dataRelativePath);
-    await addIndexHtmlIfNeeded(extraGitArguments, benchmarkBaseDir, path.join(basePath, 'index.html'));
+    await addIndexHtmlIfNeeded(extraGitArguments, benchmarkRepoDir, path.join(basePath, 'index.html'));
     await git.cmd(extraGitArguments, 'commit', '-m', `add ${name} benchmark result for ${bench.commit.id}`);
 
     if (githubToken && autoPush) {
