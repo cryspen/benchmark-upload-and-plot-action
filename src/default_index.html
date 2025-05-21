@@ -130,6 +130,7 @@
                 <div id="benchmark-set-dropdown"></div>
                 <strong> Number of charts displayed: </strong>
                 <div id="num-charts-shown"></div>
+                <div id="clear-filters-btn-div"></div>
             </div>
             <div id="body"></div>
         </main>
@@ -488,7 +489,31 @@
                 function createFilterInterface(elem, uniqueValues) {
                     const fragment = document.createDocumentFragment();
 
-                    elem.className = 'filter-interface';
+                    // button to clear all filters
+                    const clearFilters = document.getElementById('clear-filters-btn-div');
+                    clearFilters.innerHTML = '';
+                    const btn = document.createElement('button');
+                    btn.setAttribute('id', 'clear-filters-btn');
+                    btn.textContent = 'Clear all filters';
+                    btn.disabled = true;
+                    btn.addEventListener('click', function () {
+                        Object.entries(uniqueValues).forEach(([key, values]) => {
+                            values.forEach((value) => {
+                                const checkbox = document.getElementById(`${key}-${value}`);
+                                checkbox.checked = true;
+                                const hidden = false;
+
+                                // hide the chart
+                                setChartHiddenStatus(hidden, key, value);
+                            });
+                            const numSelected = values.length;
+                            const selectAll = document.getElementById(`${key}-select-all`);
+                            selectAll.setAttribute('num-selected', numSelected);
+                            selectAll.checked = true;
+                            selectAll.indeterminate = false;
+                        });
+                    });
+                    clearFilters.appendChild(btn);
 
                     Object.entries(uniqueValues).forEach(([key, values]) => {
                         const checklist = document.createElement('div');
@@ -518,9 +543,15 @@
                             values.forEach((value) => {
                                 const checkbox = document.getElementById(`${key}-${value}`);
                                 checkbox.checked = this.checked;
+                                const hidden = !this.checked;
 
                                 // hide the chart
-                                setChartHiddenStatus(!this.checked, key, value);
+                                setChartHiddenStatus(hidden, key, value);
+
+                                // enable clear filters button
+                                if (hidden) {
+                                    btn.disabled = false;
+                                }
                             });
                             const numSelected = this.checked ? values.length : 0;
                             selectAll.setAttribute('num-selected', numSelected);
