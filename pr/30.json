@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1747817457007,
+  "lastUpdate": 1747817458729,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test fail if exceed threshold": [
@@ -393,6 +393,40 @@
           "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/30/commits/8647a85df8734346162c2eff08632e1882c8efc6"
         },
         "date": 1747817363761,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "value": 135,
+            "range": "± 24",
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "name": "bench_fib_10"
+          },
+          {
+            "value": 18149,
+            "range": "± 755",
+            "unit": "ns/iter",
+            "os": "ubuntu-latest",
+            "name": "bench_fib_20"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "e5d6fac60a98942b33f659920a8aa3f7574148a1",
+          "message": "Fix for regression detection (retrieving previous benchmark)",
+          "timestamp": "2025-05-21T07:09:32Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/30/commits/e5d6fac60a98942b33f659920a8aa3f7574148a1"
+        },
+        "date": 1747817454999,
         "bigger_is_better": false,
         "benches": [
           {
