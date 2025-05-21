@@ -26,7 +26,6 @@ jobs:
           group-by: 'os'
           schema: 'name,os'
 
-jobs:
   check:
     needs: [setup]
     runs-on: ubuntu-latest
