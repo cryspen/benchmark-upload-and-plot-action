@@ -432,6 +432,7 @@
 
                 function setChartHiddenStatus(hide, key, value) {
                     value = value ? value : 'undefined';
+                    value = typeof value === 'number' ? value.toString() : value;
                     const charts = document.getElementsByClassName('benchmark-graphs');
                     const filteredCharts = Array.from(charts).filter((chart) => {
                         const chartValue = chart.getAttribute(key.replace(' ', ''));
