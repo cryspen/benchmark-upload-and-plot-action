@@ -108,18 +108,13 @@ function getComparePathAndSha(): [string, string] | undefined {
 
     return [comparePath, sha];
 }
-async function getPrevBench(config: Config): Promise<Benchmark | null> {
+async function getPrevBench(benchmarkBaseDir: string, config: Config): Promise<Benchmark | null> {
     // TODO: error handling
     const comparePathAndSha = getComparePathAndSha();
     if (!comparePathAndSha) {
         return null;
     }
-    let benchmarkBaseDir = './';
-
-    const { githubToken, skipFetchGhPages, ghRepository, basePath, name } = config;
-    if (githubToken && !skipFetchGhPages && ghRepository) {
-        benchmarkBaseDir = './benchmark-data-repository';
-    }
+    const { basePath, name } = config;
     const [comparePath, compareSha] = comparePathAndSha;
     const data = await loadDataJson(path.join(benchmarkBaseDir, basePath, comparePath));
 
@@ -498,7 +493,11 @@ function isRemoteRejectedError(err: unknown): err is Error {
     return false;
 }
 
-async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Config, retry: number) {
+async function writeBenchmarkToGitHubPagesWithRetry(
+    bench: Benchmark,
+    config: Config,
+    retry: number,
+): Promise<Benchmark | null> {
     const {
         name,
         ghPagesBranch,
@@ -552,6 +551,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
             githubToken: !!githubToken,
         });
     }
+    const prevBench = await getPrevBench(benchmarkBaseDir, config);
 
     // `benchmarkDataDirPath` is an absolute path at this stage,
     // so we need to convert it to relative to be able to prepend the `benchmarkBaseDir`
@@ -561,7 +561,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
         // sometimes we don't want to push the benchmark data (e.g. on the merge queue).
         // in this case, skip the below.
         console.warn('No data path could be built');
-        return;
+        return prevBench;
     }
 
     let dataRelativePath = getDataPath(dataEntry);
@@ -612,8 +612,7 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
                 core.warning(
                     `Retrying to generate a commit and push to remote ${ghPagesBranch} with retry count ${retry}...`,
                 );
-                await writeBenchmarkToGitHubPagesWithRetry(bench, config, retry - 1); // Recursively retry
-                return;
+                return await writeBenchmarkToGitHubPagesWithRetry(bench, config, retry - 1); // Recursively retry
             } else {
                 core.warning(`Failed to add benchmark data to '${name}' data: ${JSON.stringify(bench)}`);
                 throw new Error(
@@ -626,9 +625,11 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench: Benchmark, config: Co
             `Auto-push to ${ghPagesBranch} is skipped because it requires both 'github-token' and 'auto-push' inputs`,
         );
     }
+
+    return prevBench;
 }
 
-async function writeBenchmarkToGitHubPages(bench: Benchmark, config: Config) {
+async function writeBenchmarkToGitHubPages(bench: Benchmark, config: Config): Promise<Benchmark | null> {
     const { ghPagesBranch, skipFetchGhPages, ghRepository, githubToken } = config;
     if (!ghRepository) {
         if (!skipFetchGhPages) {
@@ -637,8 +638,7 @@ async function writeBenchmarkToGitHubPages(bench: Benchmark, config: Config) {
         await git.cmd([], 'switch', ghPagesBranch);
     }
     try {
-        await writeBenchmarkToGitHubPagesWithRetry(bench, config, 10);
-        return await getPrevBench(config);
+        return await writeBenchmarkToGitHubPagesWithRetry(bench, config, 10);
     } catch (e) {
         console.warn(e);
         throw e;
