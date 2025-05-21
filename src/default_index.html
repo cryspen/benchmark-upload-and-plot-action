@@ -461,20 +461,19 @@
                     });
                 }
 
-                function getUniqueValuesForKey(groupKeys, groupBy) {
+                function getUniqueValuesByKey(groupKeys, groupBy) {
                     // get the unique values for each group
                     const uniqueValues = {};
                     groupBy.forEach((key) => {
-                        const keys = groupKeys.map((k) => k[key]);
-                        const set = [...new Set(keys)];
-                        uniqueValues[key] = set;
+                        uniqueValues[key] = [...new Set(groupKeys.map((k) => k[key]))];
                     });
 
                     return uniqueValues;
                 }
-                function createFilterInterface(elem, groupKeys, groupBy) {
+                function createFilterInterface(elem, uniqueValues) {
+                    const fragment = document.createDocumentFragment();
+
                     elem.className = 'filter-interface';
-                    const uniqueValues = getUniqueValuesForKey(groupKeys, groupBy);
 
                     Object.entries(uniqueValues).forEach(([key, values]) => {
                         const checklist = document.createElement('div');
@@ -552,8 +551,9 @@
                             checklist.appendChild(wrapper);
                         });
 
-                        elem.appendChild(checklist);
+                        fragment.appendChild(checklist);
                     });
+                    elem.appendChild(fragment);
                 }
                 function populateRefPrDropdown(refsOpt, prsOpt) {
                     const refs = refsOpt ? refsOpt : [];
@@ -671,7 +671,8 @@
                     const groupKeys = Object.keys(groupedData).map((keyString) => parseKey(keyString, groupBy));
 
                     // create the interface at the top of the page for filtering
-                    createFilterInterface(filterElem, groupKeys, groupBy);
+                    const uniqueValues = getUniqueValuesByKey(groupKeys, groupBy);
+                    createFilterInterface(filterElem, uniqueValues);
 
                     // create  a chart for each group
                     Object.entries(groupedData).forEach(([groupKeyString, filteredTraces]) => {
