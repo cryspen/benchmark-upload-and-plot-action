@@ -128,6 +128,8 @@
                     </div>
                 </div>
                 <div id="benchmark-set-dropdown"></div>
+                <strong> Number of charts displayed: </strong>
+                <div id="num-charts-shown"></div>
             </div>
             <div id="body"></div>
         </main>
@@ -430,6 +432,11 @@
                     }
                 }
 
+                function updateNumShown(numShown) {
+                    const elem = document.getElementById('num-charts-shown');
+                    elem.textContent = numShown;
+                }
+
                 function setChartHiddenStatus(hide, key, value) {
                     value = value ? value : 'undefined';
                     value = typeof value === 'number' ? value.toString() : value;
@@ -460,6 +467,13 @@
                         }
                         chart.setAttribute('hidden-by', hiddenBy);
                     });
+
+                    // update number of charts hidden
+                    const numShown = Array.from(charts).filter((chart) => {
+                        return chart.style.getPropertyValue('display') !== 'none';
+                    }).length;
+
+                    updateNumShown(numShown);
                 }
 
                 function getUniqueValuesByKey(groupKeys, groupBy) {
@@ -675,6 +689,7 @@
                     const uniqueValues = getUniqueValuesByKey(groupKeys, groupBy);
                     createFilterInterface(filterElem, uniqueValues);
 
+                    let numShown = 0;
                     // create  a chart for each group
                     Object.entries(groupedData).forEach(([groupKeyString, filteredTraces]) => {
                         // build the title
@@ -688,11 +703,14 @@
                         const chartElem = chartFilteredTraces(setElem, title, filteredTraces);
                         if (chartElem) {
                             addAttributesToChartElement(chartElem, groupKey);
+                            numShown += 1;
                         }
                     });
 
                     main.appendChild(filterElem);
                     main.appendChild(setElem);
+
+                    updateNumShown(numShown);
                 }
                 async function checkFileAvailable(url) {
                     const response = await fetch(url, { method: 'HEAD' }).catch((e) => {
