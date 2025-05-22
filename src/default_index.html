@@ -68,9 +68,18 @@
                 display: flex;
                 gap: 25px;
             }
+            .checklist {
+                padding-right: 10px;
+            }
             .checklist-title {
                 font-weight: bold;
                 text-align: center;
+            }
+            .select-all {
+                background: grey;
+                color: white;
+                margin-right: 2px;
+                width: 100%;
             }
             .benchmark-set {
                 margin: 8px 0;
@@ -119,6 +128,9 @@
                     </div>
                 </div>
                 <div id="benchmark-set-dropdown"></div>
+                <strong> Number of charts displayed: </strong>
+                <div id="num-charts-shown"></div>
+                <div id="clear-filters-btn-div"></div>
             </div>
             <div id="body"></div>
         </main>
@@ -393,8 +405,42 @@
                         elem.setAttribute(key.replace(' ', ''), value);
                     });
                 }
+                function updateSelectAllStatus(add, selectAll, max) {
+                    let numSelected = selectAll.getAttribute('num-selected');
+                    numSelected = numSelected ? Number(numSelected) : 0;
+                    numSelected = numSelected ? numSelected : 0;
+
+                    if (add) {
+                        numSelected += 1;
+                    } else if (!add && numSelected === 0) {
+                        numSelected = 0;
+                    } else {
+                        numSelected -= 1;
+                    }
+
+                    selectAll.setAttribute('num-selected', numSelected);
+
+                    // set the state
+                    if (numSelected === 0) {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = false;
+                    } else if (numSelected === max) {
+                        selectAll.checked = true;
+                        selectAll.indeterminate = false;
+                    } else {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = true;
+                    }
+                }
+
+                function updateNumShown(numShown) {
+                    const elem = document.getElementById('num-charts-shown');
+                    elem.textContent = numShown;
+                }
 
                 function setChartHiddenStatus(hide, key, value) {
+                    value = value ? value : 'undefined';
+                    value = typeof value === 'number' ? value.toString() : value;
                     const charts = document.getElementsByClassName('benchmark-graphs');
                     const filteredCharts = Array.from(charts).filter((chart) => {
                         const chartValue = chart.getAttribute(key.replace(' ', ''));
@@ -422,22 +468,52 @@
                         }
                         chart.setAttribute('hidden-by', hiddenBy);
                     });
+
+                    // update number of charts hidden
+                    const numShown = Array.from(charts).filter((chart) => {
+                        return chart.style.getPropertyValue('display') !== 'none';
+                    }).length;
+
+                    updateNumShown(numShown);
                 }
 
-                function getUniqueValuesForKey(groupKeys, groupBy) {
-                    // get the unique values for each group
+                // get the unique values for each group
+                function getUniqueValuesByKey(groupKeys, groupBy) {
                     const uniqueValues = {};
                     groupBy.forEach((key) => {
-                        const keys = groupKeys.map((k) => k[key]);
-                        const set = [...new Set(keys)];
-                        uniqueValues[key] = set;
+                        uniqueValues[key] = [...new Set(groupKeys.map((k) => k[key]))];
                     });
 
                     return uniqueValues;
                 }
-                function createFilterInterface(elem, groupKeys, groupBy) {
-                    elem.className = 'filter-interface';
-                    const uniqueValues = getUniqueValuesForKey(groupKeys, groupBy);
+                function createFilterInterface(elem, uniqueValues) {
+                    const fragment = document.createDocumentFragment();
+
+                    // button to clear all filters
+                    const clearFilters = document.getElementById('clear-filters-btn-div');
+                    clearFilters.innerHTML = '';
+                    const btn = document.createElement('button');
+                    btn.setAttribute('id', 'clear-filters-btn');
+                    btn.textContent = 'Clear all filters';
+                    btn.disabled = true;
+                    btn.addEventListener('click', function () {
+                        Object.entries(uniqueValues).forEach(([key, values]) => {
+                            values.forEach((value) => {
+                                const checkbox = document.getElementById(`${key}-${value}`);
+                                checkbox.checked = true;
+                                const hidden = false;
+
+                                // hide the chart
+                                setChartHiddenStatus(hidden, key, value);
+                            });
+                            const numSelected = values.length;
+                            const selectAll = document.getElementById(`${key}-select-all`);
+                            selectAll.setAttribute('num-selected', numSelected);
+                            selectAll.checked = true;
+                            selectAll.indeterminate = false;
+                        });
+                    });
+                    clearFilters.appendChild(btn);
 
                     Object.entries(uniqueValues).forEach(([key, values]) => {
                         const checklist = document.createElement('div');
@@ -448,7 +524,43 @@
                         title.textContent = key;
                         checklist.appendChild(title);
 
+                        // select all / deselect all
+                        const selectAllWrapper = document.createElement('div');
+                        selectAllWrapper.className = 'select-all';
+
+                        const selectAll = document.createElement('input');
+                        selectAll.setAttribute('id', `${key}-select-all`);
+                        selectAll.setAttribute('type', 'checkbox');
+                        const checkboxId = `${key}-select-all-checkbox`;
+                        const selectAllLabel = document.createElement('label');
+                        selectAllLabel.setAttribute('for', checkboxId);
+                        selectAllLabel.textContent = 'select all';
+                        selectAllWrapper.appendChild(selectAll);
+                        selectAllWrapper.appendChild(selectAllLabel);
+                        checklist.appendChild(selectAllWrapper);
+
+                        selectAll.addEventListener('change', function () {
+                            values.forEach((value) => {
+                                const checkbox = document.getElementById(`${key}-${value}`);
+                                checkbox.checked = this.checked;
+                                const hidden = !this.checked;
+
+                                // hide the chart
+                                setChartHiddenStatus(hidden, key, value);
+
+                                // enable clear filters button
+                                if (hidden) {
+                                    btn.disabled = false;
+                                }
+                            });
+                            const numSelected = this.checked ? values.length : 0;
+                            selectAll.setAttribute('num-selected', numSelected);
+                        });
+
                         values.forEach((value) => {
+                            // select all
+                            updateSelectAllStatus(true, selectAll, values.length);
+
                             // generate the filter interface from the unique values
                             const wrapper = document.createElement('div');
                             wrapper.className = 'checklist-entry';
@@ -476,11 +588,8 @@
                             checkBox.addEventListener('change', function () {
                                 const key = this.getAttribute('key');
                                 const value = this.getAttribute('value');
-                                if (this.checked) {
-                                    setChartHiddenStatus(false, key, value);
-                                } else {
-                                    setChartHiddenStatus(true, key, value);
-                                }
+                                setChartHiddenStatus(!this.checked, key, value);
+                                updateSelectAllStatus(this.checked, selectAll, values.length);
                             });
                             wrapper.appendChild(checkBox);
                             wrapper.appendChild(label);
@@ -488,8 +597,9 @@
                             checklist.appendChild(wrapper);
                         });
 
-                        elem.appendChild(checklist);
+                        fragment.appendChild(checklist);
                     });
+                    elem.appendChild(fragment);
                 }
                 function populateRefPrDropdown(refsOpt, prsOpt) {
                     const refs = refsOpt ? refsOpt : [];
@@ -607,8 +717,10 @@
                     const groupKeys = Object.keys(groupedData).map((keyString) => parseKey(keyString, groupBy));
 
                     // create the interface at the top of the page for filtering
-                    createFilterInterface(filterElem, groupKeys, groupBy);
+                    const uniqueValues = getUniqueValuesByKey(groupKeys, groupBy);
+                    createFilterInterface(filterElem, uniqueValues);
 
+                    let numShown = 0;
                     // create  a chart for each group
                     Object.entries(groupedData).forEach(([groupKeyString, filteredTraces]) => {
                         // build the title
@@ -622,11 +734,14 @@
                         const chartElem = chartFilteredTraces(setElem, title, filteredTraces);
                         if (chartElem) {
                             addAttributesToChartElement(chartElem, groupKey);
+                            numShown += 1;
                         }
                     });
 
                     main.appendChild(filterElem);
                     main.appendChild(setElem);
+
+                    updateNumShown(numShown);
                 }
                 async function checkFileAvailable(url) {
                     const response = await fetch(url, { method: 'HEAD' }).catch((e) => {
