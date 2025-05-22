@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1747828348046,
+  "lastUpdate": 1747897170845,
   "repoUrl": "https://github.com/cryspen/benchmark-upload-and-plot-action",
   "entries": {
     "Test second action": [
@@ -140,6 +140,44 @@
             "unit": "Megabytes",
             "os": "ubuntu-latest_64",
             "value": 200
+          },
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 3",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 2
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "committer": {
+            "name": "cryspen",
+            "username": "cryspen"
+          },
+          "id": "6fa99a8d6acc398a6d15ef1fb7c6344c2f1857cd",
+          "message": "New features",
+          "timestamp": "2025-05-21T07:09:32Z",
+          "url": "https://github.com/cryspen/benchmark-upload-and-plot-action/pull/32/commits/6fa99a8d6acc398a6d15ef1fb7c6344c2f1857cd"
+        },
+        "date": 1747897170432,
+        "bigger_is_better": false,
+        "benches": [
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 1",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 0
+          },
+          {
+            "name": "My Custom Smaller Is Better Benchmark - Bench 2",
+            "unit": "Megabytes",
+            "os": "ubuntu-latest_64",
+            "value": 1
           },
           {
             "name": "My Custom Smaller Is Better Benchmark - Bench 3",
