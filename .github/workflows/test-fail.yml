@@ -2,6 +2,7 @@ name: Test that the action fails if benchmark increase exceeds threshold
 on:
   workflow_dispatch:
   pull_request:
+
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -9,8 +10,8 @@ jobs:
       # run the test using the local action in repo
       - uses: actions/checkout@v4
         with:
-          # use last commit from main as basis for comparison
-          ref: main
+          # use base ref for comparison
+          ref: ${{ GITHUB_BASE_REF }}
       - name: "build"
         run: |
           npm install
@@ -25,6 +26,7 @@ jobs:
           gh-pages-branch: gh-pages-test
           group-by: 'os'
           schema: 'name,os'
+          external-data-json-path: refs/heads/${{ GITHUB_BASE_REF }}.json
 
   check:
     needs: [setup]
