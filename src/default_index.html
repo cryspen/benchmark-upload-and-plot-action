@@ -477,8 +477,8 @@
                     updateNumShown(numShown);
                 }
 
+                // get the unique values for each group
                 function getUniqueValuesByKey(groupKeys, groupBy) {
-                    // get the unique values for each group
                     const uniqueValues = {};
                     groupBy.forEach((key) => {
                         uniqueValues[key] = [...new Set(groupKeys.map((k) => k[key]))];
