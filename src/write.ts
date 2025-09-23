@@ -52,7 +52,7 @@ function getDataEntry(): DataEntry | undefined {
 
     let type: DataEntryType;
     let id: string;
-    if (eventName === 'pull_request') {
+    if (eventName === 'pull_request' || eventName === 'pull_request_target') {
         id = github.context.payload.number;
         type = DataEntryType.pullRequest;
     } else if (eventName === 'push') {
@@ -79,7 +79,7 @@ function getComparePathAndSha(): [string, string] | undefined {
 
     let ref: string;
     let sha: string;
-    if (eventName === 'pull_request') {
+    if (eventName === 'pull_request' || eventName === 'pull_request_target') {
         const branch = github.context.payload.pull_request?.base.ref;
         sha = github.context.payload.pull_request?.base.sha;
         if (!branch || !sha) {
